@@ -1,0 +1,130 @@
+<script setup lang="ts">
+import { Head, Link, useForm } from '@inertiajs/vue3';
+import AppLayout from '@/layouts/AppLayout.vue';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
+import { Textarea } from '@/components/ui/textarea';
+import { dashboard } from '@/routes';
+import templates from '@/routes/templates';
+import type { BreadcrumbItem } from '@/types';
+
+const breadcrumbs: BreadcrumbItem[] = [
+    { title: 'Dashboard', href: dashboard.url() },
+    { title: 'Templates', href: templates.index.url() },
+    { title: 'Create Template', href: templates.create.url() },
+];
+
+const policyKeys = [
+    { key: 'mfa_trust_enabled', label: 'MFA Trust', description: 'Trust MFA claims from partner tenants.' },
+    { key: 'device_trust_enabled', label: 'Device Trust', description: 'Trust device compliance from partner tenants.' },
+    { key: 'direct_connect_enabled', label: 'Direct Connect', description: 'Allow Teams direct connect.' },
+    { key: 'b2b_inbound_enabled', label: 'B2B Inbound', description: 'Allow inbound B2B collaboration.' },
+    { key: 'b2b_outbound_enabled', label: 'B2B Outbound', description: 'Allow outbound B2B collaboration.' },
+];
+
+const form = useForm({
+    name: '',
+    description: '',
+    policy_config: {
+        mfa_trust_enabled: false,
+        device_trust_enabled: false,
+        direct_connect_enabled: false,
+        b2b_inbound_enabled: true,
+        b2b_outbound_enabled: true,
+    } as Record<string, boolean>,
+});
+
+function submit() {
+    form.post(templates.store.url());
+}
+</script>
+
+<template>
+    <Head title="Create Template" />
+
+    <AppLayout :breadcrumbs="breadcrumbs">
+        <div class="flex flex-col gap-6 p-6 max-w-xl">
+            <div>
+                <h1 class="text-2xl font-semibold">Create Template</h1>
+                <p class="text-sm text-muted-foreground mt-1">
+                    Define a reusable policy configuration for partner organizations.
+                </p>
+            </div>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle>Template Details</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <form @submit.prevent="submit" class="flex flex-col gap-5">
+                        <!-- Name -->
+                        <div class="flex flex-col gap-1.5">
+                            <Label for="name">Name <span class="text-destructive">*</span></Label>
+                            <Input
+                                id="name"
+                                v-model="form.name"
+                                placeholder="e.g. Standard Vendor"
+                                required
+                                :class="form.errors.name ? 'border-destructive' : ''"
+                            />
+                            <p v-if="form.errors.name" class="text-xs text-destructive">{{ form.errors.name }}</p>
+                        </div>
+
+                        <!-- Description -->
+                        <div class="flex flex-col gap-1.5">
+                            <Label for="description">Description</Label>
+                            <Textarea
+                                id="description"
+                                v-model="form.description"
+                                placeholder="Describe when to use this template..."
+                                class="min-h-[80px]"
+                            />
+                            <p v-if="form.errors.description" class="text-xs text-destructive">{{ form.errors.description }}</p>
+                        </div>
+
+                        <Separator />
+
+                        <!-- Policy config -->
+                        <div class="flex flex-col gap-3">
+                            <p class="text-sm font-medium">Policy Configuration</p>
+                            <div
+                                v-for="policy in policyKeys"
+                                :key="policy.key"
+                                class="flex items-center justify-between py-1.5"
+                            >
+                                <div>
+                                    <p class="text-sm font-medium">{{ policy.label }}</p>
+                                    <p class="text-xs text-muted-foreground">{{ policy.description }}</p>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <Checkbox
+                                        :id="`policy-${policy.key}`"
+                                        :checked="form.policy_config[policy.key]"
+                                        @update:checked="(v: boolean) => { form.policy_config[policy.key] = v; }"
+                                    />
+                                    <Label :for="`policy-${policy.key}`" class="cursor-pointer text-sm w-8">
+                                        {{ form.policy_config[policy.key] ? 'On' : 'Off' }}
+                                    </Label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="flex gap-2 pt-2">
+                            <Button type="submit" :disabled="form.processing">
+                                {{ form.processing ? 'Creating…' : 'Create Template' }}
+                            </Button>
+                            <Link :href="templates.index.url()">
+                                <Button type="button" variant="outline">Cancel</Button>
+                            </Link>
+                        </div>
+                    </form>
+                </CardContent>
+            </Card>
+        </div>
+    </AppLayout>
+</template>

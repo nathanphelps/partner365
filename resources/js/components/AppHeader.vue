@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3';
-import { BookOpen, Folder, LayoutGrid, Menu, Search } from 'lucide-vue-next';
+import { Activity, BookOpen, Building2, FileStack, LayoutGrid, Menu, Search, Users } from 'lucide-vue-next';
 import { computed } from 'vue';
 import AppLogo from '@/components/AppLogo.vue';
 import AppLogoIcon from '@/components/AppLogoIcon.vue';
@@ -54,22 +54,17 @@ const activeItemStyles =
     'text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100';
 
 const mainNavItems: NavItem[] = [
-    {
-        title: 'Dashboard',
-        href: dashboard(),
-        icon: LayoutGrid,
-    },
+    { title: 'Dashboard', href: dashboard(), icon: LayoutGrid },
+    { title: 'Partners', href: '/partners', icon: Building2 },
+    { title: 'Guests', href: '/guests', icon: Users },
+    { title: 'Templates', href: '/templates', icon: FileStack },
+    { title: 'Activity', href: '/activity', icon: Activity },
 ];
 
 const rightNavItems: NavItem[] = [
     {
-        title: 'Repository',
-        href: 'https://github.com/laravel/vue-starter-kit',
-        icon: Folder,
-    },
-    {
         title: 'Documentation',
-        href: 'https://laravel.com/docs/starter-kits#vue',
+        href: 'https://laravel.com/docs',
         icon: BookOpen,
     },
 ];
