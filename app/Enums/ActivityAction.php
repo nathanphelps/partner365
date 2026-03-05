@@ -12,4 +12,9 @@ enum ActivityAction: string
     case PolicyChanged = 'policy_changed';
     case TemplateCreated = 'template_created';
     case SyncCompleted = 'sync_completed';
+    case SettingsUpdated = 'settings_updated';
+    case UserApproved = 'user_approved';
+    case UserRoleChanged = 'user_role_changed';
+    case UserDeleted = 'user_deleted';
+    case SyncTriggered = 'sync_triggered';
 }
