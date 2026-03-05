@@ -129,3 +129,22 @@ test('it throws on graph api error responses', function () {
     $service = app(MicrosoftGraphService::class);
     $service->get('/users/nonexistent');
 })->throws(\App\Exceptions\GraphApiException::class);
+
+test('it reads credentials from Setting model with config fallback', function () {
+    \App\Models\Setting::set('graph', 'tenant_id', 'db-tenant-id');
+    \App\Models\Setting::set('graph', 'client_id', 'db-client-id');
+
+    Http::fake([
+        'login.microsoftonline.com/db-tenant-id/*' => Http::response([
+            'access_token' => 'db-token',
+            'expires_in' => 3600,
+        ]),
+    ]);
+
+    $service = app(MicrosoftGraphService::class);
+    $token = $service->getAccessToken();
+
+    expect($token)->toBe('db-token');
+
+    Http::assertSent(fn ($request) => str_contains($request->url(), 'db-tenant-id'));
+});

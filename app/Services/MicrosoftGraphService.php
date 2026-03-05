@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Exceptions\GraphApiException;
+use App\Models\Setting;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 
@@ -11,15 +12,15 @@ class MicrosoftGraphService
     public function getAccessToken(): string
     {
         return Cache::remember('msgraph_access_token', 3500, function () {
-            $tenantId = config('graph.tenant_id');
+            $tenantId = Setting::get('graph', 'tenant_id', config('graph.tenant_id'));
 
             $response = Http::asForm()->post(
                 "https://login.microsoftonline.com/{$tenantId}/oauth2/v2.0/token",
                 [
                     'grant_type' => 'client_credentials',
-                    'client_id' => config('graph.client_id'),
-                    'client_secret' => config('graph.client_secret'),
-                    'scope' => config('graph.scopes'),
+                    'client_id' => Setting::get('graph', 'client_id', config('graph.client_id')),
+                    'client_secret' => Setting::get('graph', 'client_secret', config('graph.client_secret')),
+                    'scope' => Setting::get('graph', 'scopes', config('graph.scopes')),
                 ]
             );
 
@@ -50,7 +51,8 @@ class MicrosoftGraphService
     private function request(string $method, string $path, array $data = [], array $query = []): array
     {
         $token = $this->getAccessToken();
-        $url = config('graph.base_url') . $path;
+        $baseUrl = Setting::get('graph', 'base_url', config('graph.base_url'));
+        $url = $baseUrl . $path;
 
         $request = Http::withToken($token)->acceptJson();
 
