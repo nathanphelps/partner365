@@ -14,7 +14,10 @@ MicrosoftGraphService               ← Core HTTP client + token management
 ├── TenantResolverService           ← Tenant info lookup
 ├── AccessReviewService             ← Access review definitions + remediation
 ├── ConditionalAccessPolicyService ← CA policy sync + partner mapping
+├── SensitivityLabelService        ← Sensitivity label sync + partner mapping
 └── TrustScoreService               ← Domain reputation scoring (uses DnsLookupService + RDAP)
+
+FaviconService                       ← Partner favicon fetch + cache (independent, no Graph API)
 ```
 
 ## MicrosoftGraphService
@@ -302,9 +305,41 @@ Syncs Conditional Access policies that target guest/external users and maps them
 
 > **Required Permission:** `Policy.Read.All` (application permission, already granted)
 
+## SensitivityLabelService
+
+Syncs Microsoft Information Protection sensitivity labels, label policies, and site-level label assignments. Maps labels to partner organizations based on policy scope and site sharing.
+
+### Endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `fetchLabelsFromGraph()` | GET `/security/informationProtection/sensitivityLabels` | List all sensitivity labels |
+| `fetchPoliciesFromGraph()` | GET `/security/informationProtection/sensitivityLabels/policies` | List label policies |
+| `fetchSiteLabelsFromGraph()` | GET `/sites?$filter=...&$select=id,displayName,webUrl` + GET `/sites/{id}/sensitivityLabel` | Site label assignments |
+
+### Sync Logic
+
+1. **Labels** — Two-pass sync: creates/updates all labels first, then links parent-child relationships (avoids FK constraint issues with self-referencing)
+2. **Policies** — Parses target type from `scopes.users.included` (all_users, specific_groups, all_users_and_guests) and stores assigned label IDs
+3. **Site labels** — Fetches sites with sensitivity labels and checks external sharing status
+4. **Partner mappings** — Clears and rebuilds via two strategies:
+   - **Policy-based**: `all_users_and_guests`/`all_users` → maps to all partners; `specific_groups` → maps to partners with guest users in those groups
+   - **Site-based**: Externally-shared labeled sites → maps to all partners
+
+### Data Extraction
+
+- **Scope** — Derived from `contentFormats`: `['file', 'email']` → `files_emails`, `['site', 'unifiedGroup']` → `sites_groups`
+- **Protection type** — Derived from `protectionSettings`: encryption settings → `encryption`, watermark → `watermark`, header/footer → `header_footer`, none → `none`
+
+### Gap Detection
+
+`getUncoveredPartners()` returns partners with zero rows in the pivot table — i.e., no sensitivity labels are mapped to them.
+
+> **Required Permissions:** `InformationProtection.Read.All`, `Sites.Read.All` (application permissions)
+
 ## Background Sync
 
-Four Artisan commands sync data from Graph API to the local database, plus one daily scoring command:
+Five Artisan commands sync data from Graph API to the local database, plus one daily scoring command:
 
 ### sync:partners
 
@@ -338,6 +373,16 @@ Four Artisan commands sync data from Graph API to the local database, plus one d
 5. Removes stale policies no longer in Graph API
 6. Logs sync results to `SyncLog`
 
+### sync:sensitivity-labels
+
+1. Fetches all sensitivity labels via `SensitivityLabelService::syncLabels()`
+2. Two-pass: creates/updates all labels, then links parent-child relationships
+3. Syncs label policies via `syncPolicies()` — parses target type and assigned labels
+4. Syncs site label assignments via `syncSiteLabels()` — checks external sharing
+5. Rebuilds partner mappings via `buildPartnerMappings()` — policy-based + site-based
+6. Removes stale labels/policies no longer returned by Graph
+7. Logs sync results to `SyncLog`
+
 ### score:partners
 
 Runs daily to calculate trust scores for all partners with a domain set:
@@ -358,6 +403,7 @@ Schedule::command('sync:partners')->everyFifteenMinutes();
 Schedule::command('sync:guests')->everyFifteenMinutes();
 Schedule::command('sync:access-reviews')->everyFifteenMinutes();
 Schedule::command('sync:conditional-access-policies')->everyFifteenMinutes();
+Schedule::command('sync:sensitivity-labels')->everyFifteenMinutes();
 Schedule::command('score:partners')->daily();
 ```
 

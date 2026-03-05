@@ -202,6 +202,7 @@ This runs the background commands:
 - `sync:guests` — every 15 minutes
 - `sync:access-reviews` — every 15 minutes
 - `sync:conditional-access-policies` — every 15 minutes
+- `sync:favicons` — daily (fetches and caches partner favicons)
 - `score:partners` — daily (calculates domain trust scores)
 
 ### 6. Set Up Queue Worker (Optional)

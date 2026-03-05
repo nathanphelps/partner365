@@ -2,7 +2,7 @@
 
 ## Overview
 
-Partner365 uses [Pest PHP](https://pestphp.com/) for testing. The test suite contains 300 tests covering services, controllers, middleware, models, commands, compliance reporting, trust scoring, syslog/CEF export, and audit logging.
+Partner365 uses [Pest PHP](https://pestphp.com/) for testing. The test suite contains 330 tests covering services, controllers, middleware, models, commands, compliance reporting, trust scoring, sensitivity labels, syslog/CEF export, favicon fetching, and audit logging.
 
 ## Running Tests
 
@@ -33,25 +33,29 @@ tests/
     │   └── AuthAuditLoggingTest.php              (5 tests)
     ├── Settings/                     # 4 files — Profile, password, 2FA, audit logging
     │   └── AuditLoggingTest.php                  (3 tests)
-    ├── Services/                     # 8 files — Graph API services + Syslog
+    ├── Services/                     # 9 files — Graph API services + Syslog
     │   ├── MicrosoftGraphServiceTest.php              (9 tests)
     │   ├── CrossTenantPolicyServiceTest.php           (6 tests)
     │   ├── GuestUserServiceTest.php                   (16 tests)
     │   ├── TenantResolverServiceTest.php              (2 tests)
     │   ├── ActivityLogServiceTest.php                 (2 tests)
     │   ├── ConditionalAccessPolicyServiceTest.php     (6 tests)
+    │   ├── SensitivityLabelServiceTest.php            (8 tests)
     │   └── Syslog/
     │       ├── CefFormatterTest.php                   (4 tests)
     │       └── SyslogTransportTest.php                (3 tests)
-    ├── Controllers/                  # 3 files — Controller tests
+    ├── Controllers/                  # 4 files — Controller tests
     │   ├── ConditionalAccessPolicyControllerTest.php  (5 tests)
+    │   ├── SensitivityLabelControllerTest.php         (6 tests)
     │   ├── PartnerTemplateControllerTest.php          (2 tests)
     │   └── ActivityLogControllerTest.php              (6 tests)
-    ├── Commands/                     # 4 files — Sync commands + activity logging
+    ├── Commands/                     # 6 files — Sync commands + activity logging
     │   ├── SyncPartnersTest.php                (2 tests)
     │   ├── SyncGuestsTest.php                  (2 tests)
     │   ├── SyncAccessReviewsTest.php           (4 tests)
-    │   └── SyncActivityLoggingTest.php         (3 tests)
+    │   ├── SyncSensitivityLabelsTest.php       (included in service tests)
+    │   ├── SyncActivityLoggingTest.php         (3 tests)
+    │   └── SyncFaviconsCommandTest.php         (3 tests)
     ├── Jobs/
     │   └── ForwardToSyslogTest.php             (3 tests)
     ├── Observers/
@@ -75,6 +79,8 @@ tests/
     ├── AccessReviewControllerTest.php          (11 tests)
     ├── TrustScoreServiceTest.php               (7 tests — score calculation)
     ├── DnsLookupServiceTest.php               (6 tests — DNS record queries)
+    ├── FaviconServiceTest.php                (7 tests — favicon fetching + HTML parsing)
+    ├── SyncFaviconsCommandTest.php           (3 tests — daily favicon sync command)
     ├── ScorePartnersCommandTest.php           (2 tests — daily scoring command)
     ├── DashboardTest.php                       (2 tests)
     └── ExampleTest.php                         (1 test)

@@ -29,9 +29,11 @@ Partner365 is a monolithic Laravel 12 + Vue 3 application using Inertia.js for s
 │  │  ActivityLogService (audit trail)               ││
 │  │  AccessReviewService (access review lifecycle) ││
 │  │  ConditionalAccessPolicyService (CA sync)     ││
+│  │  SensitivityLabelService (label sync + mapping)││
 │  │  EntitlementService (access packages + Graph)  ││
 │  │  TrustScoreService (domain reputation scoring) ││
 │  │  DnsLookupService (DNS record queries)         ││
+│  │  FaviconService (partner favicon fetch+cache)  ││
 │  │                                                ││
 │  │  ComplianceReportController (aggregation only) ││
 │  └──────┬──────────────────────────────────────────┘│
@@ -51,6 +53,9 @@ Partner365 is a monolithic Laravel 12 + Vue 3 application using Inertia.js for s
 │  │             │  │  sync:entitlements    (every 15 min)  │ │
 │  │             │  │  sync:conditional-    (every 15 min)  │ │
 │  │             │  │    access-policies                    │ │
+│  │             │  │  sync:sensitivity-   (every 15 min)  │ │
+│  │             │  │    labels                             │ │
+│  │             │  │  sync:favicons        (daily)         │ │
 │  │             │  │  score:partners       (daily)         │ │
 │  └──────┬──────┘  └───────────────────────────────────────┘ │
 └─────────┼───────────────────────────────────────────┘
@@ -83,7 +88,7 @@ users
 
 partner_organizations
 ├── id, tenant_id (unique UUID)
-├── display_name, domain, category (enum)
+├── display_name, domain, favicon_path (cached favicon), category (enum)
 ├── owner_user_id (FK → users)
 ├── notes
 ├── b2b_inbound_enabled, b2b_outbound_enabled
@@ -163,6 +168,44 @@ conditional_access_policy_partner (pivot)
 ├── matched_user_type
 └── timestamps
 
+sensitivity_labels
+├── id, label_id (unique, Graph API label ID)
+├── name, description, tooltip
+├── color (hex), priority (integer)
+├── protection_type (encryption/watermark/header_footer/none)
+├── scope (JSON array: files_emails, sites_groups)
+├── is_active (boolean)
+├── parent_id (FK → sensitivity_labels, nullable, self-referencing)
+├── raw_json (JSON)
+├── synced_at
+└── timestamps
+
+sensitivity_label_policies
+├── id, policy_id (unique, Graph API policy ID)
+├── name
+├── target_type (all_users/specific_groups/all_users_and_guests)
+├── target_groups (JSON, nullable)
+├── labels (JSON array of label IDs)
+├── raw_json (JSON)
+├── synced_at
+└── timestamps
+
+sensitivity_label_partner (pivot)
+├── id
+├── sensitivity_label_id (FK → sensitivity_labels)
+├── partner_organization_id (FK → partner_organizations)
+├── matched_via (label_policy/site_assignment)
+├── policy_name, site_name (nullable context strings)
+└── timestamps
+
+site_sensitivity_labels
+├── id, site_id (unique, Graph site ID)
+├── site_name, site_url
+├── sensitivity_label_id (FK → sensitivity_labels, nullable)
+├── external_sharing_enabled (boolean)
+├── synced_at
+└── timestamps
+
 access_package_catalogs
 ├── id, graph_id (unique, nullable)
 ├── display_name, description
@@ -221,8 +264,11 @@ settings
 
 ### Relationships
 
-- `PartnerOrganization` → belongs to `User` (owner), has many `GuestUser`, belongs to many `ConditionalAccessPolicy`
+- `PartnerOrganization` → belongs to `User` (owner), has many `GuestUser`, belongs to many `ConditionalAccessPolicy`, belongs to many `SensitivityLabel`
 - `ConditionalAccessPolicy` → belongs to many `PartnerOrganization` (via pivot with `matched_user_type`)
+- `SensitivityLabel` → belongs to many `PartnerOrganization` (via pivot with `matched_via`, `policy_name`, `site_name`), belongs to `SensitivityLabel` (parent), has many `SensitivityLabel` (children)
+- `SensitivityLabelPolicy` → standalone (stores label policy definitions with target type and assigned labels)
+- `SiteSensitivityLabel` → belongs to `SensitivityLabel` (tracks per-site label assignments)
 - `GuestUser` → belongs to `PartnerOrganization` (nullable), belongs to `User` (invited_by)
 - `PartnerTemplate` → belongs to `User` (created_by)
 - `AccessReview` → belongs to `User` (reviewer, created_by), belongs to `PartnerOrganization` (scope), has many `AccessReviewInstance`

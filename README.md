@@ -27,9 +27,11 @@ Partner365 solves this with a single interface for IT admins, business owners, a
 - **Dashboard** — Action center with key stats (partners, guests, stale guests, pending invitations, overdue reviews), triage section (pending entitlement approvals with inline approve/deny, partners needing attention with trust scores), and recent activity feed
 - **Onboarding Wizard** — 3-step partner creation with tenant resolution, optional templates, and policy configuration
 - **Partner Templates** — Reusable policy configurations for consistent onboarding
+- **Partner Favicons** — Automatic daily fetch and cache of partner organization favicons from their domains, displayed on index and detail pages with initials fallback
 - **Background Sync** — Automatic 15-minute sync from Graph API keeps local data current
 - **Access Reviews** — Periodic certification of guest user and partner organization access with configurable remediation (flag, disable, remove)
 - **Conditional Access Visibility** — Read-only view of Conditional Access policies targeting guest/external users, per-partner policy mapping with gap detection for uncovered partners
+- **Sensitivity Label Visibility** — Read-only view of Microsoft Information Protection sensitivity labels, per-partner impact mapping via label policies and site assignments, gap detection for uncovered partners
 - **Entitlement Management** — Self-service access packages for external partner users with bundled group memberships and SharePoint site access, single-stage approval workflows, configurable expiration, and Graph API integration
 - **Activity Log** — Full audit trail of all actions with filtering by action type, user, date range, and keyword search
 - **SIEM Integration** — Syslog/CEF forwarding to LogRhythm (or any SIEM) with admin-configurable host, port, transport (UDP/TCP/TLS), and facility
@@ -123,13 +125,13 @@ Dockerfile                     # Multi-stage build (Node + FrankenPHP)
 docker-compose.yml             # Local container deployment
 
 app/
-├── Console/Commands/       # sync:partners, sync:guests, sync:access-reviews, sync:entitlements, sync:conditional-access-policies, score:partners
+├── Console/Commands/       # sync:partners, sync:guests, sync:favicons, sync:access-reviews, sync:entitlements, sync:conditional-access-policies, sync:sensitivity-labels, score:partners
 ├── Enums/                  # UserRole, PartnerCategory, InvitationStatus, ActivityAction, CloudEnvironment,
 │                           # ReviewType, RecurrenceType, RemediationAction, ReviewInstanceStatus, ReviewDecision,
 │                           # AccessPackageResourceType, AssignmentStatus
 ├── Exceptions/             # GraphApiException
 ├── Http/
-│   ├── Controllers/        # Partner, Guest, Template, Dashboard, ComplianceReport, ActivityLog, AccessReview, ConditionalAccessPolicy, Entitlement, Admin
+│   ├── Controllers/        # Partner, Guest, Template, Dashboard, ComplianceReport, ActivityLog, AccessReview, ConditionalAccessPolicy, SensitivityLabel, Entitlement, Admin
 │   ├── Middleware/          # CheckRole (RBAC)
 │   └── Requests/           # StorePartner, UpdatePartner, InviteGuest, StoreTemplate, UpdateCollaboration,
 │                           # StoreAccessReview, StoreAccessPackage, UpdateAccessPackage, UpdateSyslogSettings
@@ -137,14 +139,15 @@ app/
 ├── Listeners/              # LogAuthEvent (Login, Logout, Failed, Lockout, 2FA)
 ├── Models/                 # PartnerOrganization, GuestUser, PartnerTemplate, ActivityLog, Setting,
 │                           # AccessReview, AccessReviewInstance, AccessReviewDecision,
-│                           # ConditionalAccessPolicy,
+│                           # ConditionalAccessPolicy, SensitivityLabel, SensitivityLabelPolicy, SiteSensitivityLabel,
 │                           # AccessPackageCatalog, AccessPackage, AccessPackageResource, AccessPackageAssignment
 ├── Observers/              # ActivityLogObserver (auto-dispatches syslog forwarding)
 └── Services/               # MicrosoftGraphService, CrossTenantPolicyService,
                             # GuestUserService, TenantResolverService,
                             # CollaborationSettingsService, ActivityLogService,
                             # AccessReviewService, ConditionalAccessPolicyService,
-                            # EntitlementService, TrustScoreService, DnsLookupService
+                            # SensitivityLabelService, EntitlementService,
+                            # TrustScoreService, DnsLookupService, FaviconService
     └── Syslog/             # CefFormatter (CEF string builder), SyslogTransport (UDP/TCP/TLS)
 
 resources/js/
@@ -155,22 +158,23 @@ resources/js/
 │   ├── reports/            # Index (compliance dashboard with CSV export)
 │   ├── access-reviews/     # Index, Create, Show, Instance
 │   ├── conditional-access/ # Index, Show (read-only CA policy visibility)
+│   ├── sensitivity-labels/ # Index, Show (read-only sensitivity label visibility)
 │   ├── entitlements/       # Index, Create (multi-step wizard), Show
 │   ├── admin/              # Graph settings, Collaboration, Users, Sync, Syslog
 │   ├── activity/           # Index
 │   └── Dashboard.vue
-├── types/                  # TypeScript types for Partner, Guest (+ access types), AccessReview, ConditionalAccessPolicy, Entitlement, Compliance, Paginated
-└── components/             # shadcn-vue UI components + TrustScoreBadge
+├── types/                  # TypeScript types for Partner, Guest (+ access types), AccessReview, ConditionalAccessPolicy, SensitivityLabel, Entitlement, Compliance, Paginated
+└── components/             # shadcn-vue UI components + TrustScoreBadge + PartnerAvatar
 
 tests/Feature/
 ├── Auth/                   # Fortify auth tests + AuthAuditLoggingTest
-├── Commands/               # SyncPartners, SyncGuests, SyncAccessReviews, SyncConditionalAccessPolicies, SyncActivityLogging
-├── Controllers/            # ConditionalAccessPolicy, PartnerTemplate, ActivityLog controller tests
+├── Commands/               # SyncPartners, SyncGuests, SyncAccessReviews, SyncConditionalAccessPolicies, SyncSensitivityLabels, SyncActivityLogging
+├── Controllers/            # ConditionalAccessPolicy, SensitivityLabel, PartnerTemplate, ActivityLog controller tests
 ├── Jobs/                   # ForwardToSyslogTest
 ├── Middleware/              # CheckRole
 ├── Models/                 # PartnerOrganization
 ├── Observers/              # ActivityLogObserverTest
-├── Services/               # All Graph API service classes + Syslog/ (CefFormatter, SyslogTransport)
+├── Services/               # All Graph API service classes + SensitivityLabelService + Syslog/ (CefFormatter, SyslogTransport)
 ├── Settings/               # Profile, Password, 2FA, AuditLogging tests
 ├── Admin/                  # AdminGraph, AdminSync, AdminUser, AdminSyslog controller tests
 ├── PartnerOrganizationTest.php
@@ -183,6 +187,8 @@ tests/Feature/
 ├── EntitlementControllerTest.php
 ├── TrustScoreServiceTest.php
 ├── DnsLookupServiceTest.php
+├── FaviconServiceTest.php
+├── SyncFaviconsCommandTest.php
 └── ScorePartnersCommandTest.php
 ```
 

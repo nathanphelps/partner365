@@ -22,7 +22,10 @@ use App\Models\ConditionalAccessPolicy;
 use App\Models\GuestUser;
 use App\Models\PartnerOrganization;
 use App\Models\PartnerTemplate;
+use App\Models\SensitivityLabel;
+use App\Models\SensitivityLabelPolicy;
 use App\Models\Setting;
+use App\Models\SiteSensitivityLabel;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
@@ -39,10 +42,12 @@ class DevSeeder extends Seeder
         $guests = $this->seedGuests($partners, $users);
         $templates = $this->seedTemplates($users['admin']);
         $this->seedConditionalAccessPolicies($partners);
+        $this->seedSensitivityLabels($partners);
         $this->seedEntitlements($partners, $users);
         $this->seedAccessReviews($partners, $users);
         $this->seedActivityLogs($users, $partners, $guests, $templates);
         $this->seedSyncLogs();
+        $this->seedFavicons($partners);
         $this->seedSettings();
     }
 
@@ -53,6 +58,10 @@ class DevSeeder extends Seeder
             'access_review_decisions',
             'access_review_instances',
             'access_reviews',
+            'sensitivity_label_partner',
+            'site_sensitivity_labels',
+            'sensitivity_label_policies',
+            'sensitivity_labels',
             'conditional_access_policy_partner',
             'conditional_access_policies',
             'access_package_assignments',
@@ -383,6 +392,144 @@ class DevSeeder extends Seeder
                         'matched_user_type' => trim($userType),
                     ]);
                 }
+            }
+        }
+    }
+
+    private function seedSensitivityLabels(\Illuminate\Support\Collection $partners): void
+    {
+        $labels = [
+            [
+                'label_id' => fake()->uuid(),
+                'name' => 'Public',
+                'description' => 'Data intended for public consumption.',
+                'tooltip' => 'Apply to content that can be shared externally.',
+                'color' => '#00B050',
+                'priority' => 0,
+                'protection_type' => 'none',
+                'scope' => ['files_emails', 'sites_groups'],
+                'is_active' => true,
+            ],
+            [
+                'label_id' => fake()->uuid(),
+                'name' => 'General',
+                'description' => 'Business data not intended for public consumption.',
+                'tooltip' => 'Default label for internal business documents.',
+                'color' => '#0078D4',
+                'priority' => 1,
+                'protection_type' => 'none',
+                'scope' => ['files_emails', 'sites_groups'],
+                'is_active' => true,
+            ],
+            [
+                'label_id' => fake()->uuid(),
+                'name' => 'Confidential',
+                'description' => 'Sensitive business data that could cause damage if shared.',
+                'tooltip' => 'Apply to sensitive internal documents.',
+                'color' => '#FFB900',
+                'priority' => 2,
+                'protection_type' => 'encryption',
+                'scope' => ['files_emails', 'sites_groups'],
+                'is_active' => true,
+            ],
+            [
+                'label_id' => fake()->uuid(),
+                'name' => 'Highly Confidential',
+                'description' => 'Very sensitive data with strict access controls.',
+                'tooltip' => 'Apply to the most sensitive business data.',
+                'color' => '#D83B01',
+                'priority' => 3,
+                'protection_type' => 'encryption',
+                'scope' => ['files_emails', 'sites_groups'],
+                'is_active' => true,
+            ],
+        ];
+
+        $createdLabels = collect();
+        foreach ($labels as $labelData) {
+            $label = SensitivityLabel::create(array_merge($labelData, [
+                'synced_at' => fake()->dateTimeBetween('-1 day', 'now'),
+            ]));
+            $createdLabels->push($label);
+        }
+
+        // Add sub-labels to Confidential
+        $confidential = $createdLabels->firstWhere('name', 'Confidential');
+        $subLabels = [
+            ['name' => 'Confidential - Internal Only', 'protection_type' => 'encryption', 'priority' => 20],
+            ['name' => 'Confidential - Recipients Only', 'protection_type' => 'encryption', 'priority' => 21],
+            ['name' => 'Confidential - Watermarked', 'protection_type' => 'watermark', 'priority' => 22],
+        ];
+
+        foreach ($subLabels as $sub) {
+            SensitivityLabel::create([
+                'label_id' => fake()->uuid(),
+                'name' => $sub['name'],
+                'description' => 'Sub-label of Confidential.',
+                'color' => '#FFB900',
+                'priority' => $sub['priority'],
+                'protection_type' => $sub['protection_type'],
+                'scope' => ['files_emails'],
+                'is_active' => true,
+                'parent_id' => $confidential->id,
+                'synced_at' => fake()->dateTimeBetween('-1 day', 'now'),
+            ]);
+        }
+
+        // Create label policies
+        $allUsersPolicy = SensitivityLabelPolicy::create([
+            'policy_id' => fake()->uuid(),
+            'name' => 'Default Label Policy',
+            'target_type' => 'all_users_and_guests',
+            'target_groups' => null,
+            'labels' => $createdLabels->pluck('label_id')->toArray(),
+            'synced_at' => fake()->dateTimeBetween('-1 day', 'now'),
+        ]);
+
+        SensitivityLabelPolicy::create([
+            'policy_id' => fake()->uuid(),
+            'name' => 'Executive Policy',
+            'target_type' => 'specific_groups',
+            'target_groups' => [fake()->uuid()],
+            'labels' => $createdLabels->where('priority', '>=', 2)->pluck('label_id')->toArray(),
+            'synced_at' => fake()->dateTimeBetween('-1 day', 'now'),
+        ]);
+
+        // Create site sensitivity labels
+        $siteNames = ['Project Portal', 'Partner Hub', 'Engineering Wiki', 'HR Documents'];
+        foreach ($siteNames as $i => $siteName) {
+            SiteSensitivityLabel::create([
+                'site_id' => fake()->uuid(),
+                'site_name' => $siteName,
+                'site_url' => 'https://contoso.sharepoint.com/sites/'.str_replace(' ', '-', strtolower($siteName)),
+                'sensitivity_label_id' => $createdLabels->random()->id,
+                'external_sharing_enabled' => $i < 2, // first 2 sites have external sharing
+                'synced_at' => fake()->dateTimeBetween('-1 day', 'now'),
+            ]);
+        }
+
+        // Build partner mappings — all_users_and_guests policy maps to all partners
+        foreach ($createdLabels as $label) {
+            // Map ~60% of partners to each label via policy
+            $mappedPartners = $partners->shuffle()->take((int) ($partners->count() * 0.6));
+            foreach ($mappedPartners as $partner) {
+                $label->partners()->attach($partner->id, [
+                    'matched_via' => 'label_policy',
+                    'policy_name' => $allUsersPolicy->name,
+                    'site_name' => null,
+                ]);
+            }
+        }
+
+        // Map a few partners via site assignment
+        $siteLabel = $createdLabels->first();
+        foreach ($partners->shuffle()->take(5) as $partner) {
+            if (! $siteLabel->partners()->where('partner_organization_id', $partner->id)->exists()) {
+                $siteLabel->partners()->attach($partner->id, [
+                    'matched_via' => 'site_assignment',
+                    'policy_name' => null,
+                    'site_name' => 'Project Portal',
+                ]);
             }
         }
     }
@@ -746,6 +893,16 @@ class DevSeeder extends Seeder
             'created_at' => fake()->dateTimeBetween('-7 days', $now),
         ];
 
+        // Sensitivity label sync
+        $entries[] = [
+            'user_id' => null,
+            'action' => ActivityAction::SensitivityLabelsSynced->value,
+            'subject_type' => null,
+            'subject_id' => null,
+            'details' => json_encode(['labels_synced' => 4, 'policies_synced' => 2, 'sites_synced' => 4]),
+            'created_at' => fake()->dateTimeBetween('-7 days', $now),
+        ];
+
         // User management actions
         foreach ($users['operators']->take(3) as $operator) {
             $entries[] = [
@@ -828,6 +985,21 @@ class DevSeeder extends Seeder
         }
 
         return $breakdown;
+    }
+
+    private function seedFavicons(\Illuminate\Support\Collection $partners): void
+    {
+        // Simulate cached favicons for a subset of partners.
+        // Creates placeholder files so the UI shows the avatar fallback (initials).
+        // Run `php artisan sync:favicons` against a real network to fetch actual icons.
+        $disk = \Illuminate\Support\Facades\Storage::disk('public');
+        $disk->makeDirectory('favicons');
+
+        foreach ($partners->whereNotNull('domain')->take(10) as $partner) {
+            $filename = "favicons/{$partner->id}.ico";
+            $disk->put($filename, '');
+            $partner->update(['favicon_path' => $filename]);
+        }
     }
 
     private function seedSettings(): void

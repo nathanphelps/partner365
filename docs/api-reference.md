@@ -131,6 +131,13 @@ Live-fetched from Microsoft Graph API. Responses are cached server-side for 5 mi
 | GET | `/conditional-access` | `ConditionalAccessPolicyController@index` | `conditional-access.index` | Any |
 | GET | `/conditional-access/{conditionalAccessPolicy}` | `ConditionalAccessPolicyController@show` | `conditional-access.show` | Any |
 
+### Sensitivity Labels (Read-only)
+
+| Method | URI | Controller@Method | Name | Role |
+|--------|-----|------------------|------|------|
+| GET | `/sensitivity-labels` | `SensitivityLabelController@index` | `sensitivity-labels.index` | Any |
+| GET | `/sensitivity-labels/{sensitivityLabel}` | `SensitivityLabelController@show` | `sensitivity-labels.show` | Any |
+
 ### Compliance Reports
 
 | Method | URI | Controller@Method | Name | Role |
@@ -288,9 +295,26 @@ Live-fetched from Microsoft Graph API. Responses are cached server-side for 5 mi
 }
 ```
 
+### Sensitivity Labels Index
+
+```typescript
+{
+    labels: Paginated<SensitivityLabel>;
+    uncoveredPartnerCount: number;
+}
+```
+
+### Sensitivity Labels Show
+
+```typescript
+{
+    label: SensitivityLabel & { partners: PartnerOrganization[]; children: SensitivityLabel[] };
+}
+```
+
 ### Partners Show
 
-The `PartnerOrganization` type includes trust score fields and conditional access policies: `trust_score` (0-100 or null), `trust_score_breakdown` (JSON with per-signal pass/fail and points), and `trust_score_calculated_at`.
+The `PartnerOrganization` type includes trust score fields, conditional access policies, and sensitivity labels: `trust_score` (0-100 or null), `trust_score_breakdown` (JSON with per-signal pass/fail and points), and `trust_score_calculated_at`.
 
 ```typescript
 {
@@ -316,6 +340,7 @@ The `PartnerOrganization` type includes trust score fields and conditional acces
         no_device_trust_count: number;
         overly_permissive_count: number;  // both B2B inbound + outbound enabled
         no_ca_policies_count: number;
+        no_sensitivity_labels_count: number;
         partners: NonCompliantPartner[];
     };
     guestHealth: {
