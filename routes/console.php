@@ -23,3 +23,4 @@ Schedule::command('sync:partners')->cron("*/{$partnersInterval} * * * *");
 Schedule::command('sync:guests')->cron("*/{$guestsInterval} * * * *");
 Schedule::command('score:partners')->daily();
 Schedule::command('sync:entitlements')->cron("*/{$entitlementsInterval} * * * *");
+Schedule::command('sync:conditional-access-policies')->cron("*/{$partnersInterval} * * * *");

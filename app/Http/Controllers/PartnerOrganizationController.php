@@ -109,11 +109,16 @@ class PartnerOrganizationController extends Controller
             ->paginate(25, ['*'], 'guests_page')
             ->withQueryString();
 
+        $conditionalAccessPolicies = $partner->conditionalAccessPolicies()
+            ->withPivot('matched_user_type')
+            ->get();
+
         return Inertia::render('partners/Show', [
             'partner' => $partner,
             'guests' => $guests,
             'activity' => $this->activityLog->forSubject($partner),
             'canManage' => $request->user()->role->canManage(),
+            'conditionalAccessPolicies' => $conditionalAccessPolicies,
         ]);
     }
 

@@ -6,6 +6,7 @@ use App\Enums\PartnerCategory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class PartnerOrganization extends Model
@@ -48,5 +49,12 @@ class PartnerOrganization extends Model
     public function guestUsers(): HasMany
     {
         return $this->hasMany(GuestUser::class, 'partner_organization_id');
+    }
+
+    public function conditionalAccessPolicies(): BelongsToMany
+    {
+        return $this->belongsToMany(ConditionalAccessPolicy::class, 'conditional_access_policy_partner')
+            ->withPivot('matched_user_type')
+            ->withTimestamps();
     }
 }

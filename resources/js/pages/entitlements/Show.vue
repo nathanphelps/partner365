@@ -3,12 +3,7 @@ import { Head, router, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-    Card,
-    CardContent,
-    CardHeader,
-    CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
@@ -110,9 +105,7 @@ function deletePackage() {
                         {{ package.description }}
                     </p>
                 </div>
-                <Badge
-                    :variant="package.is_active ? 'default' : 'secondary'"
-                >
+                <Badge :variant="package.is_active ? 'default' : 'secondary'">
                     {{ package.is_active ? 'Active' : 'Inactive' }}
                 </Badge>
             </div>
@@ -123,28 +116,20 @@ function deletePackage() {
                 <CardHeader>
                     <CardTitle>Configuration</CardTitle>
                 </CardHeader>
-                <CardContent
-                    class="grid grid-cols-2 gap-x-4 gap-y-2 text-sm"
-                >
+                <CardContent class="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
                     <span class="text-muted-foreground">Partner</span>
                     <span>{{
                         package.partner_organization?.display_name ?? '\u2014'
                     }}</span>
 
                     <span class="text-muted-foreground">Catalog</span>
-                    <span>{{
-                        package.catalog?.display_name ?? '\u2014'
-                    }}</span>
+                    <span>{{ package.catalog?.display_name ?? '\u2014' }}</span>
 
                     <span class="text-muted-foreground">Duration</span>
                     <span>{{ package.duration_days }} days</span>
 
-                    <span class="text-muted-foreground"
-                        >Approval Required</span
-                    >
-                    <span>{{
-                        package.approval_required ? 'Yes' : 'No'
-                    }}</span>
+                    <span class="text-muted-foreground">Approval Required</span>
+                    <span>{{ package.approval_required ? 'Yes' : 'No' }}</span>
 
                     <span class="text-muted-foreground">Approver</span>
                     <span>{{ package.approver?.name ?? '\u2014' }}</span>
@@ -266,9 +251,7 @@ function deletePackage() {
                                     a.target_user_email
                                 }}</TableCell>
                                 <TableCell>
-                                    <Badge
-                                        :variant="statusVariant(a.status)"
-                                    >
+                                    <Badge :variant="statusVariant(a.status)">
                                         {{ statusLabel(a.status) }}
                                     </Badge>
                                 </TableCell>
@@ -285,8 +268,7 @@ function deletePackage() {
                                     <div class="flex gap-1">
                                         <Button
                                             v-if="
-                                                a.status ===
-                                                'pending_approval'
+                                                a.status === 'pending_approval'
                                             "
                                             variant="outline"
                                             size="sm"
@@ -304,8 +286,7 @@ function deletePackage() {
                                         </Button>
                                         <Button
                                             v-if="
-                                                a.status ===
-                                                'pending_approval'
+                                                a.status === 'pending_approval'
                                             "
                                             variant="outline"
                                             size="sm"
@@ -353,15 +334,13 @@ function deletePackage() {
 
             <Card v-if="isAdmin" class="border-destructive/50">
                 <CardHeader>
-                    <CardTitle class="text-destructive"
-                        >Danger Zone</CardTitle
-                    >
+                    <CardTitle class="text-destructive">Danger Zone</CardTitle>
                 </CardHeader>
                 <CardContent>
                     <div v-if="!showDeleteConfirm">
                         <p class="mb-3 text-sm text-muted-foreground">
-                            Delete this access package, its resources, and
-                            all assignments.
+                            Delete this access package, its resources, and all
+                            assignments.
                         </p>
                         <Button
                             variant="destructive"
@@ -381,9 +360,7 @@ function deletePackage() {
                                 @click="deletePackage"
                             >
                                 {{
-                                    deleting
-                                        ? 'Deleting\u2026'
-                                        : 'Yes, Delete'
+                                    deleting ? 'Deleting\u2026' : 'Yes, Delete'
                                 }}
                             </Button>
                             <Button

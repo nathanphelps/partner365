@@ -31,4 +31,5 @@ enum ActivityAction: string
     case AssignmentApproved = 'assignment_approved';
     case AssignmentDenied = 'assignment_denied';
     case AssignmentRevoked = 'assignment_revoked';
+    case ConditionalAccessPoliciesSynced = 'conditional_access_policies_synced';
 }

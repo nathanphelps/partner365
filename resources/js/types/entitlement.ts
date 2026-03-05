@@ -14,7 +14,11 @@ export type AccessPackage = {
     catalog_id: number;
     catalog?: AccessPackageCatalog;
     partner_organization_id: number;
-    partner_organization?: { id: number; display_name: string; tenant_id: string };
+    partner_organization?: {
+        id: number;
+        display_name: string;
+        tenant_id: string;
+    };
     display_name: string;
     description: string | null;
     duration_days: number;
@@ -47,7 +51,14 @@ export type AccessPackageAssignment = {
     access_package_id: number;
     target_user_email: string;
     target_user_id: string | null;
-    status: 'pending_approval' | 'approved' | 'denied' | 'delivering' | 'delivered' | 'expired' | 'revoked';
+    status:
+        | 'pending_approval'
+        | 'approved'
+        | 'denied'
+        | 'delivering'
+        | 'delivered'
+        | 'expired'
+        | 'revoked';
     approved_by_user_id: number | null;
     approved_by?: { id: number; name: string };
     expires_at: string | null;

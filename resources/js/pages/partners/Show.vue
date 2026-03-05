@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { Head, router, usePage } from '@inertiajs/vue3';
-import { CircleHelp } from 'lucide-vue-next';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import { AlertTriangle, CircleHelp, Shield } from 'lucide-vue-next';
 import { ref, reactive, computed } from 'vue';
 import GuestUserTable from '@/components/GuestUserTable.vue';
 import TrustScoreBadge from '@/components/TrustScoreBadge.vue';
@@ -18,6 +18,14 @@ import {
 } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
 import {
     Tooltip,
@@ -30,6 +38,7 @@ import { policyDefinitions } from '@/lib/policy-config';
 import { dashboard } from '@/routes';
 import partners from '@/routes/partners';
 import type { BreadcrumbItem } from '@/types';
+import type { ConditionalAccessPolicy } from '@/types/conditional-access';
 import type {
     PartnerOrganization,
     GuestUser,
@@ -40,6 +49,9 @@ const props = defineProps<{
     partner: PartnerOrganization;
     guests: Paginated<GuestUser>;
     canManage: boolean;
+    conditionalAccessPolicies: (ConditionalAccessPolicy & {
+        pivot: { matched_user_type: string };
+    })[];
 }>();
 
 const page = usePage();
@@ -636,6 +648,85 @@ const directConnectStatus = computed(() => {
                     </CardContent>
                 </Card>
             </div>
+
+            <!-- Conditional Access Policies -->
+            <Card>
+                <CardHeader>
+                    <CardTitle class="flex items-center gap-2">
+                        <Shield class="size-5" />
+                        Conditional Access ({{
+                            conditionalAccessPolicies.length
+                        }})
+                    </CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <div
+                        v-if="conditionalAccessPolicies.length === 0"
+                        class="flex items-center gap-3 rounded-lg border border-yellow-300 bg-yellow-50 p-4 dark:border-yellow-700 dark:bg-yellow-950"
+                    >
+                        <AlertTriangle
+                            class="size-5 shrink-0 text-yellow-600 dark:text-yellow-400"
+                        />
+                        <p class="text-sm text-yellow-800 dark:text-yellow-200">
+                            No Conditional Access policies target this partner's
+                            guests.
+                            <Link href="/conditional-access" class="underline"
+                                >View all policies</Link
+                            >
+                        </p>
+                    </div>
+                    <Table v-else>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Policy</TableHead>
+                                <TableHead>State</TableHead>
+                                <TableHead>Matched Type</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            <TableRow
+                                v-for="policy in conditionalAccessPolicies"
+                                :key="policy.id"
+                            >
+                                <TableCell>
+                                    <Link
+                                        :href="`/conditional-access/${policy.id}`"
+                                        class="font-medium hover:underline"
+                                    >
+                                        {{ policy.display_name }}
+                                    </Link>
+                                </TableCell>
+                                <TableCell>
+                                    <Badge
+                                        :variant="
+                                            policy.state === 'enabled'
+                                                ? 'default'
+                                                : policy.state ===
+                                                    'enabledForReportingButNotEnforced'
+                                                  ? 'secondary'
+                                                  : 'outline'
+                                        "
+                                    >
+                                        {{
+                                            policy.state === 'enabled'
+                                                ? 'Enabled'
+                                                : policy.state ===
+                                                    'enabledForReportingButNotEnforced'
+                                                  ? 'Report-only'
+                                                  : 'Disabled'
+                                        }}
+                                    </Badge>
+                                </TableCell>
+                                <TableCell>
+                                    <Badge variant="secondary">
+                                        {{ policy.pivot.matched_user_type }}
+                                    </Badge>
+                                </TableCell>
+                            </TableRow>
+                        </TableBody>
+                    </Table>
+                </CardContent>
+            </Card>
 
             <!-- Guest Users -->
             <Card>

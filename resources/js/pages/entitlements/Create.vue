@@ -181,8 +181,7 @@ function submit() {
                     <Button
                         type="submit"
                         :disabled="
-                            !form.partner_organization_id ||
-                            !form.display_name
+                            !form.partner_organization_id || !form.display_name
                         "
                     >
                         Next: Add Resources
@@ -319,9 +318,7 @@ function submit() {
                 </Card>
 
                 <div class="flex justify-between">
-                    <Button variant="outline" @click="goToStep(1)"
-                        >Back</Button
-                    >
+                    <Button variant="outline" @click="goToStep(1)">Back</Button>
                     <Button
                         :disabled="form.resources.length === 0"
                         @click="goToStep(3)"
@@ -383,10 +380,7 @@ function submit() {
                 </Card>
 
                 <div class="flex justify-between">
-                    <Button
-                        type="button"
-                        variant="outline"
-                        @click="goToStep(2)"
+                    <Button type="button" variant="outline" @click="goToStep(2)"
                         >Back</Button
                     >
                     <Button type="submit">Next: Review</Button>
@@ -423,9 +417,7 @@ function submit() {
                         <span class="text-muted-foreground"
                             >Approval Required</span
                         >
-                        <span>{{
-                            form.approval_required ? 'Yes' : 'No'
-                        }}</span>
+                        <span>{{ form.approval_required ? 'Yes' : 'No' }}</span>
 
                         <span class="text-muted-foreground">Resources</span>
                         <div class="flex flex-col gap-1">
@@ -435,9 +427,7 @@ function submit() {
                                 class="flex items-center gap-1"
                             >
                                 <Badge variant="outline" class="text-xs">{{
-                                    r.resource_type === 'group'
-                                        ? 'Group'
-                                        : 'SP'
+                                    r.resource_type === 'group' ? 'Group' : 'SP'
                                 }}</Badge>
                                 <span>{{ r.resource_display_name }}</span>
                             </div>
@@ -446,15 +436,9 @@ function submit() {
                 </Card>
 
                 <div class="flex justify-between">
-                    <Button variant="outline" @click="goToStep(3)"
-                        >Back</Button
-                    >
+                    <Button variant="outline" @click="goToStep(3)">Back</Button>
                     <Button @click="submit" :disabled="form.processing">
-                        {{
-                            form.processing
-                                ? 'Creating...'
-                                : 'Create Package'
-                        }}
+                        {{ form.processing ? 'Creating...' : 'Create Package' }}
                     </Button>
                 </div>
             </div>

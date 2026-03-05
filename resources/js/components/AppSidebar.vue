@@ -8,6 +8,7 @@ import {
     LayoutGrid,
     Package,
     Settings,
+    Shield,
     Users,
 } from 'lucide-vue-next';
 import { computed } from 'vue';
@@ -39,6 +40,11 @@ const mainNavItems = computed<NavItem[]>(() => {
             title: 'Access Reviews',
             href: '/access-reviews',
             icon: ClipboardCheck,
+        },
+        {
+            title: 'Conditional Access',
+            href: '/conditional-access',
+            icon: Shield,
         },
         {
             title: 'Entitlements',
