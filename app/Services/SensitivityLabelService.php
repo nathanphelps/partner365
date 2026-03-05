@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Exceptions\GraphApiException;
 use App\Models\PartnerOrganization;
 use App\Models\SensitivityLabel;
 use App\Models\SensitivityLabelPolicy;
@@ -219,7 +220,9 @@ class SensitivityLabelService
             $response = $this->graph->get("/sites/{$siteId}/sensitivityLabel");
 
             return $response['sensitivityLabelId'] ?? null;
-        } catch (\Throwable) {
+        } catch (GraphApiException $e) {
+            Log::warning("Failed to fetch sensitivity label for site {$siteId}: {$e->getMessage()}");
+
             return null;
         }
     }

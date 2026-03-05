@@ -65,11 +65,8 @@ class AdminSyslogController extends Controller
         }
 
         $transport = new SyslogTransport($host, $port, $protocol, $facility);
-        $success = $transport->test();
+        $result = $transport->test();
 
-        return response()->json([
-            'success' => $success,
-            'message' => $success ? 'Test event sent successfully.' : 'Failed to send test event.',
-        ]);
+        return response()->json($result);
     }
 }

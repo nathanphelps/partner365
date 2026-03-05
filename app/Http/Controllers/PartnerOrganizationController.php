@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\ActivityAction;
+use App\Exceptions\GraphApiException;
 use App\Http\Requests\StorePartnerRequest;
 use App\Http\Requests\UpdatePartnerRequest;
 use App\Models\PartnerOrganization;
@@ -67,15 +68,31 @@ class PartnerOrganizationController extends Controller
     {
         $validated = $request->validated();
 
-        $tenantInfo = $this->tenantResolver->resolve($validated['tenant_id']);
+        try {
+            $tenantInfo = $this->tenantResolver->resolve($validated['tenant_id']);
+        } catch (GraphApiException $e) {
+            return redirect()->back()->withInput()
+                ->with('error', 'Could not resolve tenant from Microsoft Graph API: '.$e->getMessage());
+        }
 
         if (! empty($validated['template_id'])) {
             $template = PartnerTemplate::findOrFail($validated['template_id']);
-            $validated = array_merge($template->policy_config, $validated);
+            $policyKeys = [
+                'b2b_inbound_enabled', 'b2b_outbound_enabled', 'mfa_trust_enabled',
+                'device_trust_enabled', 'direct_connect_inbound_enabled', 'direct_connect_outbound_enabled',
+                'tenant_restrictions_enabled',
+            ];
+            $validated = array_merge(\Illuminate\Support\Arr::only($template->policy_config, $policyKeys), $validated);
         }
 
         $graphConfig = $this->buildGraphConfig($validated);
-        $this->policyService->createPartner($validated['tenant_id'], $graphConfig);
+
+        try {
+            $this->policyService->createPartner($validated['tenant_id'], $graphConfig);
+        } catch (GraphApiException $e) {
+            return redirect()->back()->withInput()
+                ->with('error', 'Failed to create partner policy in Graph API: '.$e->getMessage());
+        }
 
         $partner = PartnerOrganization::create([
             'tenant_id' => $validated['tenant_id'],
@@ -157,7 +174,12 @@ class PartnerOrganizationController extends Controller
 
         $graphConfig = $this->buildGraphConfig($validated);
         if (! empty($graphConfig)) {
-            $this->policyService->updatePartner($partner->tenant_id, $graphConfig);
+            try {
+                $this->policyService->updatePartner($partner->tenant_id, $graphConfig);
+            } catch (GraphApiException $e) {
+                return redirect()->back()->withInput()
+                    ->with('error', 'Failed to update partner policy in Graph API: '.$e->getMessage());
+            }
         }
 
         $partner->update($validated);
@@ -173,7 +195,12 @@ class PartnerOrganizationController extends Controller
             abort(403);
         }
 
-        $this->policyService->deletePartner($partner->tenant_id);
+        try {
+            $this->policyService->deletePartner($partner->tenant_id);
+        } catch (GraphApiException $e) {
+            return redirect()->back()
+                ->with('error', 'Failed to remove partner from Graph API: '.$e->getMessage());
+        }
 
         $this->activityLog->log(request()->user(), ActivityAction::PartnerDeleted, $partner, [
             'tenant_id' => $partner->tenant_id,

@@ -53,14 +53,17 @@ class SyslogTransport
         return "<{$priority}>{$timestamp} {$hostname} {$message}";
     }
 
-    public function test(): bool
+    /**
+     * @return array{success: bool, message: string}
+     */
+    public function test(): array
     {
         try {
             $this->send('CEF:0|Partner365|Partner365|1.0|test|Test Connection|3|msg=Test event', 6);
 
-            return true;
-        } catch (\Throwable) {
-            return false;
+            return ['success' => true, 'message' => 'Test event sent successfully.'];
+        } catch (\Throwable $e) {
+            return ['success' => false, 'message' => $e->getMessage()];
         }
     }
 

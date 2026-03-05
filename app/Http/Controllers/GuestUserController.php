@@ -267,6 +267,10 @@ class GuestUserController extends Controller
 
     private function handleBulkDelete(User $user, GuestUser $guest): void
     {
+        if (! $user->role->isAdmin()) {
+            throw new \RuntimeException('Only admins can delete guest users.');
+        }
+
         $this->guestService->deleteUser($guest->entra_user_id);
         $this->activityLog->log($user, ActivityAction::GuestRemoved, $guest, ['email' => $guest->email]);
         $guest->delete();

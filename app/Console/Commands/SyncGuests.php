@@ -49,6 +49,7 @@ class SyncGuests extends Command
                         'user_principal_name' => $guest['userPrincipalName'] ?? null,
                         'partner_organization_id' => $partnerId,
                         'invitation_status' => InvitationStatus::Accepted,
+                        'account_enabled' => $guest['accountEnabled'] ?? true,
                         'last_sign_in_at' => isset($guest['signInActivity']['lastSignInDateTime'])
                             ? $guest['signInActivity']['lastSignInDateTime']
                             : null,

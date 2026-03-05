@@ -53,9 +53,13 @@ class EntitlementService
             'isHidden' => false,
         ]);
 
+        if (empty($graphResponse['id'])) {
+            throw new \RuntimeException('Graph API did not return an id for the access package');
+        }
+
         $package = AccessPackage::create([
             ...$data,
-            'graph_id' => $graphResponse['id'] ?? null,
+            'graph_id' => $graphResponse['id'],
             'catalog_id' => $catalog->id,
             'partner_organization_id' => $partner->id,
         ]);

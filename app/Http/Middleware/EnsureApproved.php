@@ -12,7 +12,7 @@ class EnsureApproved
     public function handle(Request $request, Closure $next): Response
     {
         if ($request->user() && ! $request->user()->isApproved()) {
-            return Inertia::render('PendingApproval')->toResponse($request);
+            return Inertia::render('PendingApproval')->toResponse($request)->setStatusCode(403);
         }
 
         return $next($request);

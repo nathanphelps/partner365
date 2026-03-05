@@ -12,6 +12,7 @@ use App\Models\AccessReviewInstance;
 use App\Models\GuestUser;
 use App\Models\PartnerOrganization;
 use App\Models\User;
+use Illuminate\Support\Facades\Log;
 
 class AccessReviewService
 {
@@ -30,9 +31,13 @@ class AccessReviewService
             ],
         ]);
 
+        if (empty($graphResponse['id'])) {
+            throw new \RuntimeException('Graph API did not return an id for the access review definition');
+        }
+
         return AccessReview::create([
             ...$config,
-            'graph_definition_id' => $graphResponse['id'] ?? null,
+            'graph_definition_id' => $graphResponse['id'],
         ]);
     }
 
@@ -55,7 +60,10 @@ class AccessReviewService
         ]);
     }
 
-    public function applyRemediations(AccessReviewInstance $instance): void
+    /**
+     * @return array{succeeded: int, failed: array<int, array{id: int, error: string}>}
+     */
+    public function applyRemediations(AccessReviewInstance $instance): array
     {
         $review = $instance->accessReview;
         $denyDecisions = $instance->decisions()
@@ -63,23 +71,34 @@ class AccessReviewService
             ->where('remediation_applied', false)
             ->get();
 
-        foreach ($denyDecisions as $decision) {
-            if ($review->review_type === ReviewType::GuestUsers && $review->remediation_action !== RemediationAction::FlagOnly) {
-                $guest = GuestUser::find($decision->subject_id);
-                if ($guest) {
-                    match ($review->remediation_action) {
-                        RemediationAction::Disable => $this->disableGuest($guest),
-                        RemediationAction::Remove => $this->removeGuest($guest),
-                        default => null,
-                    };
-                }
-            }
+        $succeeded = 0;
+        $failed = [];
 
-            $decision->update([
-                'remediation_applied' => true,
-                'remediation_applied_at' => now(),
-            ]);
+        foreach ($denyDecisions as $decision) {
+            try {
+                if ($review->review_type === ReviewType::GuestUsers && $review->remediation_action !== RemediationAction::FlagOnly) {
+                    $guest = GuestUser::find($decision->subject_id);
+                    if ($guest) {
+                        match ($review->remediation_action) {
+                            RemediationAction::Disable => $this->disableGuest($guest),
+                            RemediationAction::Remove => $this->removeGuest($guest),
+                            default => null,
+                        };
+                    }
+                }
+
+                $decision->update([
+                    'remediation_applied' => true,
+                    'remediation_applied_at' => now(),
+                ]);
+                $succeeded++;
+            } catch (\Throwable $e) {
+                Log::error("Remediation failed for decision {$decision->id}: {$e->getMessage()}");
+                $failed[] = ['id' => $decision->id, 'error' => $e->getMessage()];
+            }
         }
+
+        return ['succeeded' => $succeeded, 'failed' => $failed];
     }
 
     public function createInstanceWithDecisions(AccessReview $review): AccessReviewInstance

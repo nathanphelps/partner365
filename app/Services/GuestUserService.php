@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Exceptions\GraphApiException;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
 class GuestUserService
 {
@@ -163,7 +164,12 @@ class GuestUserService
                         'displayName' => $site['displayName'] ?? '',
                         'webUrl' => $site['webUrl'] ?? '',
                     ];
-                } catch (GraphApiException) {
+                } catch (GraphApiException $e) {
+                    Log::warning("Failed to fetch site for group {$group['id']}: {$e->getMessage()}", [
+                        'status' => $e->getCode(),
+                        'graphErrorCode' => $e->graphErrorCode,
+                    ]);
+
                     continue;
                 }
             }

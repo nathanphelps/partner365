@@ -6,6 +6,7 @@ use App\Enums\ActivityAction;
 use App\Enums\RemediationAction;
 use App\Enums\ReviewDecision;
 use App\Enums\ReviewType;
+use App\Exceptions\GraphApiException;
 use App\Http\Requests\StoreAccessReviewRequest;
 use App\Models\AccessReview;
 use App\Models\AccessReviewDecision;
@@ -64,7 +65,12 @@ class AccessReviewController extends Controller
 
         $validated['created_by_user_id'] = $request->user()->id;
 
-        $review = $this->reviewService->createDefinition($validated);
+        try {
+            $review = $this->reviewService->createDefinition($validated);
+        } catch (GraphApiException $e) {
+            return redirect()->back()->withInput()
+                ->with('error', 'Failed to create access review in Graph API: '.$e->getMessage());
+        }
 
         $this->activityLog->log($request->user(), ActivityAction::AccessReviewCreated, $review, [
             'title' => $review->title,
@@ -144,11 +150,20 @@ class AccessReviewController extends Controller
             abort(403);
         }
 
-        $this->reviewService->applyRemediations($instance);
+        $result = $this->reviewService->applyRemediations($instance);
 
         $this->activityLog->log($request->user(), ActivityAction::AccessReviewRemediationApplied, $instance, [
             'review_title' => $instance->accessReview->title,
+            'succeeded' => $result['succeeded'],
+            'failed_count' => count($result['failed']),
         ]);
+
+        if (! empty($result['failed'])) {
+            $failedCount = count($result['failed']);
+
+            return redirect()->back()
+                ->with('warning', "Remediations partially applied: {$result['succeeded']} succeeded, {$failedCount} failed.");
+        }
 
         return redirect()->back()->with('success', 'Remediations applied.');
     }

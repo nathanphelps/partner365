@@ -8,6 +8,7 @@ use App\Services\Syslog\CefFormatter;
 use App\Services\Syslog\SyslogTransport;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Support\Facades\Log;
 
 class ForwardToSyslog implements ShouldQueue
 {
@@ -33,6 +34,12 @@ class ForwardToSyslog implements ShouldQueue
         $facility = (int) Setting::get('syslog', 'facility', '16');
 
         if (! $host || ! SyslogTransport::validateConfig($host, $port, $protocol)) {
+            Log::warning('Syslog forwarding is enabled but configuration is invalid', [
+                'host' => $host,
+                'port' => $port,
+                'protocol' => $protocol,
+            ]);
+
             return;
         }
 

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\ActivityAction;
+use App\Exceptions\GraphApiException;
 use App\Http\Requests\StoreAccessPackageRequest;
 use App\Http\Requests\UpdateAccessPackageRequest;
 use App\Models\AccessPackage;
@@ -55,19 +56,30 @@ class EntitlementController extends Controller
         $validated = $request->validated();
 
         $partner = PartnerOrganization::findOrFail($validated['partner_organization_id']);
-        $catalog = $this->entitlementService->getOrCreateDefaultCatalog();
 
-        $package = $this->entitlementService->createAccessPackage($catalog, $partner, [
-            'display_name' => $validated['display_name'],
-            'description' => $validated['description'] ?? null,
-            'duration_days' => $validated['duration_days'],
-            'approval_required' => $validated['approval_required'],
-            'approver_user_id' => $validated['approver_user_id'] ?? null,
-            'created_by_user_id' => $request->user()->id,
-        ]);
+        try {
+            $catalog = $this->entitlementService->getOrCreateDefaultCatalog();
+        } catch (GraphApiException $e) {
+            return redirect()->back()->withInput()
+                ->with('error', 'Failed to access entitlement catalog in Graph API: '.$e->getMessage());
+        }
 
-        foreach ($validated['resources'] as $resourceData) {
-            $this->entitlementService->addResource($package, $resourceData);
+        try {
+            $package = $this->entitlementService->createAccessPackage($catalog, $partner, [
+                'display_name' => $validated['display_name'],
+                'description' => $validated['description'] ?? null,
+                'duration_days' => $validated['duration_days'],
+                'approval_required' => $validated['approval_required'],
+                'approver_user_id' => $validated['approver_user_id'] ?? null,
+                'created_by_user_id' => $request->user()->id,
+            ]);
+
+            foreach ($validated['resources'] as $resourceData) {
+                $this->entitlementService->addResource($package, $resourceData);
+            }
+        } catch (GraphApiException $e) {
+            return redirect()->back()->withInput()
+                ->with('error', 'Failed to create access package in Graph API: '.$e->getMessage());
         }
 
         $this->activityLog->log($request->user(), ActivityAction::AccessPackageCreated, $package, [
@@ -112,7 +124,13 @@ class EntitlementController extends Controller
         }
 
         $name = $entitlement->display_name;
-        $this->entitlementService->deleteAccessPackage($entitlement);
+
+        try {
+            $this->entitlementService->deleteAccessPackage($entitlement);
+        } catch (GraphApiException $e) {
+            return redirect()->back()
+                ->with('error', 'Failed to delete access package from Graph API: '.$e->getMessage());
+        }
 
         $this->activityLog->log($request->user(), ActivityAction::AccessPackageDeleted, null, [
             'display_name' => $name,

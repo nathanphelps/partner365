@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Enums\ActivityAction;
+use App\Exceptions\GraphApiException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\UpdateCollaborationSettingsRequest;
 use App\Services\ActivityLogService;
@@ -20,7 +21,14 @@ class AdminCollaborationController extends Controller
 
     public function edit(): Response
     {
-        $policy = $this->collaborationService->getSettings();
+        try {
+            $policy = $this->collaborationService->getSettings();
+        } catch (GraphApiException $e) {
+            return Inertia::render('admin/Collaboration', [
+                'settings' => null,
+                'error' => 'Could not load collaboration settings from Graph API: '.$e->getMessage(),
+            ]);
+        }
 
         return Inertia::render('admin/Collaboration', [
             'settings' => [
