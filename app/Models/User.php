@@ -24,6 +24,8 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'approved_at',
+        'approved_by',
     ];
 
     /**
@@ -50,6 +52,25 @@ class User extends Authenticatable
             'password' => 'hashed',
             'role' => UserRole::class,
             'two_factor_confirmed_at' => 'datetime',
+            'approved_at' => 'datetime',
         ];
+    }
+
+    public function isApproved(): bool
+    {
+        return $this->approved_at !== null;
+    }
+
+    public function approve(User $approver): void
+    {
+        $this->update([
+            'approved_at' => now(),
+            'approved_by' => $approver->id,
+        ]);
+    }
+
+    public function scopePending($query)
+    {
+        return $query->whereNull('approved_at');
     }
 }
