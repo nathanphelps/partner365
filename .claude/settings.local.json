@@ -27,7 +27,8 @@
       "Bash(chmod +x:*)",
       "Bash(az ad:*)",
       "Bash(composer run:*)",
-      "Bash(gh repo:*)"
+      "Bash(gh repo:*)",
+      "Bash(git push:*)"
     ]
   }
 }
