@@ -20,4 +20,8 @@ enum ActivityAction: string
     case UserRoleChanged = 'user_role_changed';
     case UserDeleted = 'user_deleted';
     case SyncTriggered = 'sync_triggered';
+    case AccessReviewCreated = 'access_review_created';
+    case AccessReviewCompleted = 'access_review_completed';
+    case AccessReviewDecisionMade = 'access_review_decision_made';
+    case AccessReviewRemediationApplied = 'access_review_remediation_applied';
 }
