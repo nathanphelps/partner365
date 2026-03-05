@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3';
-import { Activity, Building2, FileStack, LayoutGrid, Users } from 'lucide-vue-next';
+import { Link, usePage } from '@inertiajs/vue3';
+import { Activity, Building2, FileStack, LayoutGrid, Settings, Users } from 'lucide-vue-next';
+import { computed } from 'vue';
 import AppLogo from '@/components/AppLogo.vue';
-import NavFooter from '@/components/NavFooter.vue';
 import NavMain from '@/components/NavMain.vue';
 import NavUser from '@/components/NavUser.vue';
 import {
@@ -17,20 +17,29 @@ import {
 import { dashboard } from '@/routes';
 import type { NavItem } from '@/types';
 
-const mainNavItems: NavItem[] = [
-    { title: 'Dashboard', href: dashboard(), icon: LayoutGrid },
-    { title: 'Partners', href: '/partners', icon: Building2 },
-    { title: 'Guests', href: '/guests', icon: Users },
-    { title: 'Templates', href: '/templates', icon: FileStack },
-    { title: 'Activity', href: '/activity', icon: Activity },
-];
+const page = usePage();
+const isAdmin = computed(() => page.props.auth.user.role === 'admin');
 
-const footerNavItems: NavItem[] = [];
+const mainNavItems = computed<NavItem[]>(() => {
+    const items: NavItem[] = [
+        { title: 'Dashboard', href: dashboard(), icon: LayoutGrid },
+        { title: 'Partners', href: '/partners', icon: Building2 },
+        { title: 'Guests', href: '/guests', icon: Users },
+        { title: 'Templates', href: '/templates', icon: FileStack },
+        { title: 'Activity', href: '/activity', icon: Activity },
+    ];
+
+    if (isAdmin.value) {
+        items.push({ title: 'Admin', href: '/admin/graph', icon: Settings });
+    }
+
+    return items;
+});
 </script>
 
 <template>
     <Sidebar collapsible="icon" variant="inset">
-        <SidebarHeader>
+        <SidebarHeader class="p-3 pb-4">
             <SidebarMenu>
                 <SidebarMenuItem>
                     <SidebarMenuButton size="lg" as-child>
@@ -42,12 +51,11 @@ const footerNavItems: NavItem[] = [];
             </SidebarMenu>
         </SidebarHeader>
 
-        <SidebarContent>
+        <SidebarContent class="pt-2">
             <NavMain :items="mainNavItems" />
         </SidebarContent>
 
-        <SidebarFooter>
-            <NavFooter :items="footerNavItems" />
+        <SidebarFooter class="p-3">
             <NavUser />
         </SidebarFooter>
     </Sidebar>
