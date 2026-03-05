@@ -2,10 +2,12 @@
 
 namespace App\Console\Commands;
 
+use App\Enums\ActivityAction;
 use App\Enums\InvitationStatus;
 use App\Models\GuestUser;
 use App\Models\PartnerOrganization;
 use App\Models\SyncLog;
+use App\Services\ActivityLogService;
 use App\Services\GuestUserService;
 use Illuminate\Console\Command;
 
@@ -63,6 +65,11 @@ class SyncGuests extends Command
                 'status' => 'completed',
                 'records_synced' => $synced,
                 'completed_at' => now(),
+            ]);
+
+            app(ActivityLogService::class)->logSystem(ActivityAction::SyncCompleted, details: [
+                'type' => 'guests',
+                'records_synced' => $synced,
             ]);
 
             return Command::SUCCESS;

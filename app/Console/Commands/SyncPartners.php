@@ -2,8 +2,10 @@
 
 namespace App\Console\Commands;
 
+use App\Enums\ActivityAction;
 use App\Models\PartnerOrganization;
 use App\Models\SyncLog;
+use App\Services\ActivityLogService;
 use App\Services\CrossTenantPolicyService;
 use App\Services\TenantResolverService;
 use Illuminate\Console\Command;
@@ -75,6 +77,11 @@ class SyncPartners extends Command
                 'status' => 'completed',
                 'records_synced' => $synced,
                 'completed_at' => now(),
+            ]);
+
+            app(ActivityLogService::class)->logSystem(ActivityAction::SyncCompleted, details: [
+                'type' => 'partners',
+                'records_synced' => $synced,
             ]);
 
             return Command::SUCCESS;

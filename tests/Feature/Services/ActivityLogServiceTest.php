@@ -26,6 +26,15 @@ test('it logs an activity', function () {
     expect($log->details['tenant_id'])->toBe($partner->tenant_id);
 });
 
+test('it logs a system activity without a user', function () {
+    $service = app(ActivityLogService::class);
+    $log = $service->logSystem(ActivityAction::SyncCompleted, details: ['type' => 'partners', 'records_synced' => 5]);
+
+    expect($log->user_id)->toBeNull();
+    expect($log->action)->toBe(ActivityAction::SyncCompleted);
+    expect($log->details['records_synced'])->toBe(5);
+});
+
 test('it retrieves recent activity', function () {
     $user = User::factory()->create();
     $service = app(ActivityLogService::class);

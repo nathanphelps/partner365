@@ -2,7 +2,9 @@
 
 namespace App\Console\Commands;
 
+use App\Enums\ActivityAction;
 use App\Models\SyncLog;
+use App\Services\ActivityLogService;
 use App\Services\EntitlementService;
 use Illuminate\Console\Command;
 
@@ -33,6 +35,11 @@ class SyncEntitlements extends Command
                 'status' => 'completed',
                 'records_synced' => $packagesSynced + $assignmentsSynced,
                 'completed_at' => now(),
+            ]);
+
+            app(ActivityLogService::class)->logSystem(ActivityAction::SyncCompleted, details: [
+                'type' => 'entitlements',
+                'records_synced' => $packagesSynced + $assignmentsSynced,
             ]);
 
             return Command::SUCCESS;

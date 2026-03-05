@@ -22,6 +22,18 @@ class ActivityLogService
         ]);
     }
 
+    public function logSystem(ActivityAction $action, ?Model $subject = null, array $details = []): ActivityLog
+    {
+        return ActivityLog::create([
+            'user_id' => null,
+            'action' => $action,
+            'subject_type' => $subject ? get_class($subject) : null,
+            'subject_id' => $subject?->getKey(),
+            'details' => $details,
+            'created_at' => now(),
+        ]);
+    }
+
     public function recent(int $limit = 20): Collection
     {
         return ActivityLog::with('user')

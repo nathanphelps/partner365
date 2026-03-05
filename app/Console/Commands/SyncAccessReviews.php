@@ -2,12 +2,14 @@
 
 namespace App\Console\Commands;
 
+use App\Enums\ActivityAction;
 use App\Enums\RecurrenceType;
 use App\Enums\ReviewInstanceStatus;
 use App\Models\AccessReview;
 use App\Models\AccessReviewInstance;
 use App\Models\SyncLog;
 use App\Services\AccessReviewService;
+use App\Services\ActivityLogService;
 use Illuminate\Console\Command;
 
 class SyncAccessReviews extends Command
@@ -60,6 +62,11 @@ class SyncAccessReviews extends Command
                 'status' => 'completed',
                 'records_synced' => $synced,
                 'completed_at' => now(),
+            ]);
+
+            app(ActivityLogService::class)->logSystem(ActivityAction::SyncCompleted, details: [
+                'type' => 'access_reviews',
+                'records_synced' => $synced,
             ]);
 
             return Command::SUCCESS;

@@ -2,7 +2,9 @@
 
 namespace App\Console\Commands;
 
+use App\Enums\ActivityAction;
 use App\Models\SyncLog;
+use App\Services\ActivityLogService;
 use App\Services\ConditionalAccessPolicyService;
 use Illuminate\Console\Command;
 
@@ -31,6 +33,10 @@ class SyncConditionalAccessPolicies extends Command
                 'status' => 'completed',
                 'records_synced' => $synced,
                 'completed_at' => now(),
+            ]);
+
+            app(ActivityLogService::class)->logSystem(ActivityAction::ConditionalAccessPoliciesSynced, details: [
+                'records_synced' => $synced,
             ]);
 
             return Command::SUCCESS;
