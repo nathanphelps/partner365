@@ -201,6 +201,7 @@ This runs the background commands:
 - `sync:partners` — every 15 minutes
 - `sync:guests` — every 15 minutes
 - `sync:access-reviews` — every 15 minutes
+- `sync:conditional-access-policies` — every 15 minutes
 - `score:partners` — daily (calculates domain trust scores)
 
 ### 6. Set Up Queue Worker (Optional)

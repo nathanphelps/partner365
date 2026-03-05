@@ -35,7 +35,7 @@ From the app registration overview page, copy:
 
 | Permission | Purpose |
 |-----------|---------|
-| `Policy.Read.All` | Read cross-tenant access policies |
+| `Policy.Read.All` | Read cross-tenant access policies and Conditional Access policies |
 | `Policy.ReadWrite.CrossTenantAccess` | Create/update/delete partner policies |
 | `Policy.ReadWrite.Authorization` | Manage external collaboration settings (invitation controls, domain lists) |
 | `User.Invite.All` | Send B2B guest invitations |

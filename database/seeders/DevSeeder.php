@@ -12,6 +12,7 @@ use App\Models\AccessPackage;
 use App\Models\AccessPackageAssignment;
 use App\Models\AccessPackageCatalog;
 use App\Models\AccessPackageResource;
+use App\Models\ConditionalAccessPolicy;
 use App\Models\GuestUser;
 use App\Models\PartnerOrganization;
 use App\Models\PartnerTemplate;
@@ -31,6 +32,7 @@ class DevSeeder extends Seeder
         $partners = $this->seedPartners($users);
         $guests = $this->seedGuests($partners, $users);
         $templates = $this->seedTemplates($users['admin']);
+        $this->seedConditionalAccessPolicies($partners);
         $this->seedEntitlements($partners, $users);
         $this->seedActivityLogs($users, $partners, $guests, $templates);
         $this->seedSyncLogs();
@@ -41,6 +43,8 @@ class DevSeeder extends Seeder
     {
         $tables = [
             'activity_log',
+            'conditional_access_policy_partner',
+            'conditional_access_policies',
             'access_package_assignments',
             'access_package_resources',
             'access_packages',
@@ -266,6 +270,83 @@ class DevSeeder extends Seeder
         }
 
         return $templates;
+    }
+
+    private function seedConditionalAccessPolicies(\Illuminate\Support\Collection $partners): void
+    {
+        $policies = [
+            [
+                'policy_id' => fake()->uuid(),
+                'display_name' => 'Require MFA for all guest users',
+                'state' => 'enabled',
+                'guest_or_external_user_types' => 'b2bCollaborationGuest',
+                'external_tenant_scope' => 'all',
+                'target_applications' => 'all',
+                'grant_controls' => ['mfa'],
+                'session_controls' => [],
+            ],
+            [
+                'policy_id' => fake()->uuid(),
+                'display_name' => 'Require compliant device for B2B guests',
+                'state' => 'enabled',
+                'guest_or_external_user_types' => 'b2bCollaborationGuest',
+                'external_tenant_scope' => 'all',
+                'target_applications' => 'all',
+                'grant_controls' => ['compliantDevice'],
+                'session_controls' => [],
+            ],
+            [
+                'policy_id' => fake()->uuid(),
+                'display_name' => 'Block legacy auth for external users',
+                'state' => 'enabled',
+                'guest_or_external_user_types' => 'b2bCollaborationGuest,b2bDirectConnectUser',
+                'external_tenant_scope' => 'all',
+                'target_applications' => 'all',
+                'grant_controls' => ['block'],
+                'session_controls' => [],
+            ],
+            [
+                'policy_id' => fake()->uuid(),
+                'display_name' => 'Sign-in frequency for direct connect users',
+                'state' => 'enabledForReportingButNotEnforced',
+                'guest_or_external_user_types' => 'b2bDirectConnectUser',
+                'external_tenant_scope' => 'all',
+                'target_applications' => 'all',
+                'grant_controls' => [],
+                'session_controls' => ['signInFrequency'],
+            ],
+            [
+                'policy_id' => fake()->uuid(),
+                'display_name' => 'MFA for specific partner guests (disabled)',
+                'state' => 'disabled',
+                'guest_or_external_user_types' => 'b2bCollaborationGuest',
+                'external_tenant_scope' => 'specific',
+                'external_tenant_ids' => $partners->take(3)->pluck('tenant_id')->toArray(),
+                'target_applications' => 'all',
+                'grant_controls' => ['mfa'],
+                'session_controls' => [],
+            ],
+        ];
+
+        foreach ($policies as $policyData) {
+            $policy = ConditionalAccessPolicy::create(array_merge($policyData, [
+                'synced_at' => fake()->dateTimeBetween('-1 day', 'now'),
+            ]));
+
+            // Build partner mappings
+            $userTypes = explode(',', $policyData['guest_or_external_user_types']);
+            $mappedPartners = $policyData['external_tenant_scope'] === 'all'
+                ? $partners
+                : $partners->whereIn('tenant_id', $policyData['external_tenant_ids'] ?? []);
+
+            foreach ($mappedPartners as $partner) {
+                foreach ($userTypes as $userType) {
+                    $policy->partners()->attach($partner->id, [
+                        'matched_user_type' => trim($userType),
+                    ]);
+                }
+            }
+        }
     }
 
     private function seedEntitlements(\Illuminate\Support\Collection $partners, array $users): void

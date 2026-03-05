@@ -76,6 +76,13 @@ All routes require authentication (`auth` + `verified` middleware) unless noted 
 | POST | `/access-reviews/decisions/{decision}` | `AccessReviewController@submitDecision` | `access-reviews.decisions.submit` | Operator+ |
 | POST | `/access-reviews/instances/{instance}/apply` | `AccessReviewController@applyRemediations` | `access-reviews.instances.apply` | Admin |
 
+### Conditional Access (Read-only)
+
+| Method | URI | Controller@Method | Name | Role |
+|--------|-----|------------------|------|------|
+| GET | `/conditional-access` | `ConditionalAccessPolicyController@index` | `conditional-access.index` | Any |
+| GET | `/conditional-access/{conditionalAccessPolicy}` | `ConditionalAccessPolicyController@show` | `conditional-access.show` | Any |
+
 ### Activity Log
 
 | Method | URI | Controller@Method | Name | Role |
@@ -182,9 +189,26 @@ All routes require authentication (`auth` + `verified` middleware) unless noted 
 }
 ```
 
+### Conditional Access Index
+
+```typescript
+{
+    policies: Paginated<ConditionalAccessPolicy>;
+    uncoveredPartnerCount: number;
+}
+```
+
+### Conditional Access Show
+
+```typescript
+{
+    policy: ConditionalAccessPolicy & { partners: PartnerOrganization[] };
+}
+```
+
 ### Partners Show
 
-The `PartnerOrganization` type includes trust score fields: `trust_score` (0-100 or null), `trust_score_breakdown` (JSON with per-signal pass/fail and points), and `trust_score_calculated_at`.
+The `PartnerOrganization` type includes trust score fields and conditional access policies: `trust_score` (0-100 or null), `trust_score_breakdown` (JSON with per-signal pass/fail and points), and `trust_score_calculated_at`.
 
 ```typescript
 {

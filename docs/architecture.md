@@ -28,6 +28,7 @@ Partner365 is a monolithic Laravel 12 + Vue 3 application using Inertia.js for s
 │  │  TenantResolverService (tenant lookup)          ││
 │  │  ActivityLogService (audit trail)               ││
 │  │  AccessReviewService (access review lifecycle) ││
+│  │  ConditionalAccessPolicyService (CA sync)     ││
 │  │  EntitlementService (access packages + Graph)  ││
 │  │  TrustScoreService (domain reputation scoring) ││
 │  │  DnsLookupService (DNS record queries)         ││
@@ -39,6 +40,8 @@ Partner365 is a monolithic Laravel 12 + Vue 3 application using Inertia.js for s
 │  │             │  │  sync:guests          (every 15 min)  │ │
 │  │             │  │  sync:access-reviews  (every 15 min)  │ │
 │  │             │  │  sync:entitlements    (every 15 min)  │ │
+│  │             │  │  sync:conditional-    (every 15 min)  │ │
+│  │             │  │    access-policies                    │ │
 │  │             │  │  score:partners       (daily)         │ │
 │  └──────┬──────┘  └───────────────────────────────────────┘ │
 └─────────┼───────────────────────────────────────────┘
@@ -132,6 +135,25 @@ access_review_decisions
 ├── remediation_applied (boolean)
 └── timestamps
 
+conditional_access_policies
+├── id, policy_id (unique, Graph API object ID)
+├── display_name, state (enabled/disabled/enabledForReportingButNotEnforced)
+├── guest_or_external_user_types (comma-separated)
+├── external_tenant_scope (all/specific)
+├── external_tenant_ids (JSON, nullable)
+├── target_applications
+├── grant_controls (JSON), session_controls (JSON)
+├── raw_policy_json (JSON)
+├── synced_at
+└── timestamps
+
+conditional_access_policy_partner (pivot)
+├── id
+├── conditional_access_policy_id (FK → conditional_access_policies)
+├── partner_organization_id (FK → partner_organizations)
+├── matched_user_type
+└── timestamps
+
 access_package_catalogs
 ├── id, graph_id (unique, nullable)
 ├── display_name, description
@@ -181,7 +203,8 @@ activity_log
 
 ### Relationships
 
-- `PartnerOrganization` → belongs to `User` (owner), has many `GuestUser`
+- `PartnerOrganization` → belongs to `User` (owner), has many `GuestUser`, belongs to many `ConditionalAccessPolicy`
+- `ConditionalAccessPolicy` → belongs to many `PartnerOrganization` (via pivot with `matched_user_type`)
 - `GuestUser` → belongs to `PartnerOrganization` (nullable), belongs to `User` (invited_by)
 - `PartnerTemplate` → belongs to `User` (created_by)
 - `AccessReview` → belongs to `User` (reviewer, created_by), belongs to `PartnerOrganization` (scope), has many `AccessReviewInstance`

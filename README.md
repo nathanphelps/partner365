@@ -27,6 +27,7 @@ Partner365 solves this with a single interface for IT admins, business owners, a
 - **Partner Templates** — Reusable policy configurations for consistent onboarding
 - **Background Sync** — Automatic 15-minute sync from Graph API keeps local data current
 - **Access Reviews** — Periodic certification of guest user and partner organization access with configurable remediation (flag, disable, remove)
+- **Conditional Access Visibility** — Read-only view of Conditional Access policies targeting guest/external users, per-partner policy mapping with gap detection for uncovered partners
 - **Entitlement Management** — Self-service access packages for external partner users with bundled group memberships and SharePoint site access, single-stage approval workflows, configurable expiration, and Graph API integration
 - **Activity Log** — Full audit trail of all partner and guest management actions
 - **3-Tier RBAC** — Admin, Operator, and Viewer roles with middleware-enforced access control
@@ -118,23 +119,25 @@ Dockerfile                     # Multi-stage build (Node + FrankenPHP)
 docker-compose.yml             # Local container deployment
 
 app/
-├── Console/Commands/       # sync:partners, sync:guests, sync:access-reviews, sync:entitlements, score:partners
+├── Console/Commands/       # sync:partners, sync:guests, sync:access-reviews, sync:entitlements, sync:conditional-access-policies, score:partners
 ├── Enums/                  # UserRole, PartnerCategory, InvitationStatus, ActivityAction, CloudEnvironment,
 │                           # ReviewType, RecurrenceType, RemediationAction, ReviewInstanceStatus, ReviewDecision,
 │                           # AccessPackageResourceType, AssignmentStatus
 ├── Exceptions/             # GraphApiException
 ├── Http/
-│   ├── Controllers/        # Partner, Guest, Template, Dashboard, ActivityLog, AccessReview, Entitlement, Admin
+│   ├── Controllers/        # Partner, Guest, Template, Dashboard, ActivityLog, AccessReview, ConditionalAccessPolicy, Entitlement, Admin
 │   ├── Middleware/          # CheckRole (RBAC)
 │   └── Requests/           # StorePartner, UpdatePartner, InviteGuest, StoreTemplate, UpdateCollaboration,
 │                           # StoreAccessReview, StoreAccessPackage, UpdateAccessPackage
 ├── Models/                 # PartnerOrganization, GuestUser, PartnerTemplate, ActivityLog,
 │                           # AccessReview, AccessReviewInstance, AccessReviewDecision,
+│                           # ConditionalAccessPolicy,
 │                           # AccessPackageCatalog, AccessPackage, AccessPackageResource, AccessPackageAssignment
 └── Services/               # MicrosoftGraphService, CrossTenantPolicyService,
                             # GuestUserService, TenantResolverService,
                             # CollaborationSettingsService, ActivityLogService,
-                            # AccessReviewService, EntitlementService,
+                            # AccessReviewService, ConditionalAccessPolicyService,
+                            # EntitlementService,
                             # TrustScoreService, DnsLookupService
 
 resources/js/
@@ -143,15 +146,16 @@ resources/js/
 │   ├── guests/             # Index, Show, Invite
 │   ├── templates/          # Index, Create, Edit
 │   ├── access-reviews/     # Index, Create, Show, Instance
+│   ├── conditional-access/ # Index, Show (read-only CA policy visibility)
 │   ├── entitlements/       # Index, Create (multi-step wizard), Show
 │   ├── admin/              # Graph settings, Collaboration, Users, Sync
 │   ├── activity/           # Index
 │   └── Dashboard.vue
-├── types/                  # TypeScript types for Partner, Guest, AccessReview, Entitlement, Paginated
+├── types/                  # TypeScript types for Partner, Guest, AccessReview, ConditionalAccessPolicy, Entitlement, Paginated
 └── components/             # shadcn-vue UI components + TrustScoreBadge
 
 tests/Feature/
-├── Commands/               # SyncPartners, SyncGuests, SyncAccessReviews
+├── Commands/               # SyncPartners, SyncGuests, SyncAccessReviews, SyncConditionalAccessPolicies
 ├── Middleware/              # CheckRole
 ├── Models/                 # PartnerOrganization
 ├── Services/               # All Graph API service classes
@@ -162,6 +166,8 @@ tests/Feature/
 ├── AccessReviewControllerTest.php
 ├── EntitlementServiceTest.php
 ├── EntitlementControllerTest.php
+├── Controllers/
+│   └── ConditionalAccessPolicyControllerTest.php
 ├── TrustScoreServiceTest.php
 ├── DnsLookupServiceTest.php
 └── ScorePartnersCommandTest.php

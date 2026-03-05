@@ -13,6 +13,7 @@ MicrosoftGraphService               ← Core HTTP client + token management
 ├── GuestUserService                ← Guest invitations + user management
 ├── TenantResolverService           ← Tenant info lookup
 ├── AccessReviewService             ← Access review definitions + remediation
+├── ConditionalAccessPolicyService ← CA policy sync + partner mapping
 └── TrustScoreService               ← Domain reputation scoring (uses DnsLookupService + RDAP)
 ```
 
@@ -254,9 +255,37 @@ The service also handles operations that don't involve Graph API:
 
 > **Required Permission:** `AccessReview.ReadWrite.All` (application permission)
 
+## ConditionalAccessPolicyService
+
+Syncs Conditional Access policies that target guest/external users and maps them to partner organizations.
+
+### Endpoint
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `fetchPoliciesFromGraph()` | GET `/identity/conditionalAccess/policies` | List all CA policies |
+
+### Sync Logic
+
+1. Fetches all CA policies from Graph API
+2. Filters to policies with `conditions.users.includeGuestsOrExternalUsers`
+3. Parses grant controls, session controls, target applications, and external tenant scope
+4. Upserts to `conditional_access_policies` table
+5. Builds partner mappings via pivot table based on:
+   - **All tenants** scope → maps to all partners
+   - **Enumerated tenants** → maps only to partners whose `tenant_id` is in the `members` list
+6. Records `matched_user_type` on the pivot (e.g., `b2bCollaborationGuest`, `b2bDirectConnectUser`)
+7. Removes stale policies no longer returned by Graph
+
+### Gap Detection
+
+`getUncoveredPartners()` returns partners with zero rows in the pivot table — i.e., no CA policies target their guests.
+
+> **Required Permission:** `Policy.Read.All` (application permission, already granted)
+
 ## Background Sync
 
-Three Artisan commands sync data from Graph API to the local database, plus one daily scoring command:
+Four Artisan commands sync data from Graph API to the local database, plus one daily scoring command:
 
 ### sync:partners
 
@@ -281,6 +310,15 @@ Three Artisan commands sync data from Graph API to the local database, plus one 
 3. Updates `next_review_at` based on `recurrence_interval_days`
 4. Logs sync results to `SyncLog`
 
+### sync:conditional-access-policies
+
+1. Fetches all CA policies via `ConditionalAccessPolicyService::syncPolicies()`
+2. Filters to policies targeting guest/external users
+3. Upserts `conditional_access_policies` table keyed by `policy_id`
+4. Rebuilds partner pivot mappings with granular tenant/user-type matching
+5. Removes stale policies no longer in Graph API
+6. Logs sync results to `SyncLog`
+
 ### score:partners
 
 Runs daily to calculate trust scores for all partners with a domain set:
@@ -300,6 +338,7 @@ Partners without a domain are skipped. Failures for individual partners are logg
 Schedule::command('sync:partners')->everyFifteenMinutes();
 Schedule::command('sync:guests')->everyFifteenMinutes();
 Schedule::command('sync:access-reviews')->everyFifteenMinutes();
+Schedule::command('sync:conditional-access-policies')->everyFifteenMinutes();
 Schedule::command('score:partners')->daily();
 ```
 
