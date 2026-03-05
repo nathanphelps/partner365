@@ -14,6 +14,7 @@ class UpdateGraphSettingsRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'cloud_environment' => ['required', 'string', 'in:commercial,gcc_high'],
             'tenant_id' => ['required', 'uuid'],
             'client_id' => ['required', 'uuid'],
             'client_secret' => ['nullable', 'string'],

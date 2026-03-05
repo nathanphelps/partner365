@@ -13,9 +13,13 @@ class MicrosoftGraphService
     {
         return Cache::remember('msgraph_access_token', 3500, function () {
             $tenantId = Setting::get('graph', 'tenant_id', config('graph.tenant_id'));
+            $cloudEnv = \App\Enums\CloudEnvironment::tryFrom(
+                Setting::get('graph', 'cloud_environment', config('graph.cloud_environment'))
+            ) ?? \App\Enums\CloudEnvironment::Commercial;
+            $loginUrl = $cloudEnv->loginUrl();
 
             $response = Http::asForm()->post(
-                "https://login.microsoftonline.com/{$tenantId}/oauth2/v2.0/token",
+                "https://{$loginUrl}/{$tenantId}/oauth2/v2.0/token",
                 [
                     'grant_type' => 'client_credentials',
                     'client_id' => Setting::get('graph', 'client_id', config('graph.client_id')),

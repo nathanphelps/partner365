@@ -45,6 +45,7 @@ test('operator cannot access admin graph page', function () {
 test('admin can update graph settings', function () {
     $this->actingAs($this->admin)
         ->put('/admin/graph', [
+            'cloud_environment' => 'commercial',
             'tenant_id' => '550e8400-e29b-41d4-a716-446655440000',
             'client_id' => '660e8400-e29b-41d4-a716-446655440000',
             'client_secret' => 'new-secret',
@@ -63,6 +64,7 @@ test('update with blank client_secret preserves existing secret', function () {
 
     $this->actingAs($this->admin)
         ->put('/admin/graph', [
+            'cloud_environment' => 'commercial',
             'tenant_id' => '550e8400-e29b-41d4-a716-446655440000',
             'client_id' => '660e8400-e29b-41d4-a716-446655440000',
             'client_secret' => null,
@@ -91,6 +93,7 @@ test('update clears cached graph token', function () {
 
     $this->actingAs($this->admin)
         ->put('/admin/graph', [
+            'cloud_environment' => 'commercial',
             'tenant_id' => '550e8400-e29b-41d4-a716-446655440000',
             'client_id' => '660e8400-e29b-41d4-a716-446655440000',
             'client_secret' => 'new-secret',
@@ -144,8 +147,86 @@ test('test connection fails with invalid credentials', function () {
         ->assertJson(['success' => false]);
 });
 
+test('admin can update cloud environment setting', function () {
+    $this->actingAs($this->admin)
+        ->put('/admin/graph', [
+            'cloud_environment' => 'gcc_high',
+            'tenant_id' => '550e8400-e29b-41d4-a716-446655440000',
+            'client_id' => '660e8400-e29b-41d4-a716-446655440000',
+            'client_secret' => 'secret',
+            'scopes' => 'https://graph.microsoft.us/.default',
+            'base_url' => 'https://graph.microsoft.us/v1.0',
+            'sync_interval_minutes' => '15',
+        ])
+        ->assertRedirect('/admin/graph');
+
+    expect(Setting::get('graph', 'cloud_environment'))->toBe('gcc_high');
+});
+
+test('cloud environment rejects invalid values', function () {
+    $this->actingAs($this->admin)
+        ->put('/admin/graph', [
+            'cloud_environment' => 'invalid_cloud',
+            'tenant_id' => '550e8400-e29b-41d4-a716-446655440000',
+            'client_id' => '660e8400-e29b-41d4-a716-446655440000',
+            'scopes' => 'https://graph.microsoft.com/.default',
+            'base_url' => 'https://graph.microsoft.com/v1.0',
+            'sync_interval_minutes' => '15',
+        ])
+        ->assertSessionHasErrors(['cloud_environment']);
+});
+
+test('graph settings page includes cloud environment', function () {
+    Setting::set('graph', 'cloud_environment', 'gcc_high');
+
+    $this->actingAs($this->admin)
+        ->get('/admin/graph')
+        ->assertInertia(fn ($page) => $page
+            ->component('admin/Graph')
+            ->where('settings.cloud_environment', 'gcc_high')
+        );
+});
+
+test('consent url returns admin consent url', function () {
+    Setting::set('graph', 'tenant_id', '550e8400-e29b-41d4-a716-446655440000');
+    Setting::set('graph', 'client_id', '660e8400-e29b-41d4-a716-446655440000');
+    Setting::set('graph', 'cloud_environment', 'commercial');
+
+    $this->actingAs($this->admin)
+        ->getJson('/admin/graph/consent')
+        ->assertOk()
+        ->assertJsonStructure(['url']);
+});
+
+test('consent url uses gcc high login url when configured', function () {
+    Setting::set('graph', 'tenant_id', '550e8400-e29b-41d4-a716-446655440000');
+    Setting::set('graph', 'client_id', '660e8400-e29b-41d4-a716-446655440000');
+    Setting::set('graph', 'cloud_environment', 'gcc_high');
+
+    $response = $this->actingAs($this->admin)
+        ->getJson('/admin/graph/consent')
+        ->assertOk();
+
+    expect($response->json('url'))->toContain('login.microsoftonline.us');
+});
+
+test('consent callback renders success view', function () {
+    $this->get('/admin/graph/consent/callback?admin_consent=True&tenant=some-tenant')
+        ->assertOk()
+        ->assertViewIs('admin.consent-callback')
+        ->assertViewHas('success', true);
+});
+
+test('consent callback renders error view', function () {
+    $this->get('/admin/graph/consent/callback?error=access_denied&error_description=Admin+denied')
+        ->assertOk()
+        ->assertViewIs('admin.consent-callback')
+        ->assertViewHas('success', false)
+        ->assertViewHas('error', 'Admin denied');
+});
+
 test('update validates required fields', function () {
     $this->actingAs($this->admin)
         ->put('/admin/graph', [])
-        ->assertSessionHasErrors(['tenant_id', 'client_id', 'scopes', 'base_url', 'sync_interval_minutes']);
+        ->assertSessionHasErrors(['cloud_environment', 'tenant_id', 'client_id', 'scopes', 'base_url', 'sync_interval_minutes']);
 });

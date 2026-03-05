@@ -9,8 +9,10 @@ use App\Models\Setting;
 use App\Services\ActivityLogService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use Illuminate\View\View;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -31,6 +33,7 @@ class AdminGraphController extends Controller
 
         return Inertia::render('admin/Graph', [
             'settings' => [
+                'cloud_environment' => $settings['cloud_environment'] ?? config('graph.cloud_environment'),
                 'tenant_id' => $settings['tenant_id'] ?? config('graph.tenant_id'),
                 'client_id' => $settings['client_id'] ?? config('graph.client_id'),
                 'client_secret_masked' => $masked,
@@ -45,6 +48,7 @@ class AdminGraphController extends Controller
     {
         $validated = $request->validated();
 
+        Setting::set('graph', 'cloud_environment', $validated['cloud_environment']);
         Setting::set('graph', 'tenant_id', $validated['tenant_id']);
         Setting::set('graph', 'client_id', $validated['client_id']);
         Setting::set('graph', 'scopes', $validated['scopes']);
@@ -68,9 +72,13 @@ class AdminGraphController extends Controller
     {
         try {
             $tenantId = Setting::get('graph', 'tenant_id', config('graph.tenant_id'));
+            $cloudEnv = \App\Enums\CloudEnvironment::tryFrom(
+                Setting::get('graph', 'cloud_environment', config('graph.cloud_environment'))
+            ) ?? \App\Enums\CloudEnvironment::Commercial;
+            $loginUrl = $cloudEnv->loginUrl();
 
             $response = Http::asForm()->post(
-                "https://login.microsoftonline.com/{$tenantId}/oauth2/v2.0/token",
+                "https://{$loginUrl}/{$tenantId}/oauth2/v2.0/token",
                 [
                     'grant_type' => 'client_credentials',
                     'client_id' => Setting::get('graph', 'client_id', config('graph.client_id')),
@@ -93,5 +101,36 @@ class AdminGraphController extends Controller
                 'message' => 'Connection failed: '.$e->getMessage(),
             ]);
         }
+    }
+
+    public function consentUrl(): JsonResponse
+    {
+        $tenantId = Setting::get('graph', 'tenant_id', config('graph.tenant_id'));
+        $clientId = Setting::get('graph', 'client_id', config('graph.client_id'));
+        $cloudEnv = \App\Enums\CloudEnvironment::tryFrom(
+            Setting::get('graph', 'cloud_environment', config('graph.cloud_environment'))
+        ) ?? \App\Enums\CloudEnvironment::Commercial;
+
+        $redirectUri = route('admin.graph.consent.callback');
+        $loginUrl = $cloudEnv->loginUrl();
+
+        $url = "https://{$loginUrl}/{$tenantId}/adminconsent?"
+            .http_build_query([
+                'client_id' => $clientId,
+                'redirect_uri' => $redirectUri,
+            ]);
+
+        return response()->json(['url' => $url]);
+    }
+
+    public function consentCallback(Request $request): View
+    {
+        $success = $request->query('admin_consent') === 'True';
+        $error = $request->query('error_description');
+
+        return view('admin.consent-callback', [
+            'success' => $success,
+            'error' => $error,
+        ]);
     }
 }

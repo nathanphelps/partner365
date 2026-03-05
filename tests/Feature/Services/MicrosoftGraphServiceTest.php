@@ -148,3 +148,24 @@ test('it reads credentials from Setting model with config fallback', function ()
 
     Http::assertSent(fn ($request) => str_contains($request->url(), 'db-tenant-id'));
 });
+
+test('it uses gcc high login url when cloud environment is gcc_high', function () {
+    \App\Models\Setting::set('graph', 'cloud_environment', 'gcc_high');
+    \App\Models\Setting::set('graph', 'tenant_id', 'gcc-tenant');
+    \App\Models\Setting::set('graph', 'client_id', 'gcc-client');
+    \App\Models\Setting::set('graph', 'client_secret', 'gcc-secret', encrypted: true);
+    \App\Models\Setting::set('graph', 'scopes', 'https://graph.microsoft.us/.default');
+
+    Http::fake([
+        'login.microsoftonline.us/*' => Http::response([
+            'access_token' => 'gcc-token',
+            'expires_in' => 3600,
+        ]),
+    ]);
+
+    $service = app(MicrosoftGraphService::class);
+    $token = $service->getAccessToken();
+
+    expect($token)->toBe('gcc-token');
+    Http::assertSent(fn ($request) => str_contains($request->url(), 'login.microsoftonline.us'));
+});

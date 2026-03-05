@@ -1,16 +1,24 @@
 <script setup lang="ts">
 import { Head, useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import type { BreadcrumbItem } from '@/types';
 
 type Props = {
     settings: {
+        cloud_environment: string | null;
         tenant_id: string | null;
         client_id: string | null;
         client_secret_masked: string | null;
@@ -28,6 +36,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 const form = useForm({
+    cloud_environment: props.settings.cloud_environment ?? 'commercial',
     tenant_id: props.settings.tenant_id ?? '',
     client_id: props.settings.client_id ?? '',
     client_secret: '',
@@ -35,6 +44,28 @@ const form = useForm({
     base_url: props.settings.base_url ?? '',
     sync_interval_minutes: props.settings.sync_interval_minutes ?? 15,
 });
+
+const cloudDefaults: Record<string, { scopes: string; base_url: string }> = {
+    commercial: {
+        scopes: 'https://graph.microsoft.com/.default',
+        base_url: 'https://graph.microsoft.com/v1.0',
+    },
+    gcc_high: {
+        scopes: 'https://graph.microsoft.us/.default',
+        base_url: 'https://graph.microsoft.us/v1.0',
+    },
+};
+
+watch(
+    () => form.cloud_environment,
+    (env) => {
+        const defaults = cloudDefaults[env];
+        if (defaults) {
+            form.scopes = defaults.scopes;
+            form.base_url = defaults.base_url;
+        }
+    },
+);
 
 const submit = () => {
     form.put('/admin/graph');
@@ -66,6 +97,60 @@ const testConnection = async () => {
         testLoading.value = false;
     }
 };
+
+const consentResult = ref<{ success: boolean; error?: string } | null>(null);
+const consentLoading = ref(false);
+
+const grantAdminConsent = async () => {
+    consentResult.value = null;
+    consentLoading.value = true;
+
+    try {
+        const response = await fetch('/admin/graph/consent', {
+            headers: {
+                Accept: 'application/json',
+                'X-CSRF-TOKEN':
+                    document.querySelector<HTMLMetaElement>(
+                        'meta[name="csrf-token"]',
+                    )?.content ?? '',
+            },
+        });
+        const data = await response.json();
+
+        const popup = window.open(data.url, '_blank', 'width=600,height=700');
+
+        const handler = (event: MessageEvent) => {
+            if (
+                event.origin === window.location.origin &&
+                event.data?.type === 'admin-consent'
+            ) {
+                consentResult.value = {
+                    success: event.data.success,
+                    error: event.data.error,
+                };
+                consentLoading.value = false;
+                window.removeEventListener('message', handler);
+            }
+        };
+        window.addEventListener('message', handler);
+
+        const pollTimer = setInterval(() => {
+            if (popup?.closed) {
+                clearInterval(pollTimer);
+                if (consentLoading.value) {
+                    consentLoading.value = false;
+                    window.removeEventListener('message', handler);
+                }
+            }
+        }, 1000);
+    } catch {
+        consentResult.value = {
+            success: false,
+            error: 'Failed to start consent flow.',
+        };
+        consentLoading.value = false;
+    }
+};
 </script>
 
 <template>
@@ -80,6 +165,22 @@ const testConnection = async () => {
             />
 
             <form class="space-y-6" @submit.prevent="submit">
+                <div class="grid gap-2">
+                    <Label for="cloud_environment">Cloud Environment</Label>
+                    <Select v-model="form.cloud_environment">
+                        <SelectTrigger>
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="commercial"
+                                >Commercial</SelectItem
+                            >
+                            <SelectItem value="gcc_high">GCC High</SelectItem>
+                        </SelectContent>
+                    </Select>
+                    <InputError :message="form.errors.cloud_environment" />
+                </div>
+
                 <div class="grid gap-2">
                     <Label for="tenant_id">Tenant ID</Label>
                     <Input
@@ -189,6 +290,43 @@ const testConnection = async () => {
                         class="text-sm"
                     >
                         {{ testResult.message }}
+                    </p>
+                </div>
+            </div>
+
+            <div class="border-t pt-6">
+                <Heading
+                    variant="small"
+                    title="Admin Consent"
+                    description="Grant admin consent for the app's API permissions in your tenant"
+                />
+                <div class="mt-4 flex items-center gap-4">
+                    <Button
+                        variant="outline"
+                        :disabled="consentLoading"
+                        @click="grantAdminConsent"
+                    >
+                        {{
+                            consentLoading
+                                ? 'Waiting for consent...'
+                                : 'Grant Admin Consent'
+                        }}
+                    </Button>
+                    <p
+                        v-if="consentResult"
+                        :class="
+                            consentResult.success
+                                ? 'text-green-600'
+                                : 'text-red-600'
+                        "
+                        class="text-sm"
+                    >
+                        {{
+                            consentResult.success
+                                ? 'Admin consent granted successfully.'
+                                : (consentResult.error ??
+                                  'Consent was not granted.')
+                        }}
                     </p>
                 </div>
             </div>

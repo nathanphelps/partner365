@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'cloud_environment' => env('MICROSOFT_GRAPH_CLOUD_ENVIRONMENT', 'commercial'),
     'tenant_id' => env('MICROSOFT_GRAPH_TENANT_ID'),
     'client_id' => env('MICROSOFT_GRAPH_CLIENT_ID'),
     'client_secret' => env('MICROSOFT_GRAPH_CLIENT_SECRET'),

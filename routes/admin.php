@@ -12,6 +12,7 @@ Route::middleware(['auth', 'verified', 'approved', 'role:admin'])->prefix('admin
     Route::get('graph', [AdminGraphController::class, 'edit'])->name('admin.graph.edit');
     Route::put('graph', [AdminGraphController::class, 'update'])->name('admin.graph.update');
     Route::post('graph/test', [AdminGraphController::class, 'testConnection'])->name('admin.graph.test');
+    Route::get('graph/consent', [AdminGraphController::class, 'consentUrl'])->name('admin.graph.consent');
 
     Route::get('collaboration', [AdminCollaborationController::class, 'edit'])->name('admin.collaboration.edit');
     Route::put('collaboration', [AdminCollaborationController::class, 'update'])->name('admin.collaboration.update');
@@ -25,3 +26,6 @@ Route::middleware(['auth', 'verified', 'approved', 'role:admin'])->prefix('admin
     Route::put('sync', [AdminSyncController::class, 'update'])->name('admin.sync.update');
     Route::post('sync/{type}/run', [AdminSyncController::class, 'run'])->name('admin.sync.run');
 });
+
+Route::get('admin/graph/consent/callback', [AdminGraphController::class, 'consentCallback'])
+    ->name('admin.graph.consent.callback');
