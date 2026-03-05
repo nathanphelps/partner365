@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 
-import sharp from 'sharp';
-import toIco from 'to-ico';
 import { readFileSync, writeFileSync } from 'fs';
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import sharp from 'sharp';
+import toIco from 'to-ico';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const publicDir = resolve(__dirname, '..', 'public');
