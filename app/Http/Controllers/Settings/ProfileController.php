@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Settings;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\ProfileDeleteRequest;
 use App\Http\Requests\Settings\ProfileUpdateRequest;
+use App\Enums\ActivityAction;
+use App\Services\ActivityLogService;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -38,6 +40,10 @@ class ProfileController extends Controller
 
         $request->user()->save();
 
+        app(ActivityLogService::class)->log($request->user(), ActivityAction::ProfileUpdated, $request->user(), [
+            'fields' => array_keys($request->validated()),
+        ]);
+
         return to_route('profile.edit');
     }
 
@@ -47,6 +53,10 @@ class ProfileController extends Controller
     public function destroy(ProfileDeleteRequest $request): RedirectResponse
     {
         $user = $request->user();
+
+        app(ActivityLogService::class)->log($user, ActivityAction::AccountDeleted, null, [
+            'email' => $user->email,
+        ]);
 
         Auth::logout();
 
