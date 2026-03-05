@@ -3,10 +3,13 @@
 namespace App\Models;
 
 use App\Enums\ActivityAction;
+use App\Observers\ActivityLogObserver;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
+#[ObservedBy(ActivityLogObserver::class)]
 class ActivityLog extends Model
 {
     public $timestamps = false;
