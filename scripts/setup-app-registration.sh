@@ -6,6 +6,7 @@ set -euo pipefail
 
 APP_NAME="Partner365"
 ENV_FILE="$(dirname "$0")/../.env"
+APP_URL="${APP_URL:-http://localhost:8000}"
 
 # --- Azure CLI detection and login ---
 
@@ -56,11 +57,15 @@ done
 
 REQUIRED_ACCESS="[{\"resourceAppId\":\"$GRAPH_API\",\"resourceAccess\":[$RESOURCE_ACCESS_ITEMS]}]"
 
+REDIRECT_URI="${APP_URL}/admin/graph/consent/callback"
+
 echo "Creating app registration: $APP_NAME"
+echo "Redirect URI: $REDIRECT_URI"
 APP_ID=$(az ad app create \
     --display-name "$APP_NAME" \
     --sign-in-audience "AzureADMyOrg" \
     --required-resource-accesses "$REQUIRED_ACCESS" \
+    --web-redirect-uris "$REDIRECT_URI" \
     --query appId -o tsv)
 
 echo "App registered: $APP_ID"
@@ -106,9 +111,16 @@ echo "============================================"
 echo ""
 echo ".env updated with Graph credentials."
 echo ""
-echo "IMPORTANT: Grant admin consent for the application permissions:"
+echo "IMPORTANT: Grant admin consent for the application permissions."
 echo ""
+echo "Option 1 — Via CLI:"
 echo "  az ad app permission admin-consent --id $APP_ID"
 echo ""
-echo "Or use the Azure Portal:"
+echo "Option 2 — Via Azure Portal:"
 echo "  https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/CallAnAPI/appId/$APP_ID"
+echo ""
+echo "Option 3 — Via Partner365 (after setup):"
+echo "  Go to Admin → Microsoft Graph → Grant Admin Consent"
+echo ""
+echo "For GCC High tenants, set MICROSOFT_GRAPH_CLOUD_ENVIRONMENT=gcc_high in .env"
+echo "or select 'GCC High' from the Cloud Environment dropdown in Admin → Microsoft Graph."

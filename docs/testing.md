@@ -2,7 +2,7 @@
 
 ## Overview
 
-Partner365 uses [Pest PHP](https://pestphp.com/) for testing. The test suite contains 148 tests with 448 assertions covering services, controllers, middleware, models, and commands.
+Partner365 uses [Pest PHP](https://pestphp.com/) for testing. The test suite contains 160 tests with 488 assertions covering services, controllers, middleware, models, and commands.
 
 ## Running Tests
 
@@ -32,7 +32,7 @@ tests/
     ├── Auth/                         # 7 files — Fortify authentication tests
     ├── Settings/                     # 3 files — Profile, password, 2FA settings
     ├── Services/                     # 5 files — All Graph API service classes
-    │   ├── MicrosoftGraphServiceTest.php       (7 tests)
+    │   ├── MicrosoftGraphServiceTest.php       (9 tests)
     │   ├── CrossTenantPolicyServiceTest.php    (6 tests)
     │   ├── GuestUserServiceTest.php            (4 tests)
     │   ├── TenantResolverServiceTest.php       (2 tests)
@@ -46,6 +46,12 @@ tests/
     │   └── PartnerOrganizationTest.php         (3 tests)
     ├── PartnerOrganizationTest.php             (8 tests — controller)
     ├── GuestUserControllerTest.php             (5 tests — controller)
+    ├── Admin/
+    │   ├── AdminGraphControllerTest.php          (17 tests)
+    │   ├── AdminSyncControllerTest.php           (7 tests)
+    │   └── AdminUserControllerTest.php           (9 tests)
+    ├── Enums/
+    │   └── CloudEnvironmentTest.php              (4 tests)
     ├── CollaborationSettingsTest.php           (6 tests — admin collaboration)
     ├── DashboardTest.php                       (2 tests)
     └── ExampleTest.php                         (1 test)

@@ -51,6 +51,18 @@ All routes require authentication (`auth` + `verified` middleware) unless noted 
 | GET | `/admin/collaboration` | `AdminCollaborationController@edit` | `admin.collaboration.edit` | Admin |
 | PUT | `/admin/collaboration` | `AdminCollaborationController@update` | `admin.collaboration.update` | Admin |
 
+### Admin — Graph Settings
+
+| Method | URI | Controller@Method | Name | Role |
+|--------|-----|------------------|------|------|
+| GET | `/admin/graph` | `AdminGraphController@edit` | `admin.graph.edit` | Admin |
+| PUT | `/admin/graph` | `AdminGraphController@update` | `admin.graph.update` | Admin |
+| POST | `/admin/graph/test` | `AdminGraphController@testConnection` | `admin.graph.test` | Admin |
+| GET | `/admin/graph/consent` | `AdminGraphController@consentUrl` | `admin.graph.consent` | Admin |
+| GET | `/admin/graph/consent/callback` | `AdminGraphController@consentCallback` | `admin.graph.consent.callback` | None* |
+
+\* The consent callback is unauthenticated because Microsoft redirects to it in the popup context.
+
 ### Activity Log
 
 | Method | URI | Controller@Method | Name | Role |

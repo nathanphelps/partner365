@@ -35,7 +35,10 @@ resources/js/
 │   │   ├── Create.vue      # New template form
 │   │   └── Edit.vue        # Edit template form
 │   ├── admin/
-│   │   └── Collaboration.vue  # External collaboration settings (admin only)
+│   │   ├── Graph.vue          # Graph API settings, cloud env, admin consent
+│   │   ├── Collaboration.vue  # External collaboration settings
+│   │   ├── Users.vue          # User management
+│   │   └── Sync.vue           # Sync settings
 │   └── activity/
 │       └── Index.vue       # Paginated activity log
 ├── components/

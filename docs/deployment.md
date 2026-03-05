@@ -165,8 +165,9 @@ Ensure `mod_rewrite` is enabled. The `.htaccess` in the `public/` directory hand
 | `MICROSOFT_GRAPH_TENANT_ID` | Yes | — | Azure AD tenant ID |
 | `MICROSOFT_GRAPH_CLIENT_ID` | Yes | — | App registration client ID |
 | `MICROSOFT_GRAPH_CLIENT_SECRET` | Yes | — | App registration client secret |
-| `MICROSOFT_GRAPH_SCOPES` | No | `https://graph.microsoft.com/.default` | OAuth scopes |
-| `MICROSOFT_GRAPH_BASE_URL` | No | `https://graph.microsoft.com/v1.0` | Graph API base URL |
+| `MICROSOFT_GRAPH_CLOUD_ENVIRONMENT` | No | `commercial` | Cloud environment (`commercial` or `gcc_high`) |
+| `MICROSOFT_GRAPH_SCOPES` | No | Auto from cloud env | OAuth scopes (overrides cloud env default) |
+| `MICROSOFT_GRAPH_BASE_URL` | No | Auto from cloud env | Graph API base URL (overrides cloud env default) |
 | `MICROSOFT_GRAPH_SYNC_INTERVAL` | No | `15` | Sync interval in minutes |
 
 ## Initial Data

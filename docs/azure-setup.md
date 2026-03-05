@@ -8,7 +8,7 @@ This guide walks through creating the Azure AD app registration required for Par
 2. Click **New registration**
 3. Name: `Partner365` (or your preferred name)
 4. Supported account types: **Accounts in this organizational directory only**
-5. Redirect URI: Leave blank (not needed for client credentials flow)
+5. Redirect URI: **Web** → `https://your-app-url/admin/graph/consent/callback` (for admin consent flow)
 6. Click **Register**
 
 ## Step 2: Note the IDs
@@ -61,6 +61,7 @@ MICROSOFT_GRAPH_CLIENT_SECRET=your-secret-value-here
 Optional overrides (defaults are usually fine):
 
 ```env
+MICROSOFT_GRAPH_CLOUD_ENVIRONMENT=commercial   # or gcc_high
 MICROSOFT_GRAPH_SCOPES="https://graph.microsoft.com/.default"
 MICROSOFT_GRAPH_BASE_URL="https://graph.microsoft.com/v1.0"
 MICROSOFT_GRAPH_SYNC_INTERVAL=15
@@ -93,15 +94,26 @@ If it fails, check:
 - **Use Conditional Access** to restrict where the app can authenticate from
 - **Principle of least privilege** — only grant the permissions listed above; do not grant broader admin roles
 
-## National Cloud Endpoints
+## GCC High / National Cloud Support
 
-If your tenant is in a national cloud, override the base URL:
+Partner365 supports GCC High out of the box via the **Cloud Environment** setting on the Admin → Microsoft Graph page. Select "GCC High" and the app automatically uses the correct endpoints:
 
-| Cloud | Base URL |
-|-------|---------|
-| Global | `https://graph.microsoft.com/v1.0` (default) |
-| US Government L4 | `https://graph.microsoft.us/v1.0` |
-| US Government L5 (DOD) | `https://dod-graph.microsoft.us/v1.0` |
-| China (21Vianet) | `https://microsoftgraph.chinacloudapi.cn/v1.0` |
+| Setting | Commercial | GCC High |
+|---------|-----------|----------|
+| Login URL | `login.microsoftonline.com` | `login.microsoftonline.us` |
+| Graph Base URL | `graph.microsoft.com/v1.0` | `graph.microsoft.us/v1.0` |
+| Default Scopes | `graph.microsoft.com/.default` | `graph.microsoft.us/.default` |
 
-Also update the token endpoint in `MicrosoftGraphService` if needed (currently hardcoded to `login.microsoftonline.com`).
+You can also set the default via environment variable:
+
+```env
+MICROSOFT_GRAPH_CLOUD_ENVIRONMENT=gcc_high
+```
+
+The scopes and base URL fields remain editable for manual overrides if needed.
+
+## Admin Consent
+
+Partner365 includes an admin consent button on the Graph settings page. Instead of navigating to the Azure Portal, admins can click **Grant Admin Consent** to open a Microsoft popup directly from the app.
+
+The consent flow uses a redirect URI at `/admin/graph/consent/callback`. Make sure this URL is registered as a **Web** redirect URI in your app registration (see Step 1).

@@ -20,19 +20,30 @@ The base service handles authentication and HTTP communication.
 
 ### Token Acquisition
 
-Uses OAuth2 client credentials flow:
+Uses OAuth2 client credentials flow. The login URL is derived from the `CloudEnvironment` enum (`commercial` → `login.microsoftonline.com`, `gcc_high` → `login.microsoftonline.us`):
 
 ```
-POST https://login.microsoftonline.com/{tenantId}/oauth2/v2.0/token
+POST https://{loginUrl}/{tenantId}/oauth2/v2.0/token
 Content-Type: application/x-www-form-urlencoded
 
 grant_type=client_credentials
 &client_id={clientId}
 &client_secret={clientSecret}
-&scope=https://graph.microsoft.com/.default
+&scope={scopes}
 ```
 
 The token is cached for 3500 seconds using `Cache::remember('msgraph_access_token', 3500, ...)`. This is just under the standard 3600-second token lifetime to avoid using expired tokens.
+
+### Cloud Environment
+
+The `CloudEnvironment` enum (`app/Enums/CloudEnvironment.php`) centralizes endpoint differences between Microsoft cloud environments:
+
+| Environment | Login URL | Graph Base URL | Default Scopes |
+|-------------|-----------|----------------|----------------|
+| Commercial | `login.microsoftonline.com` | `graph.microsoft.com/v1.0` | `graph.microsoft.com/.default` |
+| GCC High | `login.microsoftonline.us` | `graph.microsoft.us/v1.0` | `graph.microsoft.us/.default` |
+
+The active environment is stored as the `graph.cloud_environment` setting (default: `commercial`). Both `MicrosoftGraphService::getAccessToken()` and `AdminGraphController::testConnection()` use it to derive the login URL.
 
 ### HTTP Methods
 
