@@ -15,6 +15,7 @@ MicrosoftGraphService               ← Core HTTP client + token management
 ├── AccessReviewService             ← Access review definitions + remediation
 ├── ConditionalAccessPolicyService ← CA policy sync + partner mapping
 ├── SensitivityLabelService        ← Sensitivity label sync + partner mapping
+├── SharePointSiteService          ← SharePoint site sync + guest permissions
 └── TrustScoreService               ← Domain reputation scoring (uses DnsLookupService + RDAP)
 
 FaviconService                       ← Partner favicon fetch + cache (independent, no Graph API)
@@ -337,9 +338,41 @@ Syncs Microsoft Information Protection sensitivity labels, label policies, and s
 
 > **Required Permissions:** `InformationProtection.Read.All`, `Sites.Read.All` (application permissions)
 
+## SharePointSiteService
+
+Syncs SharePoint sites with external sharing enabled and maps guest user permissions per site.
+
+### Endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `syncSites()` | GET `/sites?search=*` | List all SharePoint sites |
+| (per site) | GET `/sites/{siteId}/sensitivityLabel` | Get site sensitivity label |
+| `syncPermissions()` | GET `/sites/{siteId}/permissions` | List site permissions |
+
+### Sync Logic
+
+1. Fetches all sites via `GET /sites?search=*`
+2. Upserts to `sharepoint_sites` table keyed by `site_id`
+3. For each site, resolves sensitivity label by matching `sensitivityLabel.labelId` against known labels
+4. Removes stale sites no longer returned by Graph
+5. For sites with external sharing enabled (not `Disabled`), fetches permissions via `GET /sites/{siteId}/permissions`
+6. Matches permission grant recipients (by email or UPN) against known guest users in the database
+7. Classifies `granted_via` as `direct`, `sharing_link`, or `group_membership` based on the permission's `grantedToIdentitiesV2` structure
+
+### Partner Exposure
+
+`getPartnerExposure(partner)` returns SharePoint sites accessible by a partner's guest users, derived through the `sharepoint_site_permissions` join table. Used on the partner detail page.
+
+### Gap Detection
+
+Partners with zero guest users having SharePoint site permissions are counted as "uncovered" on the index page.
+
+> **Required Permission:** `Sites.FullControl.All` (application permission, needed for the site permissions endpoint)
+
 ## Background Sync
 
-Five Artisan commands sync data from Graph API to the local database, plus one daily scoring command:
+Six Artisan commands sync data from Graph API to the local database, plus one daily scoring command:
 
 ### sync:partners
 
@@ -383,6 +416,16 @@ Five Artisan commands sync data from Graph API to the local database, plus one d
 6. Removes stale labels/policies no longer returned by Graph
 7. Logs sync results to `SyncLog`
 
+### sync:sharepoint-sites
+
+1. Fetches all SharePoint sites via `SharePointSiteService::syncSites()`
+2. Upserts `sharepoint_sites` table keyed by `site_id`
+3. Resolves per-site sensitivity labels from Graph API
+4. Syncs guest user permissions via `syncPermissions()` for sites with external sharing enabled
+5. Matches permission recipients against known `guest_users` by email/UPN
+6. Removes stale sites and permissions no longer in Graph API
+7. Logs sync results to `SyncLog`
+
 ### score:partners
 
 Runs daily to calculate trust scores for all partners with a domain set:
@@ -404,6 +447,7 @@ Schedule::command('sync:guests')->everyFifteenMinutes();
 Schedule::command('sync:access-reviews')->everyFifteenMinutes();
 Schedule::command('sync:conditional-access-policies')->everyFifteenMinutes();
 Schedule::command('sync:sensitivity-labels')->everyFifteenMinutes();
+Schedule::command('sync:sharepoint-sites')->everyFifteenMinutes();
 Schedule::command('score:partners')->daily();
 ```
 

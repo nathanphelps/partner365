@@ -25,6 +25,8 @@ use App\Models\PartnerTemplate;
 use App\Models\SensitivityLabel;
 use App\Models\SensitivityLabelPolicy;
 use App\Models\Setting;
+use App\Models\SharePointSite;
+use App\Models\SharePointSitePermission;
 use App\Models\SiteSensitivityLabel;
 use App\Models\User;
 use Illuminate\Database\Seeder;
@@ -47,6 +49,7 @@ class DevSeeder extends Seeder
         $this->seedAccessReviews($partners, $users);
         $this->seedActivityLogs($users, $partners, $guests, $templates);
         $this->seedSyncLogs();
+        $this->seedSharePointSites($partners, $guests);
         $this->seedFavicons($partners);
         $this->seedSettings();
     }
@@ -58,6 +61,8 @@ class DevSeeder extends Seeder
             'access_review_decisions',
             'access_review_instances',
             'access_reviews',
+            'sharepoint_site_permissions',
+            'sharepoint_sites',
             'sensitivity_label_partner',
             'site_sensitivity_labels',
             'sensitivity_label_policies',
@@ -985,6 +990,68 @@ class DevSeeder extends Seeder
         }
 
         return $breakdown;
+    }
+
+    private function seedSharePointSites(\Illuminate\Support\Collection $partners, \Illuminate\Support\Collection $guests): void
+    {
+        $sharingCapabilities = [
+            'ExternalUserAndGuestSharing',
+            'ExternalUserSharingOnly',
+            'ExistingExternalUserSharingOnly',
+            'Disabled',
+        ];
+
+        $siteTemplates = [
+            ['Project Alpha', 'Collaborative workspace for Project Alpha deliverables'],
+            ['Vendor Portal', 'External vendor document exchange portal'],
+            ['Partner Collaboration', 'Shared workspace for partner organizations'],
+            ['Marketing Assets', 'Brand assets and marketing materials for external partners'],
+            ['Legal Documents', 'Contract templates and legal review documents'],
+            ['Engineering Specs', 'Technical specifications and design documents'],
+            ['Training Materials', 'Onboarding and training content for external users'],
+            ['Executive Briefings', 'Board-level presentations and strategy documents'],
+            ['Support Knowledge Base', 'Customer-facing support documentation'],
+            ['HR Onboarding', 'New hire paperwork and policy documents'],
+            ['Finance Reports', 'Quarterly financial reports and audit documents'],
+            ['Product Roadmap', 'Product planning and feature backlog'],
+        ];
+
+        $sensitivityLabels = SensitivityLabel::all();
+
+        foreach ($siteTemplates as $i => [$name, $description]) {
+            $capability = fake()->randomElement($sharingCapabilities);
+
+            $site = SharePointSite::create([
+                'site_id' => fake()->uuid(),
+                'display_name' => $name,
+                'url' => 'https://contoso.sharepoint.com/sites/'.str_replace(' ', '-', strtolower($name)),
+                'description' => $description,
+                'sensitivity_label_id' => $sensitivityLabels->isNotEmpty() ? $sensitivityLabels->random()->id : null,
+                'external_sharing_capability' => $capability,
+                'owner_display_name' => fake()->name(),
+                'owner_email' => fake()->safeEmail(),
+                'storage_used_bytes' => fake()->numberBetween(1_000_000, 50_000_000_000),
+                'member_count' => fake()->numberBetween(3, 50),
+                'last_activity_at' => fake()->dateTimeBetween('-30 days', 'now'),
+                'synced_at' => now(),
+            ]);
+
+            // Add guest permissions to sites with external sharing enabled
+            if ($capability !== 'Disabled' && $guests->isNotEmpty()) {
+                $siteGuests = $guests->random(min(fake()->numberBetween(1, 5), $guests->count()));
+                $roles = ['read', 'write', 'owner'];
+                $grantedVias = ['direct', 'sharing_link', 'group_membership'];
+
+                foreach ($siteGuests as $guest) {
+                    SharePointSitePermission::create([
+                        'sharepoint_site_id' => $site->id,
+                        'guest_user_id' => $guest->id,
+                        'role' => fake()->randomElement($roles),
+                        'granted_via' => fake()->randomElement($grantedVias),
+                    ]);
+                }
+            }
+        }
     }
 
     private function seedFavicons(\Illuminate\Support\Collection $partners): void

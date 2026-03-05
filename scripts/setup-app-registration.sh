@@ -58,6 +58,7 @@ declare -A PERMISSIONS=(
     ["AppRoleAssignment.ReadWrite.All"]="06b708a9-e830-4db3-a914-8e69da51d44f"
     ["Team.ReadBasic.All"]="2280dda6-0bfd-44ee-a2f4-cb867cfc4c1e"
     ["Sites.Read.All"]="332a536c-c7ef-4017-ab91-336970924f0d"
+    ["Sites.FullControl.All"]="a82116e5-55eb-4c41-a434-62fe8a61c773"
     # Sensitivity labels
     ["InformationProtection.Read.All"]="d903a879-88e0-4c09-b0c9-82f6a1333f84"
 )

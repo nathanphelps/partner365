@@ -49,6 +49,7 @@ From the app registration overview page, copy:
 | `AppRoleAssignment.ReadWrite.All` | Read guest user app role assignments (access visibility) |
 | `Team.ReadBasic.All` | Read guest user Teams memberships (access visibility) |
 | `Sites.Read.All` | Read SharePoint sites for guest access visibility and entitlement resources |
+| `Sites.FullControl.All` | Read SharePoint site permissions for guest user access tracking |
 | `InformationProtection.Read.All` | Read sensitivity labels, label policies, and site label assignments |
 
 3. Click **Grant admin consent for [your organization]**

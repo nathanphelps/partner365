@@ -138,6 +138,13 @@ Live-fetched from Microsoft Graph API. Responses are cached server-side for 5 mi
 | GET | `/sensitivity-labels` | `SensitivityLabelController@index` | `sensitivity-labels.index` | Any |
 | GET | `/sensitivity-labels/{sensitivityLabel}` | `SensitivityLabelController@show` | `sensitivity-labels.show` | Any |
 
+### SharePoint Sites (Read-only)
+
+| Method | URI | Controller@Method | Name | Role |
+|--------|-----|------------------|------|------|
+| GET | `/sharepoint-sites` | `SharePointSiteController@index` | `sharepoint-sites.index` | Any |
+| GET | `/sharepoint-sites/{sharePointSite}` | `SharePointSiteController@show` | `sharepoint-sites.show` | Any |
+
 ### Compliance Reports
 
 | Method | URI | Controller@Method | Name | Role |
@@ -312,13 +319,31 @@ Live-fetched from Microsoft Graph API. Responses are cached server-side for 5 mi
 }
 ```
 
+### SharePoint Sites Index
+
+```typescript
+{
+    sites: Paginated<SharePointSite>;
+    uncoveredPartnerCount: number;
+}
+```
+
+### SharePoint Sites Show
+
+```typescript
+{
+    site: SharePointSite & { sensitivity_label: SensitivityLabel; permissions: SharePointSitePermission[] };
+}
+```
+
 ### Partners Show
 
-The `PartnerOrganization` type includes trust score fields, conditional access policies, and sensitivity labels: `trust_score` (0-100 or null), `trust_score_breakdown` (JSON with per-signal pass/fail and points), and `trust_score_calculated_at`.
+The `PartnerOrganization` type includes trust score fields, conditional access policies, sensitivity labels, and SharePoint site exposure: `trust_score` (0-100 or null), `trust_score_breakdown` (JSON with per-signal pass/fail and points), and `trust_score_calculated_at`.
 
 ```typescript
 {
     partner: PartnerOrganization & { owner: User; guest_users: GuestUser[] };
+    sharePointSites: SharePointSite[];
     activity: ActivityLog[];
 }
 ```

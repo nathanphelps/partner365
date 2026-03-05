@@ -43,6 +43,7 @@ npm run types:check         # TypeScript type checking
 - `CrossTenantPolicyService` — Partner policy CRUD (wraps MicrosoftGraphService)
 - `GuestUserService` — Guest invitations and sync
 - `TenantResolverService` — Tenant info lookup from Graph API
+- `SharePointSiteService` — SharePoint site sync and guest permissions
 - `ActivityLogService` — Audit trail logging
 
 **Data Sync Pattern** — Write-through + background reconciliation:

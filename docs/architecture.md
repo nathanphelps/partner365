@@ -33,6 +33,7 @@ Partner365 is a monolithic Laravel 12 + Vue 3 application using Inertia.js for s
 │  │  EntitlementService (access packages + Graph)  ││
 │  │  TrustScoreService (domain reputation scoring) ││
 │  │  DnsLookupService (DNS record queries)         ││
+│  │  SharePointSiteService (site sync + perms)    ││
 │  │  FaviconService (partner favicon fetch+cache)  ││
 │  │                                                ││
 │  │  ComplianceReportController (aggregation only) ││
@@ -55,6 +56,8 @@ Partner365 is a monolithic Laravel 12 + Vue 3 application using Inertia.js for s
 │  │             │  │    access-policies                    │ │
 │  │             │  │  sync:sensitivity-   (every 15 min)  │ │
 │  │             │  │    labels                             │ │
+│  │             │  │  sync:sharepoint-   (every 15 min)  │ │
+│  │             │  │    sites                              │ │
 │  │             │  │  sync:favicons        (daily)         │ │
 │  │             │  │  score:partners       (daily)         │ │
 │  └──────┬──────┘  └───────────────────────────────────────┘ │
@@ -206,6 +209,27 @@ site_sensitivity_labels
 ├── synced_at
 └── timestamps
 
+sharepoint_sites
+├── id, site_id (unique, Graph API site ID)
+├── display_name, url, description
+├── sensitivity_label_id (FK → sensitivity_labels, nullable)
+├── external_sharing_capability (string)
+├── owner_display_name, owner_email
+├── storage_used_bytes, member_count
+├── last_activity_at
+├── raw_json (JSON)
+├── synced_at
+└── timestamps
+
+sharepoint_site_permissions
+├── id
+├── sharepoint_site_id (FK → sharepoint_sites)
+├── guest_user_id (FK → guest_users)
+├── role (string)
+├── granted_via (direct/sharing_link/group_membership)
+└── timestamps
+(Unique constraint on [sharepoint_site_id, guest_user_id, role, granted_via])
+
 access_package_catalogs
 ├── id, graph_id (unique, nullable)
 ├── display_name, description
@@ -269,7 +293,9 @@ settings
 - `SensitivityLabel` → belongs to many `PartnerOrganization` (via pivot with `matched_via`, `policy_name`, `site_name`), belongs to `SensitivityLabel` (parent), has many `SensitivityLabel` (children)
 - `SensitivityLabelPolicy` → standalone (stores label policy definitions with target type and assigned labels)
 - `SiteSensitivityLabel` → belongs to `SensitivityLabel` (tracks per-site label assignments)
-- `GuestUser` → belongs to `PartnerOrganization` (nullable), belongs to `User` (invited_by)
+- `SharePointSite` → belongs to `SensitivityLabel`, has many `SharePointSitePermission`, has many `GuestUser` (through permissions)
+- `SharePointSitePermission` → belongs to `SharePointSite`, belongs to `GuestUser`
+- `GuestUser` → belongs to `PartnerOrganization` (nullable), belongs to `User` (invited_by), has many `SharePointSitePermission`
 - `PartnerTemplate` → belongs to `User` (created_by)
 - `AccessReview` → belongs to `User` (reviewer, created_by), belongs to `PartnerOrganization` (scope), has many `AccessReviewInstance`
 - `AccessReviewInstance` → belongs to `AccessReview`, has many `AccessReviewDecision`

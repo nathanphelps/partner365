@@ -32,6 +32,7 @@ Partner365 solves this with a single interface for IT admins, business owners, a
 - **Access Reviews** — Periodic certification of guest user and partner organization access with configurable remediation (flag, disable, remove)
 - **Conditional Access Visibility** — Read-only view of Conditional Access policies targeting guest/external users, per-partner policy mapping with gap detection for uncovered partners
 - **Sensitivity Label Visibility** — Read-only view of Microsoft Information Protection sensitivity labels, per-partner impact mapping via label policies and site assignments, gap detection for uncovered partners
+- **SharePoint Site Tracking** — Synced inventory of SharePoint sites with external sharing enabled, per-site guest user permissions (direct, sharing link, group membership), per-partner exposure view, gap detection for uncovered partners
 - **Entitlement Management** — Self-service access packages for external partner users with bundled group memberships and SharePoint site access, single-stage approval workflows, configurable expiration, and Graph API integration
 - **Activity Log** — Full audit trail of all actions with filtering by action type, user, date range, and keyword search
 - **SIEM Integration** — Syslog/CEF forwarding to LogRhythm (or any SIEM) with admin-configurable host, port, transport (UDP/TCP/TLS), and facility
@@ -125,13 +126,13 @@ Dockerfile                     # Multi-stage build (Node + FrankenPHP)
 docker-compose.yml             # Local container deployment
 
 app/
-├── Console/Commands/       # sync:partners, sync:guests, sync:favicons, sync:access-reviews, sync:entitlements, sync:conditional-access-policies, sync:sensitivity-labels, score:partners
+├── Console/Commands/       # sync:partners, sync:guests, sync:favicons, sync:access-reviews, sync:entitlements, sync:conditional-access-policies, sync:sensitivity-labels, sync:sharepoint-sites, score:partners
 ├── Enums/                  # UserRole, PartnerCategory, InvitationStatus, ActivityAction, CloudEnvironment,
 │                           # ReviewType, RecurrenceType, RemediationAction, ReviewInstanceStatus, ReviewDecision,
-│                           # AccessPackageResourceType, AssignmentStatus
+│                           # AccessPackageResourceType, AssignmentStatus, SharePointSitesSynced
 ├── Exceptions/             # GraphApiException
 ├── Http/
-│   ├── Controllers/        # Partner, Guest, Template, Dashboard, ComplianceReport, ActivityLog, AccessReview, ConditionalAccessPolicy, SensitivityLabel, Entitlement, Admin
+│   ├── Controllers/        # Partner, Guest, Template, Dashboard, ComplianceReport, ActivityLog, AccessReview, ConditionalAccessPolicy, SensitivityLabel, SharePointSite, Entitlement, Admin
 │   ├── Middleware/          # CheckRole (RBAC)
 │   └── Requests/           # StorePartner, UpdatePartner, InviteGuest, StoreTemplate, UpdateCollaboration,
 │                           # StoreAccessReview, StoreAccessPackage, UpdateAccessPackage, UpdateSyslogSettings
@@ -140,13 +141,15 @@ app/
 ├── Models/                 # PartnerOrganization, GuestUser, PartnerTemplate, ActivityLog, Setting,
 │                           # AccessReview, AccessReviewInstance, AccessReviewDecision,
 │                           # ConditionalAccessPolicy, SensitivityLabel, SensitivityLabelPolicy, SiteSensitivityLabel,
+│                           # SharePointSite, SharePointSitePermission,
 │                           # AccessPackageCatalog, AccessPackage, AccessPackageResource, AccessPackageAssignment
 ├── Observers/              # ActivityLogObserver (auto-dispatches syslog forwarding)
 └── Services/               # MicrosoftGraphService, CrossTenantPolicyService,
                             # GuestUserService, TenantResolverService,
                             # CollaborationSettingsService, ActivityLogService,
                             # AccessReviewService, ConditionalAccessPolicyService,
-                            # SensitivityLabelService, EntitlementService,
+                            # SensitivityLabelService, SharePointSiteService,
+                            # EntitlementService,
                             # TrustScoreService, DnsLookupService, FaviconService
     └── Syslog/             # CefFormatter (CEF string builder), SyslogTransport (UDP/TCP/TLS)
 
@@ -159,22 +162,23 @@ resources/js/
 │   ├── access-reviews/     # Index, Create, Show, Instance
 │   ├── conditional-access/ # Index, Show (read-only CA policy visibility)
 │   ├── sensitivity-labels/ # Index, Show (read-only sensitivity label visibility)
+│   ├── sharepoint-sites/   # Index, Show (read-only SharePoint site tracking)
 │   ├── entitlements/       # Index, Create (multi-step wizard), Show
 │   ├── admin/              # Graph settings, Collaboration, Users, Sync, Syslog
 │   ├── activity/           # Index
 │   └── Dashboard.vue
-├── types/                  # TypeScript types for Partner, Guest (+ access types), AccessReview, ConditionalAccessPolicy, SensitivityLabel, Entitlement, Compliance, Paginated
+├── types/                  # TypeScript types for Partner, Guest (+ access types), AccessReview, ConditionalAccessPolicy, SensitivityLabel, SharePoint, Entitlement, Compliance, Paginated
 └── components/             # shadcn-vue UI components + TrustScoreBadge + PartnerAvatar
 
 tests/Feature/
 ├── Auth/                   # Fortify auth tests + AuthAuditLoggingTest
-├── Commands/               # SyncPartners, SyncGuests, SyncAccessReviews, SyncConditionalAccessPolicies, SyncSensitivityLabels, SyncActivityLogging
-├── Controllers/            # ConditionalAccessPolicy, SensitivityLabel, PartnerTemplate, ActivityLog controller tests
+├── Commands/               # SyncPartners, SyncGuests, SyncAccessReviews, SyncConditionalAccessPolicies, SyncSensitivityLabels, SyncSharePointSites, SyncActivityLogging
+├── Controllers/            # ConditionalAccessPolicy, SensitivityLabel, SharePointSite, PartnerTemplate, ActivityLog controller tests
 ├── Jobs/                   # ForwardToSyslogTest
 ├── Middleware/              # CheckRole
 ├── Models/                 # PartnerOrganization
 ├── Observers/              # ActivityLogObserverTest
-├── Services/               # All Graph API service classes + SensitivityLabelService + Syslog/ (CefFormatter, SyslogTransport)
+├── Services/               # All Graph API service classes + SensitivityLabelService + SharePointSiteService + Syslog/ (CefFormatter, SyslogTransport)
 ├── Settings/               # Profile, Password, 2FA, AuditLogging tests
 ├── Admin/                  # AdminGraph, AdminSync, AdminUser, AdminSyslog controller tests
 ├── PartnerOrganizationTest.php
