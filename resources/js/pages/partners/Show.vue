@@ -5,9 +5,8 @@ import GuestUserTable from '@/components/GuestUserTable.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
+import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { dashboard } from '@/routes';
@@ -197,23 +196,15 @@ const isAdmin = computed(() => {
                                 {{ policy.description }}
                             </p>
                         </div>
-                        <div class="flex items-center gap-2">
-                            <Checkbox
-                                :id="`policy-${policy.key}`"
-                                :checked="policyForm[policy.key]"
-                                @update:checked="
-                                    (val: boolean) => {
-                                        (policyForm as any)[policy.key] = val;
-                                    }
-                                "
-                            />
-                            <Label
-                                :for="`policy-${policy.key}`"
-                                class="cursor-pointer text-sm"
-                            >
-                                {{ policyForm[policy.key] ? 'On' : 'Off' }}
-                            </Label>
-                        </div>
+                        <Switch
+                            :id="`policy-${policy.key}`"
+                            :model-value="policyForm[policy.key]"
+                            @update:model-value="
+                                (val: boolean) => {
+                                    (policyForm as any)[policy.key] = val;
+                                }
+                            "
+                        />
                     </div>
 
                     <div class="flex items-center gap-3 pt-2">

@@ -4,10 +4,10 @@ import { CircleHelp } from 'lucide-vue-next';
 import { ref } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
+import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import {
     Tooltip,
@@ -169,31 +169,19 @@ function deleteTemplate() {
                                             {{ policy.description }}
                                         </p>
                                     </div>
-                                    <div class="flex items-center gap-2">
-                                        <Checkbox
-                                            :id="`policy-${policy.key}`"
-                                            :checked="
-                                                form.policy_config[policy.key]
-                                            "
-                                            @update:checked="
-                                                (v: boolean) => {
-                                                    form.policy_config[
-                                                        policy.key
-                                                    ] = v;
-                                                }
-                                            "
-                                        />
-                                        <Label
-                                            :for="`policy-${policy.key}`"
-                                            class="w-8 cursor-pointer text-sm"
-                                        >
-                                            {{
-                                                form.policy_config[policy.key]
-                                                    ? 'On'
-                                                    : 'Off'
-                                            }}
-                                        </Label>
-                                    </div>
+                                    <Switch
+                                        :id="`policy-${policy.key}`"
+                                        :model-value="
+                                            form.policy_config[policy.key]
+                                        "
+                                        @update:model-value="
+                                            (v: boolean) => {
+                                                form.policy_config[
+                                                    policy.key
+                                                ] = v;
+                                            }
+                                        "
+                                    />
                                 </div>
                             </TooltipProvider>
                         </div>

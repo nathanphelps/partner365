@@ -2,9 +2,9 @@
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { dashboard } from '@/routes';
@@ -112,12 +112,12 @@ function submit() {
                             </p>
                         </div>
 
-                        <!-- Send email checkbox -->
+                        <!-- Send email toggle -->
                         <div class="flex items-center gap-2">
-                            <Checkbox
+                            <Switch
                                 id="send-email"
-                                :checked="form.send_email"
-                                @update:checked="
+                                :model-value="form.send_email"
+                                @update:model-value="
                                     (v: boolean) => {
                                         form.send_email = v;
                                     }
