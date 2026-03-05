@@ -51,11 +51,20 @@ class PartnerTemplateController extends Controller
     {
         $template->update($request->validated());
 
+        $this->activityLog->log($request->user(), ActivityAction::TemplateUpdated, $template, [
+            'name' => $template->name,
+        ]);
+
         return redirect()->route('templates.index')->with('success', "Template '{$template->name}' updated.");
     }
 
     public function destroy(PartnerTemplate $template): RedirectResponse
     {
+        $name = $template->name;
+        $this->activityLog->log(auth()->user(), ActivityAction::TemplateDeleted, $template, [
+            'name' => $name,
+        ]);
+
         $template->delete();
 
         return redirect()->route('templates.index')->with('success', 'Template deleted.');
