@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AccessReviewController;
 use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GuestUserController;
@@ -27,6 +28,11 @@ Route::middleware(['auth', 'verified', 'approved'])->group(function () {
     Route::resource('templates', PartnerTemplateController::class)->middleware('role:admin');
 
     Route::get('activity', [ActivityLogController::class, 'index'])->name('activity.index');
+
+    Route::resource('access-reviews', AccessReviewController::class)->only(['index', 'create', 'store', 'show', 'destroy']);
+    Route::get('access-reviews/{access_review}/instances/{instance}', [AccessReviewController::class, 'showInstance'])->name('access-reviews.instances.show');
+    Route::post('access-reviews/decisions/{decision}', [AccessReviewController::class, 'submitDecision'])->name('access-reviews.decisions.submit');
+    Route::post('access-reviews/instances/{instance}/apply', [AccessReviewController::class, 'applyRemediations'])->name('access-reviews.instances.apply');
 });
 
 require __DIR__.'/settings.php';
