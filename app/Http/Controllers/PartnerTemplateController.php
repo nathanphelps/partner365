@@ -17,7 +17,7 @@ class PartnerTemplateController extends Controller
     public function index(): Response
     {
         return Inertia::render('templates/Index', [
-            'templates' => PartnerTemplate::with('createdBy')->orderBy('name')->get(),
+            'templates' => PartnerTemplate::with('createdBy')->orderBy('name')->paginate(25),
         ]);
     }
 
