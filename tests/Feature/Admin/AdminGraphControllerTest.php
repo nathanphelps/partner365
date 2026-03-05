@@ -1,6 +1,8 @@
 <?php
 
+use App\Enums\ActivityAction;
 use App\Enums\UserRole;
+use App\Models\ActivityLog;
 use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Support\Facades\Cache;
@@ -223,6 +225,34 @@ test('consent callback renders error view', function () {
         ->assertViewIs('admin.consent-callback')
         ->assertViewHas('success', false)
         ->assertViewHas('error', 'Admin denied');
+});
+
+test('test connection logs GraphConnectionTested', function () {
+    Setting::set('graph', 'tenant_id', 'test-tenant');
+    Setting::set('graph', 'client_id', 'test-client');
+    Setting::set('graph', 'client_secret', 'test-secret', encrypted: true);
+    Setting::set('graph', 'scopes', 'https://graph.microsoft.com/.default');
+
+    Http::fake([
+        'login.microsoftonline.com/*' => Http::response(['access_token' => 'test-token']),
+    ]);
+
+    Cache::forget('msgraph_access_token');
+
+    $this->actingAs($this->admin)->post('/admin/graph/test');
+
+    $log = ActivityLog::where('action', ActivityAction::GraphConnectionTested)->first();
+    expect($log)->not->toBeNull();
+    expect($log->user_id)->toBe($this->admin->id);
+    expect($log->details['success'])->toBeTrue();
+});
+
+test('consent callback logs ConsentGranted on success', function () {
+    $this->get('/admin/graph/consent/callback?admin_consent=True');
+
+    $log = ActivityLog::where('action', ActivityAction::ConsentGranted)->first();
+    expect($log)->not->toBeNull();
+    expect($log->details['success'])->toBeTrue();
 });
 
 test('update validates required fields', function () {

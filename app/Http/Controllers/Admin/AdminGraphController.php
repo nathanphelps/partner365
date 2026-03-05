@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Enums\ActivityAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\UpdateGraphSettingsRequest;
+use App\Models\ActivityLog;
 use App\Models\Setting;
 use App\Services\ActivityLogService;
 use Illuminate\Http\JsonResponse;
@@ -68,7 +69,7 @@ class AdminGraphController extends Controller
         return redirect()->route('admin.graph.edit')->with('success', 'Graph settings updated.');
     }
 
-    public function testConnection(): JsonResponse
+    public function testConnection(Request $request): JsonResponse
     {
         try {
             $tenantId = Setting::get('graph', 'tenant_id', config('graph.tenant_id'));
@@ -87,7 +88,13 @@ class AdminGraphController extends Controller
                 ]
             );
 
-            if ($response->successful() && $response->json('access_token')) {
+            $success = $response->successful() && $response->json('access_token');
+
+            $this->activityLog->log($request->user(), ActivityAction::GraphConnectionTested, null, [
+                'success' => $success,
+            ]);
+
+            if ($success) {
                 return response()->json(['success' => true, 'message' => 'Connection successful.']);
             }
 
@@ -96,6 +103,11 @@ class AdminGraphController extends Controller
                 'message' => $response->json('error_description', 'Authentication failed.'),
             ]);
         } catch (\Throwable $e) {
+            $this->activityLog->log($request->user(), ActivityAction::GraphConnectionTested, null, [
+                'success' => false,
+                'error' => $e->getMessage(),
+            ]);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Connection failed: '.$e->getMessage(),
@@ -127,6 +139,13 @@ class AdminGraphController extends Controller
     {
         $success = $request->query('admin_consent') === 'True';
         $error = $request->query('error_description');
+
+        ActivityLog::create([
+            'user_id' => null,
+            'action' => ActivityAction::ConsentGranted,
+            'details' => ['success' => $success, 'error' => $error],
+            'created_at' => now(),
+        ]);
 
         return view('admin.consent-callback', [
             'success' => $success,
