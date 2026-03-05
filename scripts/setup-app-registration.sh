@@ -40,10 +40,10 @@ GRAPH_API="00000003-0000-0000-c000-000000000000"
 declare -A PERMISSIONS=(
     ["User.Read.All"]="df021288-bdef-4463-88db-98f22de89214"
     ["User.ReadWrite.All"]="741f803b-c850-494e-b5df-cde7c675a1ca"
-    ["User.Invite.All"]="09850681-111b-4a89-9571-53f363b8da44"
+    ["User.Invite.All"]="09850681-111b-4a89-9bed-3f2cae46d706"
     ["Policy.Read.All"]="246dd0d5-5bd0-4def-940b-0421030a5b68"
-    ["Policy.ReadWrite.CrossTenantAccess"]="338163d7-f101-4c92-94ba-ca46e7f4f573"
-    ["CrossTenantInformation.ReadBasic.All"]="cac88765-0571-4b71-9c2f-f2547cdd3a94"
+    ["Policy.ReadWrite.CrossTenantAccess"]="338163d7-f101-4c92-94ba-ca46fe52447c"
+    ["CrossTenantInformation.ReadBasic.All"]="cac88765-0581-4025-9725-5ebc13f729ee"
 )
 
 RESOURCE_ACCESS_ITEMS=""
