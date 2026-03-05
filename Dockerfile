@@ -9,7 +9,7 @@ RUN npm ci
 COPY resources/ resources/
 COPY vite.config.ts tsconfig.json ./
 COPY public/ public/
-RUN npm run build
+RUN DOCKER_BUILD=1 npm run build
 
 # Stage 2: PHP production image
 FROM dunglas/frankenphp:php8.4 AS production
@@ -18,6 +18,8 @@ FROM dunglas/frankenphp:php8.4 AS production
 RUN apt-get update && apt-get install -y --no-install-recommends \
     supervisor \
     curl \
+    git \
+    unzip \
     && rm -rf /var/lib/apt/lists/*
 
 # Install PHP extensions
