@@ -24,14 +24,16 @@ Partner365 solves this with a single interface for IT admins, business owners, a
 - **Admin Consent** — One-click admin consent popup for granting Graph API permissions
 - **Trust Score** — Composite 0-100 domain reputation score per partner based on DNS hygiene (DMARC, SPF, DKIM, DNSSEC, domain age) and Entra ID metadata, recalculated daily
 - **Compliance Reports** — Unified compliance dashboard with partner policy compliance scoring, stale guest detection (30/60/90-day buckets), filterable tables by issue type, and CSV export for audit documentation
-- **Dashboard** — At-a-glance stats for partners, guests, MFA trust coverage, and pending invitations
+- **Dashboard** — Action center with key stats (partners, guests, stale guests, pending invitations, overdue reviews), triage section (pending entitlement approvals with inline approve/deny, partners needing attention with trust scores), and recent activity feed
 - **Onboarding Wizard** — 3-step partner creation with tenant resolution, optional templates, and policy configuration
 - **Partner Templates** — Reusable policy configurations for consistent onboarding
 - **Background Sync** — Automatic 15-minute sync from Graph API keeps local data current
 - **Access Reviews** — Periodic certification of guest user and partner organization access with configurable remediation (flag, disable, remove)
 - **Conditional Access Visibility** — Read-only view of Conditional Access policies targeting guest/external users, per-partner policy mapping with gap detection for uncovered partners
 - **Entitlement Management** — Self-service access packages for external partner users with bundled group memberships and SharePoint site access, single-stage approval workflows, configurable expiration, and Graph API integration
-- **Activity Log** — Full audit trail of all partner and guest management actions
+- **Activity Log** — Full audit trail of all actions with filtering by action type, user, date range, and keyword search
+- **SIEM Integration** — Syslog/CEF forwarding to LogRhythm (or any SIEM) with admin-configurable host, port, transport (UDP/TCP/TLS), and facility
+- **Comprehensive Audit Coverage** — Auth events (login, logout, lockout, 2FA), profile/password changes, template CRUD, sync completions, admin actions, and consent grants
 - **3-Tier RBAC** — Admin, Operator, and Viewer roles with middleware-enforced access control
 
 ## Tech Stack
@@ -130,17 +132,20 @@ app/
 │   ├── Controllers/        # Partner, Guest, Template, Dashboard, ComplianceReport, ActivityLog, AccessReview, ConditionalAccessPolicy, Entitlement, Admin
 │   ├── Middleware/          # CheckRole (RBAC)
 │   └── Requests/           # StorePartner, UpdatePartner, InviteGuest, StoreTemplate, UpdateCollaboration,
-│                           # StoreAccessReview, StoreAccessPackage, UpdateAccessPackage
-├── Models/                 # PartnerOrganization, GuestUser, PartnerTemplate, ActivityLog,
+│                           # StoreAccessReview, StoreAccessPackage, UpdateAccessPackage, UpdateSyslogSettings
+├── Jobs/                   # ForwardToSyslog (queued CEF forwarding)
+├── Listeners/              # LogAuthEvent (Login, Logout, Failed, Lockout, 2FA)
+├── Models/                 # PartnerOrganization, GuestUser, PartnerTemplate, ActivityLog, Setting,
 │                           # AccessReview, AccessReviewInstance, AccessReviewDecision,
 │                           # ConditionalAccessPolicy,
 │                           # AccessPackageCatalog, AccessPackage, AccessPackageResource, AccessPackageAssignment
+├── Observers/              # ActivityLogObserver (auto-dispatches syslog forwarding)
 └── Services/               # MicrosoftGraphService, CrossTenantPolicyService,
                             # GuestUserService, TenantResolverService,
                             # CollaborationSettingsService, ActivityLogService,
                             # AccessReviewService, ConditionalAccessPolicyService,
-                            # EntitlementService,
-                            # TrustScoreService, DnsLookupService
+                            # EntitlementService, TrustScoreService, DnsLookupService
+    └── Syslog/             # CefFormatter (CEF string builder), SyslogTransport (UDP/TCP/TLS)
 
 resources/js/
 ├── pages/
@@ -151,17 +156,23 @@ resources/js/
 │   ├── access-reviews/     # Index, Create, Show, Instance
 │   ├── conditional-access/ # Index, Show (read-only CA policy visibility)
 │   ├── entitlements/       # Index, Create (multi-step wizard), Show
-│   ├── admin/              # Graph settings, Collaboration, Users, Sync
+│   ├── admin/              # Graph settings, Collaboration, Users, Sync, Syslog
 │   ├── activity/           # Index
 │   └── Dashboard.vue
 ├── types/                  # TypeScript types for Partner, Guest (+ access types), AccessReview, ConditionalAccessPolicy, Entitlement, Compliance, Paginated
 └── components/             # shadcn-vue UI components + TrustScoreBadge
 
 tests/Feature/
-├── Commands/               # SyncPartners, SyncGuests, SyncAccessReviews, SyncConditionalAccessPolicies
+├── Auth/                   # Fortify auth tests + AuthAuditLoggingTest
+├── Commands/               # SyncPartners, SyncGuests, SyncAccessReviews, SyncConditionalAccessPolicies, SyncActivityLogging
+├── Controllers/            # ConditionalAccessPolicy, PartnerTemplate, ActivityLog controller tests
+├── Jobs/                   # ForwardToSyslogTest
 ├── Middleware/              # CheckRole
 ├── Models/                 # PartnerOrganization
-├── Services/               # All Graph API service classes
+├── Observers/              # ActivityLogObserverTest
+├── Services/               # All Graph API service classes + Syslog/ (CefFormatter, SyslogTransport)
+├── Settings/               # Profile, Password, 2FA, AuditLogging tests
+├── Admin/                  # AdminGraph, AdminSync, AdminUser, AdminSyslog controller tests
 ├── PartnerOrganizationTest.php
 ├── GuestUserControllerTest.php
 ├── ComplianceReportTest.php
@@ -170,8 +181,6 @@ tests/Feature/
 ├── AccessReviewControllerTest.php
 ├── EntitlementServiceTest.php
 ├── EntitlementControllerTest.php
-├── Controllers/
-│   └── ConditionalAccessPolicyControllerTest.php
 ├── TrustScoreServiceTest.php
 ├── DnsLookupServiceTest.php
 └── ScorePartnersCommandTest.php

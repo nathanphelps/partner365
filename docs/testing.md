@@ -2,7 +2,7 @@
 
 ## Overview
 
-Partner365 uses [Pest PHP](https://pestphp.com/) for testing. The test suite contains 256 tests covering services, controllers, middleware, models, commands, compliance reporting, and trust scoring.
+Partner365 uses [Pest PHP](https://pestphp.com/) for testing. The test suite contains 300 tests covering services, controllers, middleware, models, commands, compliance reporting, trust scoring, syslog/CEF export, and audit logging.
 
 ## Running Tests
 
@@ -29,21 +29,33 @@ tests/
 ├── Unit/
 │   └── ExampleTest.php
 └── Feature/
-    ├── Auth/                         # 7 files — Fortify authentication tests
-    ├── Settings/                     # 3 files — Profile, password, 2FA settings
-    ├── Services/                     # 6 files — All Graph API service classes
+    ├── Auth/                         # 8 files — Fortify auth + audit logging
+    │   └── AuthAuditLoggingTest.php              (5 tests)
+    ├── Settings/                     # 4 files — Profile, password, 2FA, audit logging
+    │   └── AuditLoggingTest.php                  (3 tests)
+    ├── Services/                     # 8 files — Graph API services + Syslog
     │   ├── MicrosoftGraphServiceTest.php              (9 tests)
     │   ├── CrossTenantPolicyServiceTest.php           (6 tests)
     │   ├── GuestUserServiceTest.php                   (16 tests)
     │   ├── TenantResolverServiceTest.php              (2 tests)
     │   ├── ActivityLogServiceTest.php                 (2 tests)
-    │   └── ConditionalAccessPolicyServiceTest.php     (6 tests)
-    ├── Controllers/                  # 1 file — Controller tests
-    │   └── ConditionalAccessPolicyControllerTest.php  (5 tests)
-    ├── Commands/                     # 3 files — Sync commands
+    │   ├── ConditionalAccessPolicyServiceTest.php     (6 tests)
+    │   └── Syslog/
+    │       ├── CefFormatterTest.php                   (4 tests)
+    │       └── SyslogTransportTest.php                (3 tests)
+    ├── Controllers/                  # 3 files — Controller tests
+    │   ├── ConditionalAccessPolicyControllerTest.php  (5 tests)
+    │   ├── PartnerTemplateControllerTest.php          (2 tests)
+    │   └── ActivityLogControllerTest.php              (6 tests)
+    ├── Commands/                     # 4 files — Sync commands + activity logging
     │   ├── SyncPartnersTest.php                (2 tests)
     │   ├── SyncGuestsTest.php                  (2 tests)
-    │   └── SyncAccessReviewsTest.php           (4 tests)
+    │   ├── SyncAccessReviewsTest.php           (4 tests)
+    │   └── SyncActivityLoggingTest.php         (3 tests)
+    ├── Jobs/
+    │   └── ForwardToSyslogTest.php             (3 tests)
+    ├── Observers/
+    │   └── ActivityLogObserverTest.php         (1 test)
     ├── Middleware/
     │   └── CheckRoleTest.php                   (4 tests)
     ├── Models/
@@ -54,7 +66,8 @@ tests/
     ├── Admin/
     │   ├── AdminGraphControllerTest.php          (17 tests)
     │   ├── AdminSyncControllerTest.php           (7 tests)
-    │   └── AdminUserControllerTest.php           (9 tests)
+    │   ├── AdminUserControllerTest.php           (9 tests)
+    │   └── AdminSyslogControllerTest.php         (7 tests)
     ├── Enums/
     │   └── CloudEnvironmentTest.php              (4 tests)
     ├── CollaborationSettingsTest.php           (6 tests — admin collaboration)

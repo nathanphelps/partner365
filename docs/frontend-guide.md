@@ -20,7 +20,7 @@ resources/js/
 │   └── app/
 │       └── AppSidebarLayout.vue  # Sidebar + content shell
 ├── pages/
-│   ├── Dashboard.vue       # Stats cards + activity feed
+│   ├── Dashboard.vue       # Action center: stats, pending approvals, attention partners, activity
 │   ├── Welcome.vue         # Public landing page
 │   ├── partners/
 │   │   ├── Index.vue       # Data table with search/filter

@@ -7,11 +7,17 @@ use App\Enums\ActivityAction;
 use App\Enums\AssignmentStatus;
 use App\Enums\InvitationStatus;
 use App\Enums\PartnerCategory;
+use App\Enums\RecurrenceType;
+use App\Enums\RemediationAction;
+use App\Enums\ReviewInstanceStatus;
+use App\Enums\ReviewType;
 use App\Enums\UserRole;
 use App\Models\AccessPackage;
 use App\Models\AccessPackageAssignment;
 use App\Models\AccessPackageCatalog;
 use App\Models\AccessPackageResource;
+use App\Models\AccessReview;
+use App\Models\AccessReviewInstance;
 use App\Models\ConditionalAccessPolicy;
 use App\Models\GuestUser;
 use App\Models\PartnerOrganization;
@@ -34,6 +40,7 @@ class DevSeeder extends Seeder
         $templates = $this->seedTemplates($users['admin']);
         $this->seedConditionalAccessPolicies($partners);
         $this->seedEntitlements($partners, $users);
+        $this->seedAccessReviews($partners, $users);
         $this->seedActivityLogs($users, $partners, $guests, $templates);
         $this->seedSyncLogs();
         $this->seedSettings();
@@ -43,6 +50,9 @@ class DevSeeder extends Seeder
     {
         $tables = [
             'activity_log',
+            'access_review_decisions',
+            'access_review_instances',
+            'access_reviews',
             'conditional_access_policy_partner',
             'conditional_access_policies',
             'access_package_assignments',
@@ -481,6 +491,66 @@ class DevSeeder extends Seeder
         }
     }
 
+    private function seedAccessReviews(
+        \Illuminate\Support\Collection $partners,
+        array $users,
+    ): void {
+        $reviewConfigs = [
+            ['title' => 'Quarterly Guest Access Review', 'type' => ReviewType::GuestUsers, 'recurrence' => RecurrenceType::Recurring, 'interval' => 90, 'remediation' => RemediationAction::Disable],
+            ['title' => 'Annual Partner Relationship Review', 'type' => ReviewType::PartnerOrganizations, 'recurrence' => RecurrenceType::Recurring, 'interval' => 365, 'remediation' => RemediationAction::FlagOnly],
+            ['title' => 'Contractor Access Cleanup', 'type' => ReviewType::GuestUsers, 'recurrence' => RecurrenceType::OneTime, 'interval' => null, 'remediation' => RemediationAction::Remove],
+        ];
+
+        foreach ($reviewConfigs as $config) {
+            $review = AccessReview::create([
+                'title' => $config['title'],
+                'description' => fake()->sentence(),
+                'review_type' => $config['type'],
+                'scope_partner_id' => $config['type'] === ReviewType::PartnerOrganizations ? null : $partners->random()->id,
+                'recurrence_type' => $config['recurrence'],
+                'recurrence_interval_days' => $config['interval'],
+                'remediation_action' => $config['remediation'],
+                'reviewer_user_id' => $users['admin']->id,
+                'created_by_user_id' => $users['admin']->id,
+                'graph_definition_id' => fake()->uuid(),
+                'next_review_at' => $config['recurrence'] === RecurrenceType::Recurring
+                    ? now()->addDays(fake()->numberBetween(1, $config['interval']))
+                    : null,
+            ]);
+
+            // Completed instance
+            AccessReviewInstance::create([
+                'access_review_id' => $review->id,
+                'status' => ReviewInstanceStatus::Completed,
+                'started_at' => now()->subDays(60),
+                'due_at' => now()->subDays(30),
+                'completed_at' => now()->subDays(32),
+            ]);
+
+            // Overdue in-progress instance (shows on dashboard)
+            if (fake()->boolean(60)) {
+                AccessReviewInstance::create([
+                    'access_review_id' => $review->id,
+                    'status' => ReviewInstanceStatus::InProgress,
+                    'started_at' => now()->subDays(20),
+                    'due_at' => now()->subDays(fake()->numberBetween(1, 10)),
+                    'completed_at' => null,
+                ]);
+            }
+
+            // Pending future instance
+            if (fake()->boolean(40)) {
+                AccessReviewInstance::create([
+                    'access_review_id' => $review->id,
+                    'status' => ReviewInstanceStatus::Pending,
+                    'started_at' => now()->addDays(5),
+                    'due_at' => now()->addDays(35),
+                    'completed_at' => null,
+                ]);
+            }
+        }
+    }
+
     private function seedActivityLogs(
         array $users,
         \Illuminate\Support\Collection $partners,
@@ -566,6 +636,94 @@ class DevSeeder extends Seeder
             ];
         }
 
+        // Template update/delete actions
+        if ($templates->count() >= 2) {
+            $entries[] = [
+                'user_id' => $users['admin']->id,
+                'action' => ActivityAction::TemplateUpdated->value,
+                'subject_type' => PartnerTemplate::class,
+                'subject_id' => $templates->first()->id,
+                'details' => json_encode(['name' => $templates->first()->name]),
+                'created_at' => fake()->dateTimeBetween('-14 days', $now),
+            ];
+        }
+
+        // Auth events — logins, logouts, failures
+        foreach ($allUsers->random(min(10, $allUsers->count())) as $user) {
+            $entries[] = [
+                'user_id' => $user->id,
+                'action' => ActivityAction::UserLoggedIn->value,
+                'subject_type' => User::class,
+                'subject_id' => $user->id,
+                'details' => json_encode(['ip' => fake()->ipv4()]),
+                'created_at' => fake()->dateTimeBetween('-14 days', $now),
+            ];
+
+            if (fake()->boolean(30)) {
+                $entries[] = [
+                    'user_id' => $user->id,
+                    'action' => ActivityAction::UserLoggedOut->value,
+                    'subject_type' => User::class,
+                    'subject_id' => $user->id,
+                    'details' => json_encode([]),
+                    'created_at' => fake()->dateTimeBetween('-14 days', $now),
+                ];
+            }
+        }
+
+        // Failed login attempts
+        for ($i = 0; $i < 5; $i++) {
+            $entries[] = [
+                'user_id' => null,
+                'action' => ActivityAction::LoginFailed->value,
+                'subject_type' => null,
+                'subject_id' => null,
+                'details' => json_encode(['email' => fake()->email(), 'ip' => fake()->ipv4()]),
+                'created_at' => fake()->dateTimeBetween('-14 days', $now),
+            ];
+        }
+
+        // Password change and 2FA events
+        foreach ($allUsers->random(min(3, $allUsers->count())) as $user) {
+            $entries[] = [
+                'user_id' => $user->id,
+                'action' => ActivityAction::PasswordChanged->value,
+                'subject_type' => User::class,
+                'subject_id' => $user->id,
+                'details' => json_encode([]),
+                'created_at' => fake()->dateTimeBetween('-30 days', $now),
+            ];
+        }
+
+        $entries[] = [
+            'user_id' => $users['admin']->id,
+            'action' => ActivityAction::TwoFactorEnabled->value,
+            'subject_type' => User::class,
+            'subject_id' => $users['admin']->id,
+            'details' => json_encode([]),
+            'created_at' => fake()->dateTimeBetween('-30 days', $now),
+        ];
+
+        // Profile update
+        $entries[] = [
+            'user_id' => $users['admin']->id,
+            'action' => ActivityAction::ProfileUpdated->value,
+            'subject_type' => User::class,
+            'subject_id' => $users['admin']->id,
+            'details' => json_encode(['fields' => ['name']]),
+            'created_at' => fake()->dateTimeBetween('-14 days', $now),
+        ];
+
+        // Graph connection test
+        $entries[] = [
+            'user_id' => $users['admin']->id,
+            'action' => ActivityAction::GraphConnectionTested->value,
+            'subject_type' => null,
+            'subject_id' => null,
+            'details' => json_encode(['success' => true]),
+            'created_at' => fake()->dateTimeBetween('-7 days', $now),
+        ];
+
         // Sync completed entries
         for ($i = 0; $i < 10; $i++) {
             $entries[] = [
@@ -577,6 +735,16 @@ class DevSeeder extends Seeder
                 'created_at' => fake()->dateTimeBetween('-30 days', $now),
             ];
         }
+
+        // CA policy sync
+        $entries[] = [
+            'user_id' => null,
+            'action' => ActivityAction::ConditionalAccessPoliciesSynced->value,
+            'subject_type' => null,
+            'subject_id' => null,
+            'details' => json_encode(['policies_synced' => 5]),
+            'created_at' => fake()->dateTimeBetween('-7 days', $now),
+        ];
 
         // User management actions
         foreach ($users['operators']->take(3) as $operator) {
@@ -669,5 +837,12 @@ class DevSeeder extends Seeder
         Setting::set('graph', 'client_secret', 'placeholder-client-secret', encrypted: true);
         Setting::set('sync', 'partner_interval', '15');
         Setting::set('sync', 'guest_interval', '15');
+
+        // Syslog/SIEM settings (disabled by default in dev)
+        Setting::set('syslog', 'enabled', 'false');
+        Setting::set('syslog', 'host', '');
+        Setting::set('syslog', 'port', '514');
+        Setting::set('syslog', 'transport', 'udp');
+        Setting::set('syslog', 'facility', '16');
     }
 }

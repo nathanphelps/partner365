@@ -36,6 +36,13 @@ Partner365 is a monolithic Laravel 12 + Vue 3 application using Inertia.js for s
 │  │  ComplianceReportController (aggregation only) ││
 │  └──────┬──────────────────────────────────────────┘│
 │         │                                            │
+│  ┌──────────────────────────────────────────────────┐│
+│  │         Syslog / SIEM Layer                       ││
+│  │  ActivityLogObserver → ForwardToSyslog (queued)  ││
+│  │  CefFormatter (CEF string builder)               ││
+│  │  SyslogTransport (UDP / TCP / TLS)               ││
+│  └──────────────────────────────────────────────────┘│
+│         │                                            │
 │  ┌──────▼──────┐  ┌───────────────────────────────────────┐ │
 │  │  Eloquent   │  │  Scheduled Commands                    │ │
 │  │  Models     │  │  sync:partners        (every 15 min)  │ │
@@ -48,10 +55,10 @@ Partner365 is a monolithic Laravel 12 + Vue 3 application using Inertia.js for s
 │  └──────┬──────┘  └───────────────────────────────────────┘ │
 └─────────┼───────────────────────────────────────────┘
           │                        │
-┌─────────▼─────────┐  ┌──────────▼──────────────────┐
-│  SQLite / Postgres │  │  Microsoft Graph API v1.0   │
-│  (Local Cache)     │  │  (Source of Truth)           │
-└────────────────────┘  └─────────────────────────────┘
+┌─────────▼─────────┐  ┌──────────▼──────────────────┐  ┌───────────────────┐
+│  SQLite / Postgres │  │  Microsoft Graph API v1.0   │  │  Syslog / SIEM    │
+│  (Local Cache)     │  │  (Source of Truth)           │  │  (LogRhythm, etc) │
+└────────────────────┘  └─────────────────────────────┘  └───────────────────┘
 ```
 
 ## Data Model
@@ -196,11 +203,20 @@ access_package_assignments
 └── timestamps
 
 activity_log
-├── id, user_id (FK → users)
-├── action (enum: partner_created, guest_invited, access_review_created, access_package_created, etc.)
+├── id, user_id (FK → users, nullable for system events)
+├── action (enum: partner_created, guest_invited, user_logged_in, login_failed,
+│          password_changed, two_factor_enabled, profile_updated, template_updated,
+│          sync_completed, graph_connection_tested, consent_granted, etc.)
 ├── subject_type, subject_id (polymorphic)
 ├── description, details (JSON)
 └── created_at
+
+settings
+├── id, group (e.g. 'graph', 'sync', 'syslog')
+├── key (e.g. 'host', 'port', 'transport', 'facility', 'enabled')
+├── value (string), encrypted (boolean)
+└── timestamps
+(Unique constraint on group + key)
 ```
 
 ### Relationships

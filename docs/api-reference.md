@@ -138,11 +138,29 @@ Live-fetched from Microsoft Graph API. Responses are cached server-side for 5 mi
 | GET | `/reports` | `ComplianceReportController@index` | `reports.index` | Any |
 | GET | `/reports/export` | `ComplianceReportController@export` | `reports.export` | Any |
 
+### Admin — SIEM / Syslog Settings
+
+| Method | URI | Controller@Method | Name | Role |
+|--------|-----|------------------|------|------|
+| GET | `/admin/syslog` | `AdminSyslogController@edit` | `admin.syslog.edit` | Admin |
+| PUT | `/admin/syslog` | `AdminSyslogController@update` | `admin.syslog.update` | Admin |
+| POST | `/admin/syslog/test` | `AdminSyslogController@test` | `admin.syslog.test` | Admin |
+
 ### Activity Log
 
 | Method | URI | Controller@Method | Name | Role |
 |--------|-----|------------------|------|------|
 | GET | `/activity` | `ActivityLogController@index` | `activity.index` | Any |
+
+**Query Parameters (all optional):**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `actions[]` | string[] | Filter by action type(s) (e.g. `user_logged_in`, `partner_created`) |
+| `user_id` | integer | Filter by user who performed the action |
+| `date_from` | date (Y-m-d) | Show entries from this date |
+| `date_to` | date (Y-m-d) | Show entries up to this date |
+| `search` | string | Search within details JSON |
 
 ## Request Validation
 
@@ -222,16 +240,25 @@ Live-fetched from Microsoft Graph API. Responses are cached server-side for 5 mi
 {
     stats: {
         total_partners: number;
-        mfa_trust_enabled: number;
-        mfa_trust_disabled: number;
         total_guests: number;
         pending_invitations: number;
-        inactive_guests: number;
-        active_reviews: number;
-        overdue_reviews: number;
-        partners_by_category: Record<string, number>;
+        stale_guests: number;          // 90+ days inactive or never signed in
+        overdue_reviews: number;       // pending/in-progress instances past due date
     };
-    recentActivity: ActivityLog[];
+    pendingApprovals: {                // top 5, ordered by requested_at asc
+        id: number;
+        access_package_id: number;
+        access_package_name: string | null;
+        target_user_email: string;
+        requested_at: string | null;
+    }[];
+    attentionPartners: {               // top 5, trust_score < 70, ordered asc
+        id: number;
+        display_name: string;
+        trust_score: number;
+        stale_guests_count: number;
+    }[];
+    recentActivity: ActivityLog[];     // last 10 entries
 }
 ```
 
@@ -331,6 +358,18 @@ The `PartnerOrganization` type includes trust score fields and conditional acces
     "recurrence_interval_days": "required_if:recurrence_type,recurring|integer|min:1|max:365",
     "remediation_action": "required|in:flag_only,disable,remove",
     "reviewer_user_id": "required|exists:users,id"
+}
+```
+
+### UpdateSyslogSettingsRequest
+
+```json
+{
+    "enabled": "required|boolean",
+    "host": "required_if:enabled,true|nullable|string|max:255",
+    "port": "integer|between:1,65535",
+    "transport": "in:udp,tcp,tls",
+    "facility": "integer|between:0,23"
 }
 ```
 
