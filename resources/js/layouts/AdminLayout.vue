@@ -63,8 +63,8 @@ const { isCurrentOrParentUrl } = useCurrentUrl();
 
                 <Separator class="my-6 lg:hidden" />
 
-                <div class="flex-1 md:max-w-2xl">
-                    <section class="max-w-xl space-y-12">
+                <div class="flex-1">
+                    <section class="space-y-12">
                         <slot />
                     </section>
                 </div>
