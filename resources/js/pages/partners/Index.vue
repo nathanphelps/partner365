@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref, watch } from 'vue';
+import TrustScoreBadge from '@/components/TrustScoreBadge.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -128,6 +129,11 @@ function formatDate(val: string | null): string {
                             <th
                                 class="px-4 py-3 text-left font-medium text-muted-foreground"
                             >
+                                Trust Score
+                            </th>
+                            <th
+                                class="px-4 py-3 text-left font-medium text-muted-foreground"
+                            >
                                 Category
                             </th>
                             <th
@@ -168,6 +174,9 @@ function formatDate(val: string | null): string {
                             </td>
                             <td class="px-4 py-3 text-muted-foreground">
                                 {{ partner.domain ?? '—' }}
+                            </td>
+                            <td class="px-4 py-3">
+                                <TrustScoreBadge :score="partner.trust_score" />
                             </td>
                             <td class="px-4 py-3">
                                 <Badge
@@ -230,7 +239,7 @@ function formatDate(val: string | null): string {
                         </tr>
                         <tr v-if="partners.data.length === 0">
                             <td
-                                colspan="7"
+                                colspan="8"
                                 class="px-4 py-8 text-center text-muted-foreground"
                             >
                                 No partners found.

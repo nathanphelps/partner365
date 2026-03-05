@@ -18,6 +18,7 @@ class PartnerOrganization extends Model
         'device_trust_enabled', 'direct_connect_inbound_enabled', 'direct_connect_outbound_enabled',
         'tenant_restrictions_enabled', 'tenant_restrictions_json',
         'raw_policy_json', 'last_synced_at',
+        'trust_score', 'trust_score_breakdown', 'trust_score_calculated_at',
     ];
 
     protected function casts(): array
@@ -34,6 +35,8 @@ class PartnerOrganization extends Model
             'tenant_restrictions_json' => 'array',
             'raw_policy_json' => 'array',
             'last_synced_at' => 'datetime',
+            'trust_score_breakdown' => 'array',
+            'trust_score_calculated_at' => 'datetime',
         ];
     }
 

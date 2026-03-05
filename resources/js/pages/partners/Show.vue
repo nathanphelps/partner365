@@ -3,6 +3,7 @@ import { Head, router, usePage } from '@inertiajs/vue3';
 import { CircleHelp } from 'lucide-vue-next';
 import { ref, reactive, computed } from 'vue';
 import GuestUserTable from '@/components/GuestUserTable.vue';
+import TrustScoreBadge from '@/components/TrustScoreBadge.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -132,6 +133,17 @@ function deletePartner() {
 function formatDate(val: string | null): string {
     if (!val) return '—';
     return new Date(val).toLocaleString();
+}
+
+function formatRelativeDate(val: string | null): string {
+    if (!val) return 'Never';
+    const d = new Date(val);
+    const diff = Date.now() - d.getTime();
+    const hours = Math.floor(diff / 3_600_000);
+    if (hours < 1) return 'Less than an hour ago';
+    if (hours < 24) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+    const days = Math.floor(hours / 24);
+    return `${days} day${days > 1 ? 's' : ''} ago`;
 }
 
 const isAdmin = computed(() => {
@@ -375,6 +387,87 @@ const directConnectStatus = computed(() => {
                     <CardContent>
                         <p class="text-sm text-muted-foreground">
                             {{ directConnectStatus.description }}
+                        </p>
+                    </CardContent>
+                </Card>
+
+                <!-- Trust Score -->
+                <Card>
+                    <CardHeader>
+                        <CardTitle class="flex items-center gap-2">
+                            Trust Score
+                            <TrustScoreBadge :score="partner.trust_score" />
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <template v-if="partner.trust_score_breakdown">
+                            <table class="w-full text-sm">
+                                <thead>
+                                    <tr class="border-b">
+                                        <th
+                                            class="pb-2 text-left font-medium text-muted-foreground"
+                                        >
+                                            Signal
+                                        </th>
+                                        <th
+                                            class="pb-2 text-center font-medium text-muted-foreground"
+                                        >
+                                            Status
+                                        </th>
+                                        <th
+                                            class="pb-2 text-right font-medium text-muted-foreground"
+                                        >
+                                            Points
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr
+                                        v-for="(
+                                            signal, key
+                                        ) in partner.trust_score_breakdown"
+                                        :key="key"
+                                        class="border-b last:border-0"
+                                    >
+                                        <td class="py-2">
+                                            {{ signal.label }}
+                                        </td>
+                                        <td class="py-2 text-center">
+                                            <span
+                                                :class="
+                                                    signal.passed
+                                                        ? 'text-green-600 dark:text-green-400'
+                                                        : 'text-red-500 dark:text-red-400'
+                                                "
+                                            >
+                                                {{
+                                                    signal.passed
+                                                        ? 'Pass'
+                                                        : 'Fail'
+                                                }}
+                                            </span>
+                                        </td>
+                                        <td
+                                            class="py-2 text-right text-muted-foreground"
+                                        >
+                                            {{ signal.points }}/{{
+                                                signal.max_points
+                                            }}
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <p class="mt-3 text-xs text-muted-foreground">
+                                Last calculated:
+                                {{
+                                    formatRelativeDate(
+                                        partner.trust_score_calculated_at,
+                                    )
+                                }}
+                            </p>
+                        </template>
+                        <p v-else class="text-sm text-muted-foreground">
+                            Trust score has not been calculated yet.
                         </p>
                     </CardContent>
                 </Card>

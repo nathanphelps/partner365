@@ -107,7 +107,13 @@ class DevSeeder extends Seeder
                     'direct_connect_outbound_enabled' => $policyProfile === 'permissive' && fake()->boolean(30),
                     'last_synced_at' => fake()->dateTimeBetween('-7 days', 'now'),
                     'notes' => fake()->boolean(60) ? fake()->paragraph() : null,
+                    'trust_score' => fake()->optional(0.8)->numberBetween(15, 98),
+                    'trust_score_calculated_at' => fake()->optional(0.8)->dateTimeBetween('-3 days', 'now'),
                 ]);
+
+                if ($partner->trust_score !== null) {
+                    $partner->update(['trust_score_breakdown' => $this->buildTrustScoreBreakdown($partner->trust_score, $policyProfile)]);
+                }
 
                 $partners->push($partner);
             }
@@ -394,6 +400,42 @@ class DevSeeder extends Seeder
         foreach (array_chunk($entries, 50) as $chunk) {
             DB::table('sync_logs')->insert($chunk);
         }
+    }
+
+    private function buildTrustScoreBreakdown(int $targetScore, string $policyProfile): array
+    {
+        $signals = [
+            'dmarc_present' => ['label' => 'DMARC record present', 'max' => 15],
+            'dmarc_enforced' => ['label' => 'DMARC policy enforced (reject/quarantine)', 'max' => 5],
+            'spf_present' => ['label' => 'SPF record present', 'max' => 15],
+            'dkim_present' => ['label' => 'DKIM record discoverable', 'max' => 5],
+            'dnssec_enabled' => ['label' => 'DNSSEC enabled', 'max' => 10],
+            'domain_age_2yr' => ['label' => 'Domain age >= 2 years', 'max' => 5],
+            'domain_age_5yr' => ['label' => 'Domain age >= 5 years', 'max' => 5],
+            'verified_domain' => ['label' => 'Tenant has verified domain', 'max' => 15],
+            'multiple_domains' => ['label' => 'Tenant has multiple verified domains', 'max' => 5],
+            'mfa_trust' => ['label' => 'MFA trust enabled', 'max' => 10],
+            'tenant_age_1yr' => ['label' => 'Partner relationship >= 1 year', 'max' => 5],
+            'tenant_age_3yr' => ['label' => 'Partner relationship >= 3 years', 'max' => 5],
+        ];
+
+        $remaining = $targetScore;
+        $breakdown = [];
+
+        foreach ($signals as $key => $signal) {
+            $pass = $remaining > 0 && fake()->boolean($policyProfile === 'permissive' ? 75 : 50);
+            $points = $pass ? min($signal['max'], $remaining) : 0;
+            $remaining -= $points;
+
+            $breakdown[$key] = [
+                'label' => $signal['label'],
+                'passed' => $pass,
+                'points' => $points,
+                'max_points' => $signal['max'],
+            ];
+        }
+
+        return $breakdown;
     }
 
     private function seedSettings(): void

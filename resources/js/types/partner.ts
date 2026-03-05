@@ -21,6 +21,17 @@ export type PartnerOrganization = {
     tenant_restrictions_enabled: boolean;
     tenant_restrictions_json: Record<string, unknown> | null;
     last_synced_at: string | null;
+    trust_score: number | null;
+    trust_score_breakdown: Record<
+        string,
+        {
+            label: string;
+            passed: boolean;
+            points: number;
+            max_points: number;
+        }
+    > | null;
+    trust_score_calculated_at: string | null;
     created_at: string;
     guest_users_count?: number;
 };
