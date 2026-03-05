@@ -26,7 +26,7 @@ class AdminGraphController extends Controller
 
         $masked = null;
         if ($secret = ($settings['client_secret'] ?? null)) {
-            $masked = '••••••••' . substr($secret, -4);
+            $masked = '••••••••'.substr($secret, -4);
         }
 
         return Inertia::render('admin/Graph', [
@@ -51,7 +51,7 @@ class AdminGraphController extends Controller
         Setting::set('graph', 'base_url', $validated['base_url']);
         Setting::set('graph', 'sync_interval_minutes', (string) $validated['sync_interval_minutes']);
 
-        if (!empty($validated['client_secret'])) {
+        if (! empty($validated['client_secret'])) {
             Setting::set('graph', 'client_secret', $validated['client_secret'], encrypted: true);
         }
 
@@ -90,7 +90,7 @@ class AdminGraphController extends Controller
         } catch (\Throwable $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Connection failed: ' . $e->getMessage(),
+                'message' => 'Connection failed: '.$e->getMessage(),
             ]);
         }
     }

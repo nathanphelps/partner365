@@ -19,7 +19,7 @@ class GuestUserFactory extends Factory
             'entra_user_id' => Str::uuid()->toString(),
             'email' => $email,
             'display_name' => fake()->name(),
-            'user_principal_name' => str_replace('@', '_', $email) . '#EXT#@contoso.onmicrosoft.com',
+            'user_principal_name' => str_replace('@', '_', $email).'#EXT#@contoso.onmicrosoft.com',
             'invitation_status' => InvitationStatus::Accepted,
             'account_enabled' => true,
         ];

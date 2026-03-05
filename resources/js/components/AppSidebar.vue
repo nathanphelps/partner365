@@ -1,6 +1,13 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3';
-import { Activity, Building2, FileStack, LayoutGrid, Settings, Users } from 'lucide-vue-next';
+import {
+    Activity,
+    Building2,
+    FileStack,
+    LayoutGrid,
+    Settings,
+    Users,
+} from 'lucide-vue-next';
 import { computed } from 'vue';
 import AppLogo from '@/components/AppLogo.vue';
 import NavMain from '@/components/NavMain.vue';

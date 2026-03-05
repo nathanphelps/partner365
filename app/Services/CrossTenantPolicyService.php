@@ -9,6 +9,7 @@ class CrossTenantPolicyService
     public function listPartners(): array
     {
         $response = $this->graph->get('/policies/crossTenantAccessPolicy/partners');
+
         return $response['value'] ?? [];
     }
 

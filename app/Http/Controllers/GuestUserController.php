@@ -59,7 +59,7 @@ class GuestUserController extends Controller
 
     public function create(): Response
     {
-        if (!request()->user()->role->canManage()) {
+        if (! request()->user()->role->canManage()) {
             abort(403);
         }
 
@@ -105,7 +105,7 @@ class GuestUserController extends Controller
 
     public function destroy(GuestUser $guest): RedirectResponse
     {
-        if (!request()->user()->role->isAdmin()) {
+        if (! request()->user()->role->isAdmin()) {
             abort(403);
         }
 

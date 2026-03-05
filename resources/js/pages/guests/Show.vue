@@ -29,7 +29,9 @@ const isAdmin = computed(() => {
     return auth?.user?.role === 'admin';
 });
 
-const statusVariant = (status: string): 'default' | 'destructive' | 'outline' => {
+const statusVariant = (
+    status: string,
+): 'default' | 'destructive' | 'outline' => {
     if (status === 'accepted') return 'default';
     if (status === 'failed') return 'destructive';
     return 'outline';
@@ -50,7 +52,9 @@ const deleting = ref(false);
 function deleteGuest() {
     deleting.value = true;
     router.delete(guests.destroy.url(props.guest.id), {
-        onFinish: () => { deleting.value = false; },
+        onFinish: () => {
+            deleting.value = false;
+        },
     });
 }
 </script>
@@ -59,17 +63,23 @@ function deleteGuest() {
     <Head :title="guest.display_name" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
-        <div class="flex flex-col gap-6 p-6 max-w-3xl">
+        <div class="flex max-w-3xl flex-col gap-6 p-6">
             <!-- Header -->
             <div class="flex items-start justify-between">
                 <div>
-                    <div class="flex items-center gap-3 flex-wrap">
-                        <h1 class="text-2xl font-semibold">{{ guest.display_name }}</h1>
-                        <Badge :variant="statusVariant(guest.invitation_status)">
+                    <div class="flex flex-wrap items-center gap-3">
+                        <h1 class="text-2xl font-semibold">
+                            {{ guest.display_name }}
+                        </h1>
+                        <Badge
+                            :variant="statusVariant(guest.invitation_status)"
+                        >
                             {{ statusLabel(guest.invitation_status) }}
                         </Badge>
                     </div>
-                    <p class="text-sm text-muted-foreground mt-1">{{ guest.email }}</p>
+                    <p class="mt-1 text-sm text-muted-foreground">
+                        {{ guest.email }}
+                    </p>
                 </div>
             </div>
 
@@ -88,25 +98,43 @@ function deleteGuest() {
                         <span class="text-muted-foreground">Email</span>
                         <span>{{ guest.email }}</span>
 
-                        <span class="text-muted-foreground">User Principal Name</span>
-                        <span class="font-mono text-xs">{{ guest.user_principal_name ?? '—' }}</span>
+                        <span class="text-muted-foreground"
+                            >User Principal Name</span
+                        >
+                        <span class="font-mono text-xs">{{
+                            guest.user_principal_name ?? '—'
+                        }}</span>
 
                         <span class="text-muted-foreground">Entra User ID</span>
-                        <span class="font-mono text-xs">{{ guest.entra_user_id }}</span>
+                        <span class="font-mono text-xs">{{
+                            guest.entra_user_id
+                        }}</span>
 
-                        <span class="text-muted-foreground">Invitation Status</span>
+                        <span class="text-muted-foreground"
+                            >Invitation Status</span
+                        >
                         <span>
-                            <Badge :variant="statusVariant(guest.invitation_status)">
+                            <Badge
+                                :variant="
+                                    statusVariant(guest.invitation_status)
+                                "
+                            >
                                 {{ statusLabel(guest.invitation_status) }}
                             </Badge>
                         </span>
 
-                        <span class="text-muted-foreground">Partner Organization</span>
+                        <span class="text-muted-foreground"
+                            >Partner Organization</span
+                        >
                         <span>
                             <Link
                                 v-if="guest.partner_organization"
-                                :href="partners.show.url(guest.partner_organization.id)"
-                                class="hover:underline text-foreground font-medium"
+                                :href="
+                                    partners.show.url(
+                                        guest.partner_organization.id,
+                                    )
+                                "
+                                class="font-medium text-foreground hover:underline"
                             >
                                 {{ guest.partner_organization.display_name }}
                             </Link>
@@ -135,20 +163,34 @@ function deleteGuest() {
                 </CardHeader>
                 <CardContent>
                     <div v-if="!showDeleteConfirm">
-                        <p class="text-sm text-muted-foreground mb-3">
-                            Remove this guest user from the system. This does not remove them from Entra ID.
+                        <p class="mb-3 text-sm text-muted-foreground">
+                            Remove this guest user from the system. This does
+                            not remove them from Entra ID.
                         </p>
-                        <Button variant="destructive" @click="showDeleteConfirm = true">
+                        <Button
+                            variant="destructive"
+                            @click="showDeleteConfirm = true"
+                        >
                             Delete Guest Record
                         </Button>
                     </div>
                     <div v-else class="flex flex-col gap-3">
-                        <p class="text-sm font-medium">Are you sure? This cannot be undone.</p>
+                        <p class="text-sm font-medium">
+                            Are you sure? This cannot be undone.
+                        </p>
                         <div class="flex gap-2">
-                            <Button variant="destructive" @click="deleteGuest" :disabled="deleting">
+                            <Button
+                                variant="destructive"
+                                @click="deleteGuest"
+                                :disabled="deleting"
+                            >
                                 {{ deleting ? 'Deleting…' : 'Yes, Delete' }}
                             </Button>
-                            <Button variant="outline" @click="showDeleteConfirm = false">Cancel</Button>
+                            <Button
+                                variant="outline"
+                                @click="showDeleteConfirm = false"
+                                >Cancel</Button
+                            >
                         </div>
                     </div>
                 </CardContent>

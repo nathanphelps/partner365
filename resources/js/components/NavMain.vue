@@ -19,7 +19,11 @@ const { isCurrentUrl } = useCurrentUrl();
 <template>
     <SidebarGroup class="px-3 py-0">
         <SidebarMenu class="gap-1.5">
-            <SidebarMenuItem v-for="item in items" :key="item.title" class="relative">
+            <SidebarMenuItem
+                v-for="item in items"
+                :key="item.title"
+                class="relative"
+            >
                 <SidebarMenuButton
                     as-child
                     size="lg"
@@ -33,7 +37,7 @@ const { isCurrentUrl } = useCurrentUrl();
                 </SidebarMenuButton>
                 <div
                     v-if="isCurrentUrl(item.href)"
-                    class="absolute left-0 top-1/2 h-6 w-[3px] -translate-y-1/2 rounded-r-full bg-primary"
+                    class="absolute top-1/2 left-0 h-6 w-[3px] -translate-y-1/2 rounded-r-full bg-primary"
                 />
             </SidebarMenuItem>
         </SidebarMenu>

@@ -25,7 +25,10 @@ const page = usePage();
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: dashboard.url() },
     { title: 'Partners', href: partners.index.url() },
-    { title: props.partner.display_name, href: partners.show.url(props.partner.id) },
+    {
+        title: props.partner.display_name,
+        href: partners.show.url(props.partner.id),
+    },
 ];
 
 const categoryLabel: Record<string, string> = {
@@ -50,20 +53,18 @@ const policiesSaved = ref(false);
 
 function savePolicies() {
     savingPolicies.value = true;
-    router.patch(
-        partners.update.url(props.partner.id),
-        policyForm,
-        {
-            preserveScroll: true,
-            onSuccess: () => {
-                policiesSaved.value = true;
-                setTimeout(() => { policiesSaved.value = false; }, 3000);
-            },
-            onFinish: () => {
-                savingPolicies.value = false;
-            },
-        }
-    );
+    router.patch(partners.update.url(props.partner.id), policyForm, {
+        preserveScroll: true,
+        onSuccess: () => {
+            policiesSaved.value = true;
+            setTimeout(() => {
+                policiesSaved.value = false;
+            }, 3000);
+        },
+        onFinish: () => {
+            savingPolicies.value = false;
+        },
+    });
 }
 
 // Notes form state
@@ -80,12 +81,14 @@ function saveNotes() {
             preserveScroll: true,
             onSuccess: () => {
                 notesSaved.value = true;
-                setTimeout(() => { notesSaved.value = false; }, 3000);
+                setTimeout(() => {
+                    notesSaved.value = false;
+                }, 3000);
             },
             onFinish: () => {
                 savingNotes.value = false;
             },
-        }
+        },
     );
 }
 
@@ -96,7 +99,9 @@ const deleting = ref(false);
 function deletePartner() {
     deleting.value = true;
     router.delete(partners.destroy.url(props.partner.id), {
-        onFinish: () => { deleting.value = false; },
+        onFinish: () => {
+            deleting.value = false;
+        },
     });
 }
 
@@ -106,38 +111,67 @@ function formatDate(val: string | null): string {
 }
 
 const policies = [
-    { key: 'mfa_trust_enabled', label: 'MFA Trust', description: 'Trust MFA claims from this partner tenant.' },
-    { key: 'device_trust_enabled', label: 'Device Trust', description: 'Trust device compliance from this partner.' },
-    { key: 'direct_connect_enabled', label: 'Direct Connect', description: 'Allow Teams direct connect with this partner.' },
-    { key: 'b2b_inbound_enabled', label: 'B2B Inbound', description: 'Allow inbound B2B collaboration from this partner.' },
-    { key: 'b2b_outbound_enabled', label: 'B2B Outbound', description: 'Allow outbound B2B collaboration to this partner.' },
+    {
+        key: 'mfa_trust_enabled',
+        label: 'MFA Trust',
+        description: 'Trust MFA claims from this partner tenant.',
+    },
+    {
+        key: 'device_trust_enabled',
+        label: 'Device Trust',
+        description: 'Trust device compliance from this partner.',
+    },
+    {
+        key: 'direct_connect_enabled',
+        label: 'Direct Connect',
+        description: 'Allow Teams direct connect with this partner.',
+    },
+    {
+        key: 'b2b_inbound_enabled',
+        label: 'B2B Inbound',
+        description: 'Allow inbound B2B collaboration from this partner.',
+    },
+    {
+        key: 'b2b_outbound_enabled',
+        label: 'B2B Outbound',
+        description: 'Allow outbound B2B collaboration to this partner.',
+    },
 ] as const;
 
 const isAdmin = computed(() => {
     const auth = page.props.auth as { user?: { role?: string } };
     return auth?.user?.role === 'admin';
 });
-
-
 </script>
 
 <template>
     <Head :title="partner.display_name" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
-        <div class="flex flex-col gap-6 p-6 max-w-4xl">
+        <div class="flex max-w-4xl flex-col gap-6 p-6">
             <!-- Header -->
             <div class="flex items-start justify-between">
                 <div>
-                    <div class="flex items-center gap-3 flex-wrap">
-                        <h1 class="text-2xl font-semibold">{{ partner.display_name }}</h1>
-                        <Badge variant="secondary">{{ categoryLabel[partner.category] ?? partner.category }}</Badge>
+                    <div class="flex flex-wrap items-center gap-3">
+                        <h1 class="text-2xl font-semibold">
+                            {{ partner.display_name }}
+                        </h1>
+                        <Badge variant="secondary">{{
+                            categoryLabel[partner.category] ?? partner.category
+                        }}</Badge>
                     </div>
-                    <p class="text-sm text-muted-foreground mt-1">{{ partner.domain ?? 'No domain' }}</p>
-                    <p class="text-xs text-muted-foreground mt-0.5">Tenant ID: {{ partner.tenant_id }}</p>
+                    <p class="mt-1 text-sm text-muted-foreground">
+                        {{ partner.domain ?? 'No domain' }}
+                    </p>
+                    <p class="mt-0.5 text-xs text-muted-foreground">
+                        Tenant ID: {{ partner.tenant_id }}
+                    </p>
                 </div>
                 <div class="flex gap-2">
-                    <span class="text-sm text-muted-foreground">Last synced: {{ formatDate(partner.last_synced_at) }}</span>
+                    <span class="text-sm text-muted-foreground"
+                        >Last synced:
+                        {{ formatDate(partner.last_synced_at) }}</span
+                    >
                 </div>
             </div>
 
@@ -155,26 +189,44 @@ const isAdmin = computed(() => {
                         class="flex items-center justify-between py-2"
                     >
                         <div>
-                            <p class="text-sm font-medium">{{ policy.label }}</p>
-                            <p class="text-xs text-muted-foreground">{{ policy.description }}</p>
+                            <p class="text-sm font-medium">
+                                {{ policy.label }}
+                            </p>
+                            <p class="text-xs text-muted-foreground">
+                                {{ policy.description }}
+                            </p>
                         </div>
                         <div class="flex items-center gap-2">
                             <Checkbox
                                 :id="`policy-${policy.key}`"
                                 :checked="policyForm[policy.key]"
-                                @update:checked="(val: boolean) => { (policyForm as any)[policy.key] = val; }"
+                                @update:checked="
+                                    (val: boolean) => {
+                                        (policyForm as any)[policy.key] = val;
+                                    }
+                                "
                             />
-                            <Label :for="`policy-${policy.key}`" class="text-sm cursor-pointer">
+                            <Label
+                                :for="`policy-${policy.key}`"
+                                class="cursor-pointer text-sm"
+                            >
                                 {{ policyForm[policy.key] ? 'On' : 'Off' }}
                             </Label>
                         </div>
                     </div>
 
                     <div class="flex items-center gap-3 pt-2">
-                        <Button @click="savePolicies" :disabled="savingPolicies">
+                        <Button
+                            @click="savePolicies"
+                            :disabled="savingPolicies"
+                        >
                             {{ savingPolicies ? 'Saving…' : 'Save Policies' }}
                         </Button>
-                        <span v-if="policiesSaved" class="text-sm text-green-600 dark:text-green-400">Saved.</span>
+                        <span
+                            v-if="policiesSaved"
+                            class="text-sm text-green-600 dark:text-green-400"
+                            >Saved.</span
+                        >
                     </div>
                 </CardContent>
             </Card>
@@ -191,10 +243,18 @@ const isAdmin = computed(() => {
                         class="min-h-[120px]"
                     />
                     <div class="flex items-center gap-3">
-                        <Button @click="saveNotes" :disabled="savingNotes" variant="secondary">
+                        <Button
+                            @click="saveNotes"
+                            :disabled="savingNotes"
+                            variant="secondary"
+                        >
                             {{ savingNotes ? 'Saving…' : 'Save Notes' }}
                         </Button>
-                        <span v-if="notesSaved" class="text-sm text-green-600 dark:text-green-400">Saved.</span>
+                        <span
+                            v-if="notesSaved"
+                            class="text-sm text-green-600 dark:text-green-400"
+                            >Saved.</span
+                        >
                     </div>
                 </CardContent>
             </Card>
@@ -208,10 +268,26 @@ const isAdmin = computed(() => {
                     <table v-if="guests.length > 0" class="w-full text-sm">
                         <thead>
                             <tr class="border-b">
-                                <th class="pb-2 text-left font-medium text-muted-foreground">Name</th>
-                                <th class="pb-2 text-left font-medium text-muted-foreground">Email</th>
-                                <th class="pb-2 text-left font-medium text-muted-foreground">Status</th>
-                                <th class="pb-2 text-left font-medium text-muted-foreground">Last Sign In</th>
+                                <th
+                                    class="pb-2 text-left font-medium text-muted-foreground"
+                                >
+                                    Name
+                                </th>
+                                <th
+                                    class="pb-2 text-left font-medium text-muted-foreground"
+                                >
+                                    Email
+                                </th>
+                                <th
+                                    class="pb-2 text-left font-medium text-muted-foreground"
+                                >
+                                    Status
+                                </th>
+                                <th
+                                    class="pb-2 text-left font-medium text-muted-foreground"
+                                >
+                                    Last Sign In
+                                </th>
                             </tr>
                         </thead>
                         <tbody>
@@ -223,24 +299,43 @@ const isAdmin = computed(() => {
                                 <td class="py-2 pr-4">
                                     <Link
                                         :href="guestRoutes.show.url(guest.id)"
-                                        class="hover:underline font-medium"
+                                        class="font-medium hover:underline"
                                     >
                                         {{ guest.display_name }}
                                     </Link>
                                 </td>
-                                <td class="py-2 pr-4 text-muted-foreground">{{ guest.email }}</td>
+                                <td class="py-2 pr-4 text-muted-foreground">
+                                    {{ guest.email }}
+                                </td>
                                 <td class="py-2 pr-4">
                                     <Badge
-                                        :variant="guest.invitation_status === 'accepted' ? 'default' : guest.invitation_status === 'failed' ? 'destructive' : 'outline'"
+                                        :variant="
+                                            guest.invitation_status ===
+                                            'accepted'
+                                                ? 'default'
+                                                : guest.invitation_status ===
+                                                    'failed'
+                                                  ? 'destructive'
+                                                  : 'outline'
+                                        "
                                     >
-                                        {{ guest.invitation_status.replace('_', ' ') }}
+                                        {{
+                                            guest.invitation_status.replace(
+                                                '_',
+                                                ' ',
+                                            )
+                                        }}
                                     </Badge>
                                 </td>
-                                <td class="py-2 text-muted-foreground">{{ formatDate(guest.last_sign_in_at) }}</td>
+                                <td class="py-2 text-muted-foreground">
+                                    {{ formatDate(guest.last_sign_in_at) }}
+                                </td>
                             </tr>
                         </tbody>
                     </table>
-                    <p v-else class="text-sm text-muted-foreground">No guest users associated with this partner.</p>
+                    <p v-else class="text-sm text-muted-foreground">
+                        No guest users associated with this partner.
+                    </p>
                 </CardContent>
             </Card>
 
@@ -251,10 +346,14 @@ const isAdmin = computed(() => {
                 </CardHeader>
                 <CardContent>
                     <div v-if="!showDeleteConfirm">
-                        <p class="text-sm text-muted-foreground mb-3">
-                            Permanently delete this partner organization and all associated data.
+                        <p class="mb-3 text-sm text-muted-foreground">
+                            Permanently delete this partner organization and all
+                            associated data.
                         </p>
-                        <Button variant="destructive" @click="showDeleteConfirm = true">
+                        <Button
+                            variant="destructive"
+                            @click="showDeleteConfirm = true"
+                        >
                             Delete Partner
                         </Button>
                     </div>
@@ -263,10 +362,18 @@ const isAdmin = computed(() => {
                             Are you sure? This cannot be undone.
                         </p>
                         <div class="flex gap-2">
-                            <Button variant="destructive" @click="deletePartner" :disabled="deleting">
+                            <Button
+                                variant="destructive"
+                                @click="deletePartner"
+                                :disabled="deleting"
+                            >
                                 {{ deleting ? 'Deleting…' : 'Yes, Delete' }}
                             </Button>
-                            <Button variant="outline" @click="showDeleteConfirm = false">Cancel</Button>
+                            <Button
+                                variant="outline"
+                                @click="showDeleteConfirm = false"
+                                >Cancel</Button
+                            >
                         </div>
                     </div>
                 </CardContent>

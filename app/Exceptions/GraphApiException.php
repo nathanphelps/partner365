@@ -7,6 +7,7 @@ use RuntimeException;
 class GraphApiException extends RuntimeException
 {
     public readonly string $graphErrorCode;
+
     public readonly array $graphError;
 
     public function __construct(string $message, int $httpStatus, string $graphErrorCode = '', array $graphError = [])

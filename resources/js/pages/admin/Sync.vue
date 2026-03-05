@@ -159,7 +159,7 @@ const expandedError = ref<string | null>(null);
             </form>
 
             <template
-                v-for="type in (['partners', 'guests'] as const)"
+                v-for="type in ['partners', 'guests'] as const"
                 :key="type"
             >
                 <div class="border-t pt-6">
@@ -174,9 +174,7 @@ const expandedError = ref<string | null>(null);
                             :disabled="syncing[type]"
                             @click="triggerSync(type)"
                         >
-                            {{
-                                syncing[type] ? 'Syncing...' : 'Sync Now'
-                            }}
+                            {{ syncing[type] ? 'Syncing...' : 'Sync Now' }}
                         </Button>
                     </div>
 
@@ -234,9 +232,7 @@ const expandedError = ref<string | null>(null);
                                         ).toLocaleString()
                                     }}</TableCell>
                                 </TableRow>
-                                <TableRow
-                                    v-if="expandedError === entry.id"
-                                >
+                                <TableRow v-if="expandedError === entry.id">
                                     <TableCell
                                         colspan="4"
                                         class="bg-red-50 text-sm text-red-700"
@@ -247,10 +243,7 @@ const expandedError = ref<string | null>(null);
                             </template>
                         </TableBody>
                     </Table>
-                    <p
-                        v-else
-                        class="mt-4 text-sm text-muted-foreground"
-                    >
+                    <p v-else class="mt-4 text-sm text-muted-foreground">
                         No sync history yet.
                     </p>
                 </div>

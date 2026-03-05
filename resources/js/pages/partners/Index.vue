@@ -28,12 +28,20 @@ let searchTimer: ReturnType<typeof setTimeout>;
 watch(search, (val) => {
     clearTimeout(searchTimer);
     searchTimer = setTimeout(() => {
-        router.get(partnerRoutes.index.url(), { search: val, category: category.value }, { preserveState: true, replace: true });
+        router.get(
+            partnerRoutes.index.url(),
+            { search: val, category: category.value },
+            { preserveState: true, replace: true },
+        );
     }, 400);
 });
 
 watch(category, (val) => {
-    router.get(partnerRoutes.index.url(), { search: search.value, category: val }, { preserveState: true, replace: true });
+    router.get(
+        partnerRoutes.index.url(),
+        { search: search.value, category: val },
+        { preserveState: true, replace: true },
+    );
 });
 
 const categoryLabel: Record<string, string> = {
@@ -69,9 +77,12 @@ function formatDate(val: string | null): string {
             <!-- Header -->
             <div class="flex items-center justify-between">
                 <div>
-                    <h1 class="text-2xl font-semibold">Partner Organizations</h1>
-                    <p class="text-sm text-muted-foreground mt-1">
-                        Manage your M365 partner tenants and their access policies.
+                    <h1 class="text-2xl font-semibold">
+                        Partner Organizations
+                    </h1>
+                    <p class="mt-1 text-sm text-muted-foreground">
+                        Manage your M365 partner tenants and their access
+                        policies.
                     </p>
                 </div>
                 <Link :href="partnerRoutes.create.url()">
@@ -88,7 +99,7 @@ function formatDate(val: string | null): string {
                 />
                 <select
                     v-model="category"
-                    class="rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                    class="rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus:ring-1 focus:ring-ring focus:outline-none"
                 >
                     <option value="">All Categories</option>
                     <option value="vendor">Vendor</option>
@@ -104,20 +115,48 @@ function formatDate(val: string | null): string {
                 <table class="w-full text-sm">
                     <thead>
                         <tr class="border-b bg-muted/50">
-                            <th class="px-4 py-3 text-left font-medium text-muted-foreground">Name</th>
-                            <th class="px-4 py-3 text-left font-medium text-muted-foreground">Domain</th>
-                            <th class="px-4 py-3 text-left font-medium text-muted-foreground">Category</th>
-                            <th class="px-4 py-3 text-left font-medium text-muted-foreground">MFA Trust</th>
-                            <th class="px-4 py-3 text-left font-medium text-muted-foreground">B2B In</th>
-                            <th class="px-4 py-3 text-left font-medium text-muted-foreground">B2B Out</th>
-                            <th class="px-4 py-3 text-left font-medium text-muted-foreground">Last Synced</th>
+                            <th
+                                class="px-4 py-3 text-left font-medium text-muted-foreground"
+                            >
+                                Name
+                            </th>
+                            <th
+                                class="px-4 py-3 text-left font-medium text-muted-foreground"
+                            >
+                                Domain
+                            </th>
+                            <th
+                                class="px-4 py-3 text-left font-medium text-muted-foreground"
+                            >
+                                Category
+                            </th>
+                            <th
+                                class="px-4 py-3 text-left font-medium text-muted-foreground"
+                            >
+                                MFA Trust
+                            </th>
+                            <th
+                                class="px-4 py-3 text-left font-medium text-muted-foreground"
+                            >
+                                B2B In
+                            </th>
+                            <th
+                                class="px-4 py-3 text-left font-medium text-muted-foreground"
+                            >
+                                B2B Out
+                            </th>
+                            <th
+                                class="px-4 py-3 text-left font-medium text-muted-foreground"
+                            >
+                                Last Synced
+                            </th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr
                             v-for="partner in partners.data"
                             :key="partner.id"
-                            class="border-b last:border-0 hover:bg-muted/30 transition-colors"
+                            class="border-b transition-colors last:border-0 hover:bg-muted/30"
                         >
                             <td class="px-4 py-3">
                                 <Link
@@ -127,31 +166,73 @@ function formatDate(val: string | null): string {
                                     {{ partner.display_name }}
                                 </Link>
                             </td>
-                            <td class="px-4 py-3 text-muted-foreground">{{ partner.domain ?? '—' }}</td>
+                            <td class="px-4 py-3 text-muted-foreground">
+                                {{ partner.domain ?? '—' }}
+                            </td>
                             <td class="px-4 py-3">
-                                <Badge :variant="categoryVariant(partner.category)">
-                                    {{ categoryLabel[partner.category] ?? partner.category }}
+                                <Badge
+                                    :variant="categoryVariant(partner.category)"
+                                >
+                                    {{
+                                        categoryLabel[partner.category] ??
+                                        partner.category
+                                    }}
                                 </Badge>
                             </td>
                             <td class="px-4 py-3">
-                                <Badge :variant="partner.mfa_trust_enabled ? 'default' : 'destructive'">
-                                    {{ partner.mfa_trust_enabled ? 'Enabled' : 'Disabled' }}
+                                <Badge
+                                    :variant="
+                                        partner.mfa_trust_enabled
+                                            ? 'default'
+                                            : 'destructive'
+                                    "
+                                >
+                                    {{
+                                        partner.mfa_trust_enabled
+                                            ? 'Enabled'
+                                            : 'Disabled'
+                                    }}
                                 </Badge>
                             </td>
                             <td class="px-4 py-3">
-                                <span :class="partner.b2b_inbound_enabled ? 'text-green-600 dark:text-green-400' : 'text-muted-foreground'">
-                                    {{ partner.b2b_inbound_enabled ? 'Yes' : 'No' }}
+                                <span
+                                    :class="
+                                        partner.b2b_inbound_enabled
+                                            ? 'text-green-600 dark:text-green-400'
+                                            : 'text-muted-foreground'
+                                    "
+                                >
+                                    {{
+                                        partner.b2b_inbound_enabled
+                                            ? 'Yes'
+                                            : 'No'
+                                    }}
                                 </span>
                             </td>
                             <td class="px-4 py-3">
-                                <span :class="partner.b2b_outbound_enabled ? 'text-green-600 dark:text-green-400' : 'text-muted-foreground'">
-                                    {{ partner.b2b_outbound_enabled ? 'Yes' : 'No' }}
+                                <span
+                                    :class="
+                                        partner.b2b_outbound_enabled
+                                            ? 'text-green-600 dark:text-green-400'
+                                            : 'text-muted-foreground'
+                                    "
+                                >
+                                    {{
+                                        partner.b2b_outbound_enabled
+                                            ? 'Yes'
+                                            : 'No'
+                                    }}
                                 </span>
                             </td>
-                            <td class="px-4 py-3 text-muted-foreground">{{ formatDate(partner.last_synced_at) }}</td>
+                            <td class="px-4 py-3 text-muted-foreground">
+                                {{ formatDate(partner.last_synced_at) }}
+                            </td>
                         </tr>
                         <tr v-if="partners.data.length === 0">
-                            <td colspan="7" class="px-4 py-8 text-center text-muted-foreground">
+                            <td
+                                colspan="7"
+                                class="px-4 py-8 text-center text-muted-foreground"
+                            >
                                 No partners found.
                             </td>
                         </tr>
@@ -160,9 +241,13 @@ function formatDate(val: string | null): string {
             </div>
 
             <!-- Pagination -->
-            <div v-if="partners.last_page > 1" class="flex items-center justify-between">
+            <div
+                v-if="partners.last_page > 1"
+                class="flex items-center justify-between"
+            >
                 <p class="text-sm text-muted-foreground">
-                    Showing {{ partners.data.length }} of {{ partners.total }} partners
+                    Showing {{ partners.data.length }} of
+                    {{ partners.total }} partners
                 </p>
                 <div class="flex gap-1">
                     <template v-for="link in partners.links" :key="link.label">
@@ -172,11 +257,12 @@ function formatDate(val: string | null): string {
                             :class="[
                                 'inline-flex items-center justify-center rounded-md px-3 py-1.5 text-sm transition-colors',
                                 link.active
-                                    ? 'bg-primary text-primary-foreground font-medium'
+                                    ? 'bg-primary font-medium text-primary-foreground'
                                     : 'border hover:bg-muted',
                             ]"
-                            v-html="link.label"
-                        />
+                            ><!-- eslint-disable-next-line vue/no-v-html --><span
+                                v-html="link.label"
+                        /></Link>
                         <span
                             v-else
                             class="inline-flex items-center justify-center rounded-md px-3 py-1.5 text-sm text-muted-foreground opacity-50"

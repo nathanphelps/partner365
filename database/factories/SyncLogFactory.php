@@ -18,7 +18,7 @@ class SyncLogFactory extends Factory
             'status' => 'completed',
             'records_synced' => $this->faker->numberBetween(0, 50),
             'started_at' => $started,
-            'completed_at' => (clone $started)->modify('+' . $this->faker->numberBetween(1, 30) . ' seconds'),
+            'completed_at' => (clone $started)->modify('+'.$this->faker->numberBetween(1, 30).' seconds'),
         ];
     }
 }

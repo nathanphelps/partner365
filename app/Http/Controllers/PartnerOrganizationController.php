@@ -54,7 +54,7 @@ class PartnerOrganizationController extends Controller
 
     public function create(): Response
     {
-        if (!request()->user()->role->canManage()) {
+        if (! request()->user()->role->canManage()) {
             abort(403);
         }
 
@@ -69,7 +69,7 @@ class PartnerOrganizationController extends Controller
 
         $tenantInfo = $this->tenantResolver->resolve($validated['tenant_id']);
 
-        if (!empty($validated['template_id'])) {
+        if (! empty($validated['template_id'])) {
             $template = PartnerTemplate::findOrFail($validated['template_id']);
             $validated = array_merge($template->policy_config, $validated);
         }
@@ -113,7 +113,7 @@ class PartnerOrganizationController extends Controller
         $validated = $request->validated();
 
         $graphConfig = $this->buildGraphConfig($validated);
-        if (!empty($graphConfig)) {
+        if (! empty($graphConfig)) {
             $this->policyService->updatePartner($partner->tenant_id, $graphConfig);
         }
 
@@ -126,7 +126,7 @@ class PartnerOrganizationController extends Controller
 
     public function destroy(PartnerOrganization $partner): RedirectResponse
     {
-        if (!request()->user()->role->isAdmin()) {
+        if (! request()->user()->role->isAdmin()) {
             abort(403);
         }
 
@@ -146,7 +146,7 @@ class PartnerOrganizationController extends Controller
     {
         $request->validate(['tenant_id' => ['required', 'string', 'uuid']]);
 
-        if (!$this->tenantResolver->isValidTenantId($request->input('tenant_id'))) {
+        if (! $this->tenantResolver->isValidTenantId($request->input('tenant_id'))) {
             return response()->json(['error' => 'Invalid tenant ID format'], 422);
         }
 

@@ -35,7 +35,10 @@ const { isCurrentOrParentUrl } = useCurrentUrl();
 
             <div class="flex flex-col lg:flex-row lg:space-x-12">
                 <aside class="w-full max-w-xl lg:w-48">
-                    <nav class="flex flex-col space-y-1 space-x-0" aria-label="Admin">
+                    <nav
+                        class="flex flex-col space-y-1 space-x-0"
+                        aria-label="Admin"
+                    >
                         <Button
                             v-for="item in adminNavItems"
                             :key="item.href as string"
@@ -47,7 +50,10 @@ const { isCurrentOrParentUrl } = useCurrentUrl();
                             as-child
                         >
                             <Link :href="item.href">
-                                <component :is="item.icon" class="mr-2 h-4 w-4" />
+                                <component
+                                    :is="item.icon"
+                                    class="mr-2 h-4 w-4"
+                                />
                                 {{ item.title }}
                             </Link>
                         </Button>

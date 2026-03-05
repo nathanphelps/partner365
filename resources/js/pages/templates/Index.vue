@@ -50,8 +50,9 @@ function enabledPoliciesCount(config: Record<string, boolean>): number {
             <div class="flex items-center justify-between">
                 <div>
                     <h1 class="text-2xl font-semibold">Partner Templates</h1>
-                    <p class="text-sm text-muted-foreground mt-1">
-                        Reusable policy configurations for partner organizations.
+                    <p class="mt-1 text-sm text-muted-foreground">
+                        Reusable policy configurations for partner
+                        organizations.
                     </p>
                 </div>
                 <Link :href="templateRoutes.create.url()">
@@ -64,18 +65,38 @@ function enabledPoliciesCount(config: Record<string, boolean>): number {
                 <table class="w-full text-sm">
                     <thead>
                         <tr class="border-b bg-muted/50">
-                            <th class="px-4 py-3 text-left font-medium text-muted-foreground">Name</th>
-                            <th class="px-4 py-3 text-left font-medium text-muted-foreground">Description</th>
-                            <th class="px-4 py-3 text-left font-medium text-muted-foreground">Policies Enabled</th>
-                            <th class="px-4 py-3 text-left font-medium text-muted-foreground">Created</th>
-                            <th class="px-4 py-3 text-left font-medium text-muted-foreground">Actions</th>
+                            <th
+                                class="px-4 py-3 text-left font-medium text-muted-foreground"
+                            >
+                                Name
+                            </th>
+                            <th
+                                class="px-4 py-3 text-left font-medium text-muted-foreground"
+                            >
+                                Description
+                            </th>
+                            <th
+                                class="px-4 py-3 text-left font-medium text-muted-foreground"
+                            >
+                                Policies Enabled
+                            </th>
+                            <th
+                                class="px-4 py-3 text-left font-medium text-muted-foreground"
+                            >
+                                Created
+                            </th>
+                            <th
+                                class="px-4 py-3 text-left font-medium text-muted-foreground"
+                            >
+                                Actions
+                            </th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr
                             v-for="template in templates.data"
                             :key="template.id"
-                            class="border-b last:border-0 hover:bg-muted/30 transition-colors"
+                            class="border-b transition-colors last:border-0 hover:bg-muted/30"
                         >
                             <td class="px-4 py-3">
                                 <Link
@@ -85,23 +106,36 @@ function enabledPoliciesCount(config: Record<string, boolean>): number {
                                     {{ template.name }}
                                 </Link>
                             </td>
-                            <td class="px-4 py-3 text-muted-foreground max-w-xs">
+                            <td
+                                class="max-w-xs px-4 py-3 text-muted-foreground"
+                            >
                                 {{ template.description || '—' }}
                             </td>
                             <td class="px-4 py-3 text-muted-foreground">
-                                {{ enabledPoliciesCount(template.policy_config) }} / {{ Object.keys(template.policy_config).length }}
+                                {{
+                                    enabledPoliciesCount(template.policy_config)
+                                }}
+                                /
+                                {{ Object.keys(template.policy_config).length }}
                             </td>
                             <td class="px-4 py-3 text-muted-foreground">
                                 {{ formatDate(template.created_at) }}
                             </td>
                             <td class="px-4 py-3">
-                                <Link :href="templateRoutes.edit.url(template.id)">
-                                    <Button variant="outline" size="sm">Edit</Button>
+                                <Link
+                                    :href="templateRoutes.edit.url(template.id)"
+                                >
+                                    <Button variant="outline" size="sm"
+                                        >Edit</Button
+                                    >
                                 </Link>
                             </td>
                         </tr>
                         <tr v-if="templates.data.length === 0">
-                            <td colspan="5" class="px-4 py-8 text-center text-muted-foreground">
+                            <td
+                                colspan="5"
+                                class="px-4 py-8 text-center text-muted-foreground"
+                            >
                                 No templates created yet.
                             </td>
                         </tr>
@@ -110,9 +144,13 @@ function enabledPoliciesCount(config: Record<string, boolean>): number {
             </div>
 
             <!-- Pagination -->
-            <div v-if="templates.last_page > 1" class="flex items-center justify-between">
+            <div
+                v-if="templates.last_page > 1"
+                class="flex items-center justify-between"
+            >
                 <p class="text-sm text-muted-foreground">
-                    Showing {{ templates.data.length }} of {{ templates.total }} templates
+                    Showing {{ templates.data.length }} of
+                    {{ templates.total }} templates
                 </p>
                 <div class="flex gap-1">
                     <template v-for="link in templates.links" :key="link.label">
@@ -122,11 +160,12 @@ function enabledPoliciesCount(config: Record<string, boolean>): number {
                             :class="[
                                 'inline-flex items-center justify-center rounded-md px-3 py-1.5 text-sm transition-colors',
                                 link.active
-                                    ? 'bg-primary text-primary-foreground font-medium'
+                                    ? 'bg-primary font-medium text-primary-foreground'
                                     : 'border hover:bg-muted',
                             ]"
-                            v-html="link.label"
-                        />
+                            ><!-- eslint-disable-next-line vue/no-v-html --><span
+                                v-html="link.label"
+                        /></Link>
                         <span
                             v-else
                             class="inline-flex items-center justify-center rounded-md px-3 py-1.5 text-sm text-muted-foreground opacity-50"

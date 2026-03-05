@@ -3,7 +3,12 @@ export type PartnerOrganization = {
     tenant_id: string;
     display_name: string;
     domain: string | null;
-    category: 'vendor' | 'contractor' | 'strategic_partner' | 'customer' | 'other';
+    category:
+        | 'vendor'
+        | 'contractor'
+        | 'strategic_partner'
+        | 'customer'
+        | 'other';
     owner_user_id: number | null;
     owner?: { id: number; name: string };
     notes: string | null;

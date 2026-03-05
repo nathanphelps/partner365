@@ -13,7 +13,11 @@ import partners from '@/routes/partners';
 import type { BreadcrumbItem } from '@/types';
 
 const props = defineProps<{
-    templates: { id: number; name: string; policy_config: Record<string, boolean> }[];
+    templates: {
+        id: number;
+        name: string;
+        policy_config: Record<string, boolean>;
+    }[];
 }>();
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -29,7 +33,11 @@ const step = ref(1);
 const tenantIdInput = ref('');
 const resolving = ref(false);
 const resolveError = ref('');
-const resolvedOrg = ref<{ display_name: string; domain: string; tenant_id: string } | null>(null);
+const resolvedOrg = ref<{
+    display_name: string;
+    domain: string;
+    tenant_id: string;
+} | null>(null);
 
 async function resolveTenant() {
     if (!tenantIdInput.value.trim()) return;
@@ -42,8 +50,13 @@ async function resolveTenant() {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content ?? '',
-                'Accept': 'application/json',
+                'X-CSRF-TOKEN':
+                    (
+                        document.querySelector(
+                            'meta[name="csrf-token"]',
+                        ) as HTMLMetaElement
+                    )?.content ?? '',
+                Accept: 'application/json',
             },
             body: JSON.stringify({ tenant_id: tenantIdInput.value.trim() }),
         });
@@ -127,23 +140,43 @@ function submit() {
     <Head title="Add Partner" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
-        <div class="flex flex-col gap-6 p-6 max-w-2xl">
+        <div class="flex max-w-2xl flex-col gap-6 p-6">
             <div>
                 <h1 class="text-2xl font-semibold">Add Partner Organization</h1>
-                <p class="text-sm text-muted-foreground mt-1">Connect a new M365 partner tenant.</p>
+                <p class="mt-1 text-sm text-muted-foreground">
+                    Connect a new M365 partner tenant.
+                </p>
             </div>
 
             <!-- Step indicator -->
             <div class="flex items-center gap-2 text-sm">
-                <span :class="step >= 1 ? 'font-semibold text-foreground' : 'text-muted-foreground'">
+                <span
+                    :class="
+                        step >= 1
+                            ? 'font-semibold text-foreground'
+                            : 'text-muted-foreground'
+                    "
+                >
                     1. Resolve Tenant
                 </span>
                 <span class="text-muted-foreground">/</span>
-                <span :class="step >= 2 ? 'font-semibold text-foreground' : 'text-muted-foreground'">
+                <span
+                    :class="
+                        step >= 2
+                            ? 'font-semibold text-foreground'
+                            : 'text-muted-foreground'
+                    "
+                >
                     2. Policies
                 </span>
                 <span class="text-muted-foreground">/</span>
-                <span :class="step >= 3 ? 'font-semibold text-foreground' : 'text-muted-foreground'">
+                <span
+                    :class="
+                        step >= 3
+                            ? 'font-semibold text-foreground'
+                            : 'text-muted-foreground'
+                    "
+                >
                     3. Review
                 </span>
             </div>
@@ -157,7 +190,9 @@ function submit() {
                 </CardHeader>
                 <CardContent class="flex flex-col gap-4">
                     <div class="flex flex-col gap-1.5">
-                        <Label for="tenant-id">Tenant ID (UUID or domain)</Label>
+                        <Label for="tenant-id"
+                            >Tenant ID (UUID or domain)</Label
+                        >
                         <div class="flex gap-2">
                             <Input
                                 id="tenant-id"
@@ -166,22 +201,38 @@ function submit() {
                                 class="flex-1"
                                 @keydown.enter="resolveTenant"
                             />
-                            <Button @click="resolveTenant" :disabled="resolving || !tenantIdInput.trim()">
+                            <Button
+                                @click="resolveTenant"
+                                :disabled="resolving || !tenantIdInput.trim()"
+                            >
                                 {{ resolving ? 'Resolving…' : 'Resolve' }}
                             </Button>
                         </div>
-                        <p v-if="resolveError" class="text-sm text-destructive">{{ resolveError }}</p>
+                        <p v-if="resolveError" class="text-sm text-destructive">
+                            {{ resolveError }}
+                        </p>
                     </div>
 
                     <!-- Resolved org preview -->
-                    <div v-if="resolvedOrg" class="rounded-lg border bg-muted/30 p-4 flex flex-col gap-1">
-                        <p class="font-medium text-sm">{{ resolvedOrg.display_name }}</p>
-                        <p class="text-xs text-muted-foreground">{{ resolvedOrg.domain }}</p>
-                        <p class="text-xs text-muted-foreground font-mono">{{ resolvedOrg.tenant_id }}</p>
+                    <div
+                        v-if="resolvedOrg"
+                        class="flex flex-col gap-1 rounded-lg border bg-muted/30 p-4"
+                    >
+                        <p class="text-sm font-medium">
+                            {{ resolvedOrg.display_name }}
+                        </p>
+                        <p class="text-xs text-muted-foreground">
+                            {{ resolvedOrg.domain }}
+                        </p>
+                        <p class="font-mono text-xs text-muted-foreground">
+                            {{ resolvedOrg.tenant_id }}
+                        </p>
                     </div>
 
                     <div class="flex gap-2 pt-2">
-                        <Button @click="proceedToStep2" :disabled="!resolvedOrg">Next: Set Policies</Button>
+                        <Button @click="proceedToStep2" :disabled="!resolvedOrg"
+                            >Next: Set Policies</Button
+                        >
                         <Link :href="partners.index.url()">
                             <Button variant="outline">Cancel</Button>
                         </Link>
@@ -201,26 +252,37 @@ function submit() {
                         <select
                             id="category"
                             v-model="form.category"
-                            class="rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                            class="rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus:ring-1 focus:ring-ring focus:outline-none"
                         >
                             <option value="vendor">Vendor</option>
                             <option value="contractor">Contractor</option>
-                            <option value="strategic_partner">Strategic Partner</option>
+                            <option value="strategic_partner">
+                                Strategic Partner
+                            </option>
                             <option value="customer">Customer</option>
                             <option value="other">Other</option>
                         </select>
                     </div>
 
                     <!-- Template selector -->
-                    <div v-if="templates.length > 0" class="flex flex-col gap-1.5">
+                    <div
+                        v-if="templates.length > 0"
+                        class="flex flex-col gap-1.5"
+                    >
                         <Label for="template">Apply Template (optional)</Label>
                         <select
                             id="template"
                             v-model="selectedTemplateId"
-                            class="rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                            class="rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus:ring-1 focus:ring-ring focus:outline-none"
                         >
-                            <option :value="''">No template — configure manually</option>
-                            <option v-for="tpl in templates" :key="tpl.id" :value="tpl.id">
+                            <option :value="''">
+                                No template — configure manually
+                            </option>
+                            <option
+                                v-for="tpl in templates"
+                                :key="tpl.id"
+                                :value="tpl.id"
+                            >
                                 {{ tpl.name }}
                             </option>
                         </select>
@@ -236,20 +298,29 @@ function submit() {
                             :key="key"
                             class="flex items-center justify-between"
                         >
-                            <Label :for="`p-${key}`" class="cursor-pointer text-sm">
+                            <Label
+                                :for="`p-${key}`"
+                                class="cursor-pointer text-sm"
+                            >
                                 {{ policyLabels[key] ?? key }}
                             </Label>
                             <Checkbox
                                 :id="`p-${key}`"
                                 :checked="val"
-                                @update:checked="(v: boolean) => { policyConfig[key] = v; }"
+                                @update:checked="
+                                    (v: boolean) => {
+                                        policyConfig[key] = v;
+                                    }
+                                "
                             />
                         </div>
                     </div>
 
                     <div class="flex gap-2 pt-2">
                         <Button @click="proceedToStep3">Next: Review</Button>
-                        <Button variant="outline" @click="step = 1">Back</Button>
+                        <Button variant="outline" @click="step = 1"
+                            >Back</Button
+                        >
                     </div>
                 </CardContent>
             </Card>
@@ -260,10 +331,14 @@ function submit() {
                     <CardTitle>Review &amp; Confirm</CardTitle>
                 </CardHeader>
                 <CardContent class="flex flex-col gap-4">
-                    <div class="rounded-lg border bg-muted/30 p-4 flex flex-col gap-2 text-sm">
+                    <div
+                        class="flex flex-col gap-2 rounded-lg border bg-muted/30 p-4 text-sm"
+                    >
                         <div class="flex justify-between">
                             <span class="text-muted-foreground">Name</span>
-                            <span class="font-medium">{{ form.display_name }}</span>
+                            <span class="font-medium">{{
+                                form.display_name
+                            }}</span>
                         </div>
                         <div class="flex justify-between">
                             <span class="text-muted-foreground">Domain</span>
@@ -271,7 +346,9 @@ function submit() {
                         </div>
                         <div class="flex justify-between">
                             <span class="text-muted-foreground">Tenant ID</span>
-                            <span class="font-mono text-xs">{{ form.tenant_id }}</span>
+                            <span class="font-mono text-xs">{{
+                                form.tenant_id
+                            }}</span>
                         </div>
                         <div class="flex justify-between">
                             <span class="text-muted-foreground">Category</span>
@@ -284,22 +361,39 @@ function submit() {
                             :key="key"
                             class="flex justify-between"
                         >
-                            <span class="text-muted-foreground">{{ policyLabels[key] ?? key }}</span>
-                            <span :class="val ? 'text-green-600 dark:text-green-400' : 'text-muted-foreground'">
+                            <span class="text-muted-foreground">{{
+                                policyLabels[key] ?? key
+                            }}</span>
+                            <span
+                                :class="
+                                    val
+                                        ? 'text-green-600 dark:text-green-400'
+                                        : 'text-muted-foreground'
+                                "
+                            >
                                 {{ val ? 'Enabled' : 'Disabled' }}
                             </span>
                         </div>
                     </div>
 
-                    <div v-if="form.errors && Object.keys(form.errors).length" class="text-sm text-destructive">
-                        <p v-for="(msg, field) in form.errors" :key="field">{{ msg }}</p>
+                    <div
+                        v-if="form.errors && Object.keys(form.errors).length"
+                        class="text-sm text-destructive"
+                    >
+                        <p v-for="(msg, field) in form.errors" :key="field">
+                            {{ msg }}
+                        </p>
                     </div>
 
                     <div class="flex gap-2">
                         <Button @click="submit" :disabled="form.processing">
-                            {{ form.processing ? 'Creating…' : 'Create Partner' }}
+                            {{
+                                form.processing ? 'Creating…' : 'Create Partner'
+                            }}
                         </Button>
-                        <Button variant="outline" @click="step = 2">Back</Button>
+                        <Button variant="outline" @click="step = 2"
+                            >Back</Button
+                        >
                     </div>
                 </CardContent>
             </Card>

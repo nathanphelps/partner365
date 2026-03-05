@@ -27,7 +27,9 @@ defineProps<{
                                 class="size-10 text-indigo-600 dark:text-indigo-400"
                             />
                         </div>
-                        <span class="text-lg font-semibold text-foreground">Partner365</span>
+                        <span class="text-lg font-semibold text-foreground"
+                            >Partner365</span
+                        >
                     </Link>
                     <div class="space-y-2 text-center">
                         <h1 class="text-xl font-medium">{{ title }}</h1>

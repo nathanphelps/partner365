@@ -29,15 +29,25 @@ let searchTimer: ReturnType<typeof setTimeout>;
 watch(search, (val) => {
     clearTimeout(searchTimer);
     searchTimer = setTimeout(() => {
-        router.get(guestRoutes.index.url(), { search: val, status: statusFilter.value }, { preserveState: true, replace: true });
+        router.get(
+            guestRoutes.index.url(),
+            { search: val, status: statusFilter.value },
+            { preserveState: true, replace: true },
+        );
     }, 400);
 });
 
 watch(statusFilter, (val) => {
-    router.get(guestRoutes.index.url(), { search: search.value, status: val }, { preserveState: true, replace: true });
+    router.get(
+        guestRoutes.index.url(),
+        { search: search.value, status: val },
+        { preserveState: true, replace: true },
+    );
 });
 
-const statusVariant = (status: string): 'default' | 'destructive' | 'outline' => {
+const statusVariant = (
+    status: string,
+): 'default' | 'destructive' | 'outline' => {
     if (status === 'accepted') return 'default';
     if (status === 'failed') return 'destructive';
     return 'outline';
@@ -62,7 +72,7 @@ function formatDate(val: string | null): string {
             <div class="flex items-center justify-between">
                 <div>
                     <h1 class="text-2xl font-semibold">Guest Users</h1>
-                    <p class="text-sm text-muted-foreground mt-1">
+                    <p class="mt-1 text-sm text-muted-foreground">
                         Manage external guest users in your M365 tenant.
                     </p>
                 </div>
@@ -80,10 +90,12 @@ function formatDate(val: string | null): string {
                 />
                 <select
                     v-model="statusFilter"
-                    class="rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                    class="rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus:ring-1 focus:ring-ring focus:outline-none"
                 >
                     <option value="">All Statuses</option>
-                    <option value="pending_acceptance">Pending Acceptance</option>
+                    <option value="pending_acceptance">
+                        Pending Acceptance
+                    </option>
                     <option value="accepted">Accepted</option>
                     <option value="failed">Failed</option>
                 </select>
@@ -94,19 +106,43 @@ function formatDate(val: string | null): string {
                 <table class="w-full text-sm">
                     <thead>
                         <tr class="border-b bg-muted/50">
-                            <th class="px-4 py-3 text-left font-medium text-muted-foreground">Name</th>
-                            <th class="px-4 py-3 text-left font-medium text-muted-foreground">Email</th>
-                            <th class="px-4 py-3 text-left font-medium text-muted-foreground">Partner Org</th>
-                            <th class="px-4 py-3 text-left font-medium text-muted-foreground">Status</th>
-                            <th class="px-4 py-3 text-left font-medium text-muted-foreground">Last Sign In</th>
-                            <th class="px-4 py-3 text-left font-medium text-muted-foreground">Created</th>
+                            <th
+                                class="px-4 py-3 text-left font-medium text-muted-foreground"
+                            >
+                                Name
+                            </th>
+                            <th
+                                class="px-4 py-3 text-left font-medium text-muted-foreground"
+                            >
+                                Email
+                            </th>
+                            <th
+                                class="px-4 py-3 text-left font-medium text-muted-foreground"
+                            >
+                                Partner Org
+                            </th>
+                            <th
+                                class="px-4 py-3 text-left font-medium text-muted-foreground"
+                            >
+                                Status
+                            </th>
+                            <th
+                                class="px-4 py-3 text-left font-medium text-muted-foreground"
+                            >
+                                Last Sign In
+                            </th>
+                            <th
+                                class="px-4 py-3 text-left font-medium text-muted-foreground"
+                            >
+                                Created
+                            </th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr
                             v-for="guest in guests.data"
                             :key="guest.id"
-                            class="border-b last:border-0 hover:bg-muted/30 transition-colors"
+                            class="border-b transition-colors last:border-0 hover:bg-muted/30"
                         >
                             <td class="px-4 py-3">
                                 <Link
@@ -116,27 +152,48 @@ function formatDate(val: string | null): string {
                                     {{ guest.display_name }}
                                 </Link>
                             </td>
-                            <td class="px-4 py-3 text-muted-foreground">{{ guest.email }}</td>
+                            <td class="px-4 py-3 text-muted-foreground">
+                                {{ guest.email }}
+                            </td>
                             <td class="px-4 py-3">
                                 <Link
                                     v-if="guest.partner_organization"
-                                    :href="partnerRoutes.show.url(guest.partner_organization.id)"
-                                    class="hover:underline text-sm"
+                                    :href="
+                                        partnerRoutes.show.url(
+                                            guest.partner_organization.id,
+                                        )
+                                    "
+                                    class="text-sm hover:underline"
                                 >
-                                    {{ guest.partner_organization.display_name }}
+                                    {{
+                                        guest.partner_organization.display_name
+                                    }}
                                 </Link>
-                                <span v-else class="text-muted-foreground">—</span>
+                                <span v-else class="text-muted-foreground"
+                                    >—</span
+                                >
                             </td>
                             <td class="px-4 py-3">
-                                <Badge :variant="statusVariant(guest.invitation_status)">
+                                <Badge
+                                    :variant="
+                                        statusVariant(guest.invitation_status)
+                                    "
+                                >
                                     {{ statusLabel(guest.invitation_status) }}
                                 </Badge>
                             </td>
-                            <td class="px-4 py-3 text-muted-foreground">{{ formatDate(guest.last_sign_in_at) }}</td>
-                            <td class="px-4 py-3 text-muted-foreground">{{ formatDate(guest.created_at) }}</td>
+                            <td class="px-4 py-3 text-muted-foreground">
+                                {{ formatDate(guest.last_sign_in_at) }}
+                            </td>
+                            <td class="px-4 py-3 text-muted-foreground">
+                                {{ formatDate(guest.created_at) }}
+                            </td>
                         </tr>
                         <tr v-if="guests.data.length === 0">
-                            <td colspan="6" class="px-4 py-8 text-center text-muted-foreground">
+                            <td
+                                colspan="6"
+                                class="px-4 py-8 text-center text-muted-foreground"
+                            >
                                 No guest users found.
                             </td>
                         </tr>
@@ -145,9 +202,13 @@ function formatDate(val: string | null): string {
             </div>
 
             <!-- Pagination -->
-            <div v-if="guests.last_page > 1" class="flex items-center justify-between">
+            <div
+                v-if="guests.last_page > 1"
+                class="flex items-center justify-between"
+            >
                 <p class="text-sm text-muted-foreground">
-                    Showing {{ guests.data.length }} of {{ guests.total }} guests
+                    Showing {{ guests.data.length }} of
+                    {{ guests.total }} guests
                 </p>
                 <div class="flex gap-1">
                     <template v-for="link in guests.links" :key="link.label">
@@ -157,11 +218,12 @@ function formatDate(val: string | null): string {
                             :class="[
                                 'inline-flex items-center justify-center rounded-md px-3 py-1.5 text-sm transition-colors',
                                 link.active
-                                    ? 'bg-primary text-primary-foreground font-medium'
+                                    ? 'bg-primary font-medium text-primary-foreground'
                                     : 'border hover:bg-muted',
                             ]"
-                            v-html="link.label"
-                        />
+                            ><!-- eslint-disable-next-line vue/no-v-html --><span
+                                v-html="link.label"
+                        /></Link>
                         <span
                             v-else
                             class="inline-flex items-center justify-center rounded-md px-3 py-1.5 text-sm text-muted-foreground opacity-50"

@@ -25,7 +25,8 @@
       "Bash(git commit:*)",
       "Bash(grep:*)",
       "Bash(chmod +x:*)",
-      "Bash(az ad:*)"
+      "Bash(az ad:*)",
+      "Bash(composer run:*)"
     ]
   }
 }

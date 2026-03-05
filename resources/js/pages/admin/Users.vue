@@ -110,20 +110,14 @@ const confirmDelete = () => {
                                 :model-value="user.role"
                                 :disabled="user.id === currentUserId"
                                 @update:model-value="
-                                    (v) =>
-                                        updateRole(
-                                            user.id,
-                                            v as string,
-                                        )
+                                    (v) => updateRole(user.id, v as string)
                                 "
                             >
                                 <SelectTrigger class="w-32">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="admin"
-                                        >Admin</SelectItem
-                                    >
+                                    <SelectItem value="admin">Admin</SelectItem>
                                     <SelectItem value="operator"
                                         >Operator</SelectItem
                                     >
@@ -172,9 +166,7 @@ const confirmDelete = () => {
                     <DialogTitle>Delete User</DialogTitle>
                     <DialogDescription>
                         Are you sure you want to delete
-                        <span class="font-medium">{{
-                            deleteTarget?.name
-                        }}</span
+                        <span class="font-medium">{{ deleteTarget?.name }}</span
                         >? This action cannot be undone.
                     </DialogDescription>
                 </DialogHeader>

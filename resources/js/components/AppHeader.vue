@@ -1,6 +1,14 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3';
-import { Activity, Building2, FileStack, LayoutGrid, Menu, Search, Users } from 'lucide-vue-next';
+import {
+    Activity,
+    Building2,
+    FileStack,
+    LayoutGrid,
+    Menu,
+    Search,
+    Users,
+} from 'lucide-vue-next';
 import { computed } from 'vue';
 import AppLogo from '@/components/AppLogo.vue';
 import AppLogoIcon from '@/components/AppLogoIcon.vue';
@@ -66,7 +74,7 @@ const rightNavItems: NavItem[] = [];
 
 <template>
     <div>
-        <div class="bg-header border-b border-sidebar-border/80">
+        <div class="border-b border-sidebar-border/80 bg-header">
             <div class="mx-auto flex h-16 items-center px-4 md:max-w-7xl">
                 <!-- Mobile Menu -->
                 <div class="lg:hidden">
@@ -260,7 +268,7 @@ const rightNavItems: NavItem[] = [];
 
         <div
             v-if="props.breadcrumbs.length > 1"
-            class="bg-header flex w-full border-b border-sidebar-border/70"
+            class="flex w-full border-b border-sidebar-border/70 bg-header"
         >
             <div
                 class="mx-auto flex h-12 w-full items-center justify-start px-4 text-muted-foreground md:max-w-7xl"

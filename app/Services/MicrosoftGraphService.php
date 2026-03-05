@@ -52,7 +52,7 @@ class MicrosoftGraphService
     {
         $token = $this->getAccessToken();
         $baseUrl = Setting::get('graph', 'base_url', config('graph.base_url'));
-        $url = $baseUrl . $path;
+        $url = $baseUrl.$path;
 
         $request = Http::withToken($token)->acceptJson();
 

@@ -51,7 +51,7 @@ class AdminSyncController extends Controller
 
     public function run(Request $request, string $type): JsonResponse
     {
-        if (!in_array($type, ['partners', 'guests'])) {
+        if (! in_array($type, ['partners', 'guests'])) {
             abort(404);
         }
 

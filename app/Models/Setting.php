@@ -20,7 +20,7 @@ class Setting extends Model
     {
         $setting = static::where('group', $group)->where('key', $key)->first();
 
-        if (!$setting || $setting->value === null) {
+        if (! $setting || $setting->value === null) {
             return $fallback;
         }
 

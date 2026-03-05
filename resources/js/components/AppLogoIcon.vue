@@ -38,6 +38,8 @@ defineProps<Props>();
             font-family="Inter, system-ui, sans-serif"
             font-size="11"
             font-weight="700"
-        >365</text>
+        >
+            365
+        </text>
     </svg>
 </template>

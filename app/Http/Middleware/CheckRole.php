@@ -12,7 +12,7 @@ class CheckRole
     {
         $user = $request->user();
 
-        if (!$user || !in_array($user->role->value, $roles)) {
+        if (! $user || ! in_array($user->role->value, $roles)) {
             abort(403, 'Insufficient permissions.');
         }
 

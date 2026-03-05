@@ -11,7 +11,7 @@ class EnsureApproved
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if ($request->user() && !$request->user()->isApproved()) {
+        if ($request->user() && ! $request->user()->isApproved()) {
             return Inertia::render('PendingApproval')->toResponse($request);
         }
 

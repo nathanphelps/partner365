@@ -19,11 +19,31 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 const policyKeys = [
-    { key: 'mfa_trust_enabled', label: 'MFA Trust', description: 'Trust MFA claims from partner tenants.' },
-    { key: 'device_trust_enabled', label: 'Device Trust', description: 'Trust device compliance from partner tenants.' },
-    { key: 'direct_connect_enabled', label: 'Direct Connect', description: 'Allow Teams direct connect.' },
-    { key: 'b2b_inbound_enabled', label: 'B2B Inbound', description: 'Allow inbound B2B collaboration.' },
-    { key: 'b2b_outbound_enabled', label: 'B2B Outbound', description: 'Allow outbound B2B collaboration.' },
+    {
+        key: 'mfa_trust_enabled',
+        label: 'MFA Trust',
+        description: 'Trust MFA claims from partner tenants.',
+    },
+    {
+        key: 'device_trust_enabled',
+        label: 'Device Trust',
+        description: 'Trust device compliance from partner tenants.',
+    },
+    {
+        key: 'direct_connect_enabled',
+        label: 'Direct Connect',
+        description: 'Allow Teams direct connect.',
+    },
+    {
+        key: 'b2b_inbound_enabled',
+        label: 'B2B Inbound',
+        description: 'Allow inbound B2B collaboration.',
+    },
+    {
+        key: 'b2b_outbound_enabled',
+        label: 'B2B Outbound',
+        description: 'Allow outbound B2B collaboration.',
+    },
 ];
 
 const form = useForm({
@@ -47,11 +67,12 @@ function submit() {
     <Head title="Create Template" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
-        <div class="flex flex-col gap-6 p-6 max-w-xl">
+        <div class="flex max-w-xl flex-col gap-6 p-6">
             <div>
                 <h1 class="text-2xl font-semibold">Create Template</h1>
-                <p class="text-sm text-muted-foreground mt-1">
-                    Define a reusable policy configuration for partner organizations.
+                <p class="mt-1 text-sm text-muted-foreground">
+                    Define a reusable policy configuration for partner
+                    organizations.
                 </p>
             </div>
 
@@ -63,15 +84,25 @@ function submit() {
                     <form @submit.prevent="submit" class="flex flex-col gap-5">
                         <!-- Name -->
                         <div class="flex flex-col gap-1.5">
-                            <Label for="name">Name <span class="text-destructive">*</span></Label>
+                            <Label for="name"
+                                >Name
+                                <span class="text-destructive">*</span></Label
+                            >
                             <Input
                                 id="name"
                                 v-model="form.name"
                                 placeholder="e.g. Standard Vendor"
                                 required
-                                :class="form.errors.name ? 'border-destructive' : ''"
+                                :class="
+                                    form.errors.name ? 'border-destructive' : ''
+                                "
                             />
-                            <p v-if="form.errors.name" class="text-xs text-destructive">{{ form.errors.name }}</p>
+                            <p
+                                v-if="form.errors.name"
+                                class="text-xs text-destructive"
+                            >
+                                {{ form.errors.name }}
+                            </p>
                         </div>
 
                         <!-- Description -->
@@ -83,31 +114,56 @@ function submit() {
                                 placeholder="Describe when to use this template..."
                                 class="min-h-[80px]"
                             />
-                            <p v-if="form.errors.description" class="text-xs text-destructive">{{ form.errors.description }}</p>
+                            <p
+                                v-if="form.errors.description"
+                                class="text-xs text-destructive"
+                            >
+                                {{ form.errors.description }}
+                            </p>
                         </div>
 
                         <Separator />
 
                         <!-- Policy config -->
                         <div class="flex flex-col gap-3">
-                            <p class="text-sm font-medium">Policy Configuration</p>
+                            <p class="text-sm font-medium">
+                                Policy Configuration
+                            </p>
                             <div
                                 v-for="policy in policyKeys"
                                 :key="policy.key"
                                 class="flex items-center justify-between py-1.5"
                             >
                                 <div>
-                                    <p class="text-sm font-medium">{{ policy.label }}</p>
-                                    <p class="text-xs text-muted-foreground">{{ policy.description }}</p>
+                                    <p class="text-sm font-medium">
+                                        {{ policy.label }}
+                                    </p>
+                                    <p class="text-xs text-muted-foreground">
+                                        {{ policy.description }}
+                                    </p>
                                 </div>
                                 <div class="flex items-center gap-2">
                                     <Checkbox
                                         :id="`policy-${policy.key}`"
-                                        :checked="form.policy_config[policy.key]"
-                                        @update:checked="(v: boolean) => { form.policy_config[policy.key] = v; }"
+                                        :checked="
+                                            form.policy_config[policy.key]
+                                        "
+                                        @update:checked="
+                                            (v: boolean) => {
+                                                form.policy_config[policy.key] =
+                                                    v;
+                                            }
+                                        "
                                     />
-                                    <Label :for="`policy-${policy.key}`" class="cursor-pointer text-sm w-8">
-                                        {{ form.policy_config[policy.key] ? 'On' : 'Off' }}
+                                    <Label
+                                        :for="`policy-${policy.key}`"
+                                        class="w-8 cursor-pointer text-sm"
+                                    >
+                                        {{
+                                            form.policy_config[policy.key]
+                                                ? 'On'
+                                                : 'Off'
+                                        }}
                                     </Label>
                                 </div>
                             </div>
@@ -116,10 +172,16 @@ function submit() {
                         <!-- Actions -->
                         <div class="flex gap-2 pt-2">
                             <Button type="submit" :disabled="form.processing">
-                                {{ form.processing ? 'Creating…' : 'Create Template' }}
+                                {{
+                                    form.processing
+                                        ? 'Creating…'
+                                        : 'Create Template'
+                                }}
                             </Button>
                             <Link :href="templates.index.url()">
-                                <Button type="button" variant="outline">Cancel</Button>
+                                <Button type="button" variant="outline"
+                                    >Cancel</Button
+                                >
                             </Link>
                         </div>
                     </form>

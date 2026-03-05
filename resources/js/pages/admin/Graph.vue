@@ -143,9 +143,7 @@ const testConnection = async () => {
                         min="1"
                         max="1440"
                     />
-                    <InputError
-                        :message="form.errors.sync_interval_minutes"
-                    />
+                    <InputError :message="form.errors.sync_interval_minutes" />
                 </div>
 
                 <div class="flex items-center gap-4">
