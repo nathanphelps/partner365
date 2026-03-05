@@ -13,7 +13,12 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+    Tabs,
+    TabsContent,
+    TabsList,
+    TabsTrigger,
+} from '@/components/ui/tabs';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { BreadcrumbItem } from '@/types';
 import type {
@@ -200,6 +205,18 @@ function formatDate(val: string | null): string {
                 </Card>
             </div>
 
+            <!-- Section Tabs -->
+            <Tabs default-value="partners">
+                <TabsList>
+                    <TabsTrigger value="partners">
+                        Partner Compliance
+                    </TabsTrigger>
+                    <TabsTrigger value="guests">
+                        Guest Health
+                    </TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="partners">
             <!-- Partner Policy Compliance -->
             <Card>
                 <CardHeader>
@@ -344,6 +361,9 @@ function formatDate(val: string | null): string {
                 </CardContent>
             </Card>
 
+                </TabsContent>
+
+                <TabsContent value="guests">
             <!-- Guest Account Health -->
             <Card>
                 <CardHeader>
@@ -514,6 +534,8 @@ function formatDate(val: string | null): string {
                     </p>
                 </CardContent>
             </Card>
+                </TabsContent>
+            </Tabs>
         </div>
     </AppLayout>
 </template>
