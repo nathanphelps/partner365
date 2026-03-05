@@ -29,7 +29,8 @@
       "Bash(composer run:*)",
       "Bash(gh repo:*)",
       "Bash(git push:*)",
-      "Bash(npx eslint:*)"
+      "Bash(npx eslint:*)",
+      "Bash(gh auth:*)"
     ]
   }
 }
