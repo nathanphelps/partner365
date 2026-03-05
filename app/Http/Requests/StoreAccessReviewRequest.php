@@ -23,7 +23,7 @@ class StoreAccessReviewRequest extends FormRequest
             'review_type' => ['required', Rule::enum(ReviewType::class)],
             'scope_partner_id' => ['nullable', 'exists:partner_organizations,id'],
             'recurrence_type' => ['required', Rule::enum(RecurrenceType::class)],
-            'recurrence_interval_days' => ['nullable', 'integer', 'min:1', 'max:365'],
+            'recurrence_interval_days' => ['required_if:recurrence_type,recurring', 'nullable', 'integer', 'min:1', 'max:365'],
             'remediation_action' => ['required', Rule::enum(RemediationAction::class)],
             'reviewer_user_id' => ['required', 'exists:users,id'],
         ];

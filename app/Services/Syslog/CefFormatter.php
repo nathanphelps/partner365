@@ -13,6 +13,7 @@ class CefFormatter
         'sync_triggered' => 3,
         'access_review_created' => 3,
         'template_created' => 3,
+        'sensitivity_labels_synced' => 3,
 
         // Medium (5)
         'partner_created' => 5,

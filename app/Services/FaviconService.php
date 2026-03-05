@@ -18,7 +18,7 @@ class FaviconService
         try {
             $iconUrl = $this->discoverIconUrl($partner->domain);
 
-            if (! $iconUrl) {
+            if (! $iconUrl || ! $this->isSafeUrl($iconUrl)) {
                 return;
             }
 
@@ -47,6 +47,10 @@ class FaviconService
     {
         $baseUrl = "https://{$domain}";
 
+        if (! $this->isSafeUrl($baseUrl)) {
+            return null;
+        }
+
         try {
             $response = Http::timeout(10)->get($baseUrl);
 
@@ -54,7 +58,10 @@ class FaviconService
                 $iconHref = $this->parseIconFromHtml($response->body());
 
                 if ($iconHref) {
-                    return $this->resolveUrl($iconHref, $baseUrl);
+                    $resolved = $this->resolveUrl($iconHref, $baseUrl);
+                    if ($resolved) {
+                        return $resolved;
+                    }
                 }
             }
         } catch (\Throwable) {
@@ -62,10 +69,11 @@ class FaviconService
         }
 
         try {
-            $fallback = Http::timeout(10)->get("{$baseUrl}/favicon.ico");
+            $faviconUrl = "{$baseUrl}/favicon.ico";
+            $fallback = Http::timeout(10)->get($faviconUrl);
 
             if ($fallback->successful() && str_starts_with($fallback->header('Content-Type', ''), 'image/')) {
-                return "{$baseUrl}/favicon.ico";
+                return $faviconUrl;
             }
         } catch (\Throwable) {
             // No favicon available
@@ -104,21 +112,46 @@ class FaviconService
         return $best;
     }
 
-    private function resolveUrl(string $href, string $baseUrl): string
+    private function resolveUrl(string $href, string $baseUrl): ?string
     {
         if (str_starts_with($href, 'http://') || str_starts_with($href, 'https://')) {
-            return $href;
+            $url = $href;
+        } elseif (str_starts_with($href, '//')) {
+            $url = "https:{$href}";
+        } elseif (str_starts_with($href, '/')) {
+            $url = "{$baseUrl}{$href}";
+        } else {
+            $url = "{$baseUrl}/{$href}";
         }
 
-        if (str_starts_with($href, '//')) {
-            return "https:{$href}";
+        if (! $this->isSafeUrl($url)) {
+            Log::warning("Blocked SSRF attempt in favicon URL: {$url}");
+
+            return null;
         }
 
-        if (str_starts_with($href, '/')) {
-            return "{$baseUrl}{$href}";
+        return $url;
+    }
+
+    private function isSafeUrl(string $url): bool
+    {
+        $host = parse_url($url, PHP_URL_HOST);
+        if (! $host) {
+            return false;
         }
 
-        return "{$baseUrl}/{$href}";
+        $ips = gethostbynamel($host);
+        if (! $ips) {
+            return false;
+        }
+
+        foreach ($ips as $ip) {
+            if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private function guessExtension(string $contentType, string $url): string

@@ -11,6 +11,7 @@ class MicrosoftGraphService
 {
     public function getAccessToken(): string
     {
+        // Cache for 3500s (just under the 3600s token lifetime) to avoid edge-case expiry
         return Cache::remember('msgraph_access_token', 3500, function () {
             $tenantId = Setting::get('graph', 'tenant_id', config('graph.tenant_id'));
             $cloudEnv = \App\Enums\CloudEnvironment::tryFrom(
@@ -28,7 +29,24 @@ class MicrosoftGraphService
                 ]
             );
 
-            return $response->json('access_token');
+            if ($response->failed()) {
+                throw new GraphApiException(
+                    'Failed to acquire access token: '.($response->json('error_description') ?? 'Unknown error'),
+                    $response->status(),
+                    $response->json('error') ?? '',
+                );
+            }
+
+            $token = $response->json('access_token');
+
+            if (empty($token)) {
+                throw new GraphApiException(
+                    'Token response did not contain an access_token',
+                    $response->status(),
+                );
+            }
+
+            return $token;
         });
     }
 

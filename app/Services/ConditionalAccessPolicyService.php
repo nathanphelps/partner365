@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\ConditionalAccessPolicy;
 use App\Models\PartnerOrganization;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Log;
 
 class ConditionalAccessPolicyService
 {
@@ -44,7 +45,14 @@ class ConditionalAccessPolicyService
     {
         $response = $this->graph->get('/identity/conditionalAccess/policies');
 
-        return $response['value'] ?? [];
+        if (! array_key_exists('value', $response)) {
+            Log::error('Graph API response missing "value" key for conditional access policies', [
+                'response_keys' => array_keys($response),
+            ]);
+            throw new \RuntimeException('Unexpected Graph API response structure for conditional access policies');
+        }
+
+        return $response['value'];
     }
 
     private function filterGuestPolicies(array $policies): array

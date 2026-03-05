@@ -18,9 +18,24 @@ class PartnerOrganization extends Model
         'b2b_inbound_enabled', 'b2b_outbound_enabled', 'mfa_trust_enabled',
         'device_trust_enabled', 'direct_connect_inbound_enabled', 'direct_connect_outbound_enabled',
         'tenant_restrictions_enabled', 'tenant_restrictions_json',
-        'raw_policy_json', 'last_synced_at',
-        'trust_score', 'trust_score_breakdown', 'trust_score_calculated_at',
     ];
+
+    public function updateFromSync(array $policyData, \DateTimeInterface $syncedAt): void
+    {
+        $this->forceFill([
+            'raw_policy_json' => $policyData,
+            'last_synced_at' => $syncedAt,
+        ])->save();
+    }
+
+    public function updateTrustScore(int $score, array $breakdown): void
+    {
+        $this->forceFill([
+            'trust_score' => $score,
+            'trust_score_breakdown' => $breakdown,
+            'trust_score_calculated_at' => now(),
+        ])->save();
+    }
 
     protected function casts(): array
     {

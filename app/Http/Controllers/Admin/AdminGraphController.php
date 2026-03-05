@@ -115,13 +115,16 @@ class AdminGraphController extends Controller
         }
     }
 
-    public function consentUrl(): JsonResponse
+    public function consentUrl(Request $request): JsonResponse
     {
         $tenantId = Setting::get('graph', 'tenant_id', config('graph.tenant_id'));
         $clientId = Setting::get('graph', 'client_id', config('graph.client_id'));
         $cloudEnv = \App\Enums\CloudEnvironment::tryFrom(
             Setting::get('graph', 'cloud_environment', config('graph.cloud_environment'))
         ) ?? \App\Enums\CloudEnvironment::Commercial;
+
+        $state = bin2hex(random_bytes(32));
+        $request->session()->put('graph_consent_state', $state);
 
         $redirectUri = route('admin.graph.consent.callback');
         $loginUrl = $cloudEnv->loginUrl();
@@ -130,6 +133,7 @@ class AdminGraphController extends Controller
             .http_build_query([
                 'client_id' => $clientId,
                 'redirect_uri' => $redirectUri,
+                'state' => $state,
             ]);
 
         return response()->json(['url' => $url]);
@@ -137,19 +141,32 @@ class AdminGraphController extends Controller
 
     public function consentCallback(Request $request): View
     {
+        $expectedState = $request->session()->pull('graph_consent_state');
+        $receivedState = $request->query('state');
+
+        if (! $expectedState || ! hash_equals($expectedState, (string) $receivedState)) {
+            return view('admin.consent-callback', [
+                'success' => false,
+                'error' => 'Invalid or missing state parameter. The consent request may have been tampered with.',
+            ]);
+        }
+
         $success = $request->query('admin_consent') === 'True';
         $error = $request->query('error_description');
 
         ActivityLog::create([
             'user_id' => null,
             'action' => ActivityAction::ConsentGranted,
-            'details' => ['success' => $success, 'error' => $error],
+            'details' => [
+                'success' => $success,
+                'error' => $error ? mb_substr((string) $error, 0, 1000) : null,
+            ],
             'created_at' => now(),
         ]);
 
         return view('admin.consent-callback', [
             'success' => $success,
-            'error' => $error,
+            'error' => $error ? mb_substr((string) $error, 0, 1000) : null,
         ]);
     }
 }

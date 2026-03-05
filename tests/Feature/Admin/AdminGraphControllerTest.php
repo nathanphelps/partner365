@@ -213,18 +213,42 @@ test('consent url uses gcc high login url when configured', function () {
 });
 
 test('consent callback renders success view', function () {
-    $this->get('/admin/graph/consent/callback?admin_consent=True&tenant=some-tenant')
+    $state = bin2hex(random_bytes(32));
+    session()->put('graph_consent_state', $state);
+
+    $this->get("/admin/graph/consent/callback?admin_consent=True&tenant=some-tenant&state={$state}")
         ->assertOk()
         ->assertViewIs('admin.consent-callback')
         ->assertViewHas('success', true);
 });
 
 test('consent callback renders error view', function () {
-    $this->get('/admin/graph/consent/callback?error=access_denied&error_description=Admin+denied')
+    $state = bin2hex(random_bytes(32));
+    session()->put('graph_consent_state', $state);
+
+    $this->get("/admin/graph/consent/callback?error=access_denied&error_description=Admin+denied&state={$state}")
         ->assertOk()
         ->assertViewIs('admin.consent-callback')
         ->assertViewHas('success', false)
         ->assertViewHas('error', 'Admin denied');
+});
+
+test('consent callback rejects missing state parameter', function () {
+    $this->get('/admin/graph/consent/callback?admin_consent=True')
+        ->assertOk()
+        ->assertViewIs('admin.consent-callback')
+        ->assertViewHas('success', false)
+        ->assertViewHas('error', 'Invalid or missing state parameter. The consent request may have been tampered with.');
+});
+
+test('consent callback rejects invalid state parameter', function () {
+    session()->put('graph_consent_state', 'expected-state');
+
+    $this->get('/admin/graph/consent/callback?admin_consent=True&state=wrong-state')
+        ->assertOk()
+        ->assertViewIs('admin.consent-callback')
+        ->assertViewHas('success', false)
+        ->assertViewHas('error', 'Invalid or missing state parameter. The consent request may have been tampered with.');
 });
 
 test('test connection logs GraphConnectionTested', function () {
@@ -248,7 +272,10 @@ test('test connection logs GraphConnectionTested', function () {
 });
 
 test('consent callback logs ConsentGranted on success', function () {
-    $this->get('/admin/graph/consent/callback?admin_consent=True');
+    $state = bin2hex(random_bytes(32));
+    session()->put('graph_consent_state', $state);
+
+    $this->get("/admin/graph/consent/callback?admin_consent=True&state={$state}");
 
     $log = ActivityLog::where('action', ActivityAction::ConsentGranted)->first();
     expect($log)->not->toBeNull();

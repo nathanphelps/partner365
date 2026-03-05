@@ -50,7 +50,7 @@ class SyncPartners extends Command
                 $directConnectOutbound = $partner['b2bDirectConnectOutbound'] ?? [];
                 $tenantRestrictions = $partner['tenantRestrictions'] ?? null;
 
-                PartnerOrganization::updateOrCreate(
+                $partnerOrg = PartnerOrganization::updateOrCreate(
                     ['tenant_id' => $tenantId],
                     [
                         'display_name' => $displayName,
@@ -63,10 +63,9 @@ class SyncPartners extends Command
                         'direct_connect_outbound_enabled' => ($directConnectOutbound['usersAndGroups']['accessType'] ?? '') === 'allowed',
                         'tenant_restrictions_enabled' => $tenantRestrictions !== null,
                         'tenant_restrictions_json' => $tenantRestrictions,
-                        'raw_policy_json' => $partner,
-                        'last_synced_at' => now(),
                     ]
                 );
+                $partnerOrg->updateFromSync($partner, now());
 
                 $synced++;
             }

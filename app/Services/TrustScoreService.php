@@ -87,11 +87,12 @@ class TrustScoreService
 
         // --- Entra ID / Graph Metadata (40 points) ---
 
-        $hasVerifiedDomain = ! empty($partner->domain);
+        // Always true here (early return at line 19 guards empty domain), but kept as a
+        // baseline signal so the breakdown always shows this criterion with its 15 points.
         $breakdown['verified_domain'] = [
-            'label' => 'Tenant has verified domain',
-            'passed' => $hasVerifiedDomain,
-            'points' => $hasVerifiedDomain ? 15 : 0,
+            'label' => 'Partner has known domain',
+            'passed' => true,
+            'points' => 15,
             'max_points' => 15,
         ];
 
@@ -135,11 +136,7 @@ class TrustScoreService
 
     public function storeScore(PartnerOrganization $partner, array $result): void
     {
-        $partner->update([
-            'trust_score' => $result['score'],
-            'trust_score_breakdown' => $result['breakdown'],
-            'trust_score_calculated_at' => now(),
-        ]);
+        $partner->updateTrustScore($result['score'], $result['breakdown']);
     }
 
     private function lookupDomainAge(string $domain): ?Carbon

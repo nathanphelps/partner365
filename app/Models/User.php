@@ -24,8 +24,6 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
-        'approved_at',
-        'approved_by',
     ];
 
     /**
@@ -63,10 +61,10 @@ class User extends Authenticatable
 
     public function approve(User $approver): void
     {
-        $this->update([
+        $this->forceFill([
             'approved_at' => now(),
             'approved_by' => $approver->id,
-        ]);
+        ])->save();
     }
 
     public function scopePending($query)

@@ -8,6 +8,7 @@ use App\Models\SensitivityLabelPolicy;
 use App\Models\SiteSensitivityLabel;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class SensitivityLabelService
 {
@@ -179,14 +180,14 @@ class SensitivityLabelService
     {
         $response = $this->graph->get('/security/informationProtection/sensitivityLabels');
 
-        return $response['value'] ?? [];
+        return $this->requireValueKey($response, 'sensitivity labels');
     }
 
     private function fetchLabelPoliciesFromGraph(): array
     {
         $response = $this->graph->get('/security/informationProtection/sensitivityLabels/policies');
 
-        return $response['value'] ?? [];
+        return $this->requireValueKey($response, 'sensitivity label policies');
     }
 
     private function fetchSitesFromGraph(): array
@@ -197,7 +198,19 @@ class SensitivityLabelService
             '$top' => 999,
         ]);
 
-        return $response['value'] ?? [];
+        return $this->requireValueKey($response, 'sites');
+    }
+
+    private function requireValueKey(array $response, string $context): array
+    {
+        if (! array_key_exists('value', $response)) {
+            Log::error("Graph API response missing \"value\" key for {$context}", [
+                'response_keys' => array_keys($response),
+            ]);
+            throw new \RuntimeException("Unexpected Graph API response structure for {$context}");
+        }
+
+        return $response['value'];
     }
 
     private function fetchSiteLabelFromGraph(string $siteId): ?string

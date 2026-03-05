@@ -89,8 +89,8 @@ class PartnerOrganizationController extends Controller
             'device_trust_enabled' => $validated['device_trust_enabled'] ?? false,
             'direct_connect_inbound_enabled' => $validated['direct_connect_inbound_enabled'] ?? false,
             'direct_connect_outbound_enabled' => $validated['direct_connect_outbound_enabled'] ?? false,
-            'last_synced_at' => now(),
         ]);
+        $partner->updateFromSync($graphConfig, now());
 
         $this->activityLog->log($request->user(), ActivityAction::PartnerCreated, $partner, [
             'tenant_id' => $partner->tenant_id,

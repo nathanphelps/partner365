@@ -29,7 +29,7 @@ class AccessReviewController extends Controller
 
     public function index(Request $request): Response
     {
-        $reviews = AccessReview::with(['reviewer', 'latestInstance', 'scopePartner'])
+        $reviews = AccessReview::with(['reviewer', 'latestInstance', 'scopedPartner'])
             ->withCount('instances')
             ->orderByDesc('created_at')
             ->paginate(25);
@@ -75,7 +75,7 @@ class AccessReviewController extends Controller
 
     public function show(AccessReview $accessReview): Response
     {
-        $accessReview->load(['reviewer', 'createdBy', 'scopePartner', 'instances' => function ($q) {
+        $accessReview->load(['reviewer', 'createdBy', 'scopedPartner', 'instances' => function ($q) {
             $q->orderByDesc('started_at');
         }]);
 

@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\CloudEnvironment;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateGraphSettingsRequest extends FormRequest
 {
@@ -14,7 +16,7 @@ class UpdateGraphSettingsRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'cloud_environment' => ['required', 'string', 'in:commercial,gcc_high'],
+            'cloud_environment' => ['required', 'string', Rule::enum(CloudEnvironment::class)],
             'tenant_id' => ['required', 'uuid'],
             'client_id' => ['required', 'uuid'],
             'client_secret' => ['nullable', 'string'],

@@ -32,7 +32,7 @@ class AccessReview extends Model
         ];
     }
 
-    public function scopePartner(): BelongsTo
+    public function scopedPartner(): BelongsTo
     {
         return $this->belongsTo(PartnerOrganization::class, 'scope_partner_id');
     }
