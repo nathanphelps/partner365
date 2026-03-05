@@ -6,6 +6,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GuestUserController;
 use App\Http\Controllers\PartnerOrganizationController;
 use App\Http\Controllers\PartnerTemplateController;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
 
@@ -34,5 +35,19 @@ Route::middleware(['auth', 'verified', 'approved'])->group(function () {
     Route::post('access-reviews/decisions/{decision}', [AccessReviewController::class, 'submitDecision'])->name('access-reviews.decisions.submit');
     Route::post('access-reviews/instances/{instance}/apply', [AccessReviewController::class, 'applyRemediations'])->name('access-reviews.instances.apply');
 });
+
+Route::get('/health', function () {
+    try {
+        DB::connection()->getPdo();
+        $database = 'ok';
+    } catch (\Throwable) {
+        $database = 'error';
+    }
+
+    return response()->json([
+        'status' => 'ok',
+        'database' => $database,
+    ]);
+})->name('health');
 
 require __DIR__.'/settings.php';
