@@ -16,7 +16,14 @@
       "Bash(composer install:*)",
       "Bash(npm install:*)",
       "Bash(mv:*)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(identify:*)",
+      "Bash(xxd:*)",
+      "Bash(git status:*)",
+      "Bash(git add:*)",
+      "Bash(ls:*)",
+      "Bash(git commit:*)",
+      "Bash(grep:*)"
     ]
   }
 }
