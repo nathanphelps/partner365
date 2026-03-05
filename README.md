@@ -19,6 +19,7 @@ Partner365 solves this with a single interface for IT admins, business owners, a
 - **Tenant Restrictions v2** — Per-partner app access controls with application targeting
 - **External Collaboration Settings** — Admin controls for guest invitation policies and domain allow/block lists
 - **Guest User Lifecycle** — Invite B2B guests, track invitation status, monitor sign-in activity, identify inactive accounts
+- **Guest Access Visibility** — Live view of each guest user's group memberships, app assignments, Teams memberships, and SharePoint site access via Graph API
 - **GCC High Support** — Cloud environment selector for Commercial and GCC High tenants with auto-derived endpoints
 - **Admin Consent** — One-click admin consent popup for granting Graph API permissions
 - **Trust Score** — Composite 0-100 domain reputation score per partner based on DNS hygiene (DMARC, SPF, DKIM, DNSSEC, domain age) and Entra ID metadata, recalculated daily
@@ -151,7 +152,7 @@ resources/js/
 │   ├── admin/              # Graph settings, Collaboration, Users, Sync
 │   ├── activity/           # Index
 │   └── Dashboard.vue
-├── types/                  # TypeScript types for Partner, Guest, AccessReview, ConditionalAccessPolicy, Entitlement, Paginated
+├── types/                  # TypeScript types for Partner, Guest (+ access types), AccessReview, ConditionalAccessPolicy, Entitlement, Paginated
 └── components/             # shadcn-vue UI components + TrustScoreBadge
 
 tests/Feature/

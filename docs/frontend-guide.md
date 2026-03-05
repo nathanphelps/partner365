@@ -28,7 +28,7 @@ resources/js/
 │   │   └── Create.vue      # 3-step onboarding wizard
 │   ├── guests/
 │   │   ├── Index.vue       # Guest list with search/filter
-│   │   ├── Show.vue        # Guest detail
+│   │   ├── Show.vue        # Guest detail with tabbed access visibility (Overview, Groups, Apps, Teams, Sites)
 │   │   └── Invite.vue      # Invitation form
 │   ├── templates/
 │   │   ├── Index.vue       # Template list
@@ -70,7 +70,7 @@ resources/js/
 │       └── tooltip/
 ├── types/
 │   ├── partner.ts          # PartnerOrganization, Paginated<T>
-│   ├── guest.ts            # GuestUser
+│   ├── guest.ts            # GuestUser, GuestGroup, GuestApp, GuestTeam, GuestSite
 │   ├── access-review.ts    # AccessReview, AccessReviewInstance, AccessReviewDecision
 │   ├── conditional-access.ts # ConditionalAccessPolicy
 │   ├── auth.ts             # Auth types

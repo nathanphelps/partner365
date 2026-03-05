@@ -23,6 +23,7 @@ Partner365 uses a 3-tier role system stored in the `users.role` column as a stri
 | Update partner policy | Yes | Yes | No |
 | Delete partner | Yes | No | No |
 | View guest list | Yes | Yes | Yes |
+| View guest access (groups, apps, teams, sites) | Yes | Yes | Yes |
 | Invite guest | Yes | Yes | No |
 | Delete guest | Yes | No | No |
 | Manage templates | Yes | No | No |

@@ -32,6 +32,54 @@ All routes require authentication (`auth` + `verified` middleware) unless noted 
 | POST | `/guests` | `GuestUserController@store` | `guests.store` | Operator+ |
 | GET | `/guests/{guest}` | `GuestUserController@show` | `guests.show` | Any |
 | DELETE | `/guests/{guest}` | `GuestUserController@destroy` | `guests.destroy` | Admin |
+| PATCH | `/guests/{guest}` | `GuestUserController@update` | `guests.update` | Operator+ |
+| POST | `/guests/{guest}/resend` | `GuestUserController@resendInvitation` | `guests.resend` | Operator+ |
+| POST | `/guests/bulk` | `GuestUserController@bulkAction` | `guests.bulk` | Operator+ |
+
+### Guest Access Visibility (JSON, read-only)
+
+Live-fetched from Microsoft Graph API. Responses are cached server-side for 5 minutes.
+
+| Method | URI | Controller@Method | Name | Role |
+|--------|-----|------------------|------|------|
+| GET | `/guests/{guest}/groups` | `GuestUserController@groups` | `guests.groups` | Any |
+| GET | `/guests/{guest}/apps` | `GuestUserController@apps` | `guests.apps` | Any |
+| GET | `/guests/{guest}/teams` | `GuestUserController@teams` | `guests.teams` | Any |
+| GET | `/guests/{guest}/sites` | `GuestUserController@sites` | `guests.sites` | Any |
+
+**Response format (groups):**
+```json
+[
+    { "id": "g1", "displayName": "Security Group A", "groupType": "security", "description": "..." },
+    { "id": "g2", "displayName": "M365 Group B", "groupType": "microsoft365", "description": null }
+]
+```
+
+**Response format (apps):**
+```json
+[
+    { "id": "a1", "appDisplayName": "SharePoint Online", "roleName": "Default Access", "assignedAt": "2026-01-15T10:00:00Z" }
+]
+```
+
+**Response format (teams):**
+```json
+[
+    { "id": "t1", "displayName": "Engineering", "description": "Eng team" }
+]
+```
+
+**Response format (sites):**
+```json
+[
+    { "id": "s1", "displayName": "Project Team Site", "webUrl": "https://contoso.sharepoint.com/sites/project-team" }
+]
+```
+
+**Error response (502):**
+```json
+{ "error": "Unable to load groups from Microsoft Graph API." }
+```
 
 ### Templates (Admin only)
 

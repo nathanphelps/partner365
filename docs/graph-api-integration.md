@@ -177,6 +177,10 @@ Manages B2B guest user lifecycle.
 | `invite(email, redirectUrl, message, sendEmail)` | POST `/invitations` | Send B2B invitation |
 | `deleteUser(userId)` | DELETE `/users/{userId}` | Remove guest user |
 | `updateUser(userId, data)` | PATCH `/users/{userId}` | Update guest profile |
+| `getUserGroups(entraUserId)` | GET `/users/{id}/memberOf` | Group memberships (filtered to groups only) |
+| `getUserApps(entraUserId)` | GET `/users/{id}/appRoleAssignments` | App role assignments |
+| `getUserTeams(entraUserId)` | GET `/users/{id}/joinedTeams` | Teams memberships |
+| `getUserSites(entraUserId)` | GET `/users/{id}/memberOf` → GET `/groups/{id}/sites/root` | SharePoint sites via M365 groups |
 
 ### Selected Fields
 
@@ -201,6 +205,21 @@ accountEnabled, createdDateTime, externalUserState, signInActivity
 ```
 
 The `invitedUserMessageInfo` key is only included when a custom message is provided.
+
+### Access Visibility (Live-Fetched)
+
+The `getUserGroups`, `getUserApps`, `getUserTeams`, and `getUserSites` methods are live-fetched from Graph API (not synced to the local database). Results are cached for 5 minutes using Laravel's cache with keys like `guest_access:{entraId}:groups`.
+
+**Group type resolution:** The `memberOf` endpoint returns all directory objects. The service filters to `#microsoft.graph.group` and classifies groups as:
+- `microsoft365` — has `Unified` in `groupTypes`
+- `security` — `securityEnabled` is true
+- `distribution` — everything else
+
+**Sites resolution:** SharePoint sites are derived from M365 group memberships. For each `Unified` group, the service calls `GET /groups/{id}/sites/root`. Groups whose site fails to resolve (e.g., no associated site) are silently skipped.
+
+**App role resolution:** The `appRoleId` of `00000000-0000-0000-0000-000000000000` indicates "Default Access" (the zero GUID is Microsoft's convention for the default app role).
+
+> **Required Permissions:** `Group.Read.All`, `Sites.Read.All` (already included in the app registration script)
 
 ## TenantResolverService
 

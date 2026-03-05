@@ -24,7 +24,7 @@ Partner365 is a monolithic Laravel 12 + Vue 3 application using Inertia.js for s
 │  │  MicrosoftGraphService (HTTP client + tokens)   ││
 │  │  CrossTenantPolicyService (partner policies)    ││
 │  │  CollaborationSettingsService (auth policy)     ││
-│  │  GuestUserService (invitations + users)         ││
+│  │  GuestUserService (invitations + users + access) ││
 │  │  TenantResolverService (tenant lookup)          ││
 │  │  ActivityLogService (audit trail)               ││
 │  │  AccessReviewService (access review lifecycle) ││
@@ -232,7 +232,7 @@ The OAuth2 client credentials token is cached for 3500 seconds (just under the 3
 
 ### Server-Side Only
 
-All Graph API calls happen server-side. The Vue frontend never sees tokens or makes direct API calls. The only AJAX call from the frontend is the tenant resolution during partner onboarding, which goes through a Laravel controller endpoint.
+All Graph API calls happen server-side. The Vue frontend never sees tokens or makes direct API calls. AJAX calls from the frontend go through Laravel controller endpoints (e.g., tenant resolution during partner onboarding, guest access visibility tabs).
 
 ### Single-Container Deployment
 
