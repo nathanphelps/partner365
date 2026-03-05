@@ -23,6 +23,7 @@ Partner365 solves this with a single interface for IT admins, business owners, a
 - **GCC High Support** — Cloud environment selector for Commercial and GCC High tenants with auto-derived endpoints
 - **Admin Consent** — One-click admin consent popup for granting Graph API permissions
 - **Trust Score** — Composite 0-100 domain reputation score per partner based on DNS hygiene (DMARC, SPF, DKIM, DNSSEC, domain age) and Entra ID metadata, recalculated daily
+- **Compliance Reports** — Unified compliance dashboard with partner policy compliance scoring, stale guest detection (30/60/90-day buckets), filterable tables by issue type, and CSV export for audit documentation
 - **Dashboard** — At-a-glance stats for partners, guests, MFA trust coverage, and pending invitations
 - **Onboarding Wizard** — 3-step partner creation with tenant resolution, optional templates, and policy configuration
 - **Partner Templates** — Reusable policy configurations for consistent onboarding
@@ -126,7 +127,7 @@ app/
 │                           # AccessPackageResourceType, AssignmentStatus
 ├── Exceptions/             # GraphApiException
 ├── Http/
-│   ├── Controllers/        # Partner, Guest, Template, Dashboard, ActivityLog, AccessReview, ConditionalAccessPolicy, Entitlement, Admin
+│   ├── Controllers/        # Partner, Guest, Template, Dashboard, ComplianceReport, ActivityLog, AccessReview, ConditionalAccessPolicy, Entitlement, Admin
 │   ├── Middleware/          # CheckRole (RBAC)
 │   └── Requests/           # StorePartner, UpdatePartner, InviteGuest, StoreTemplate, UpdateCollaboration,
 │                           # StoreAccessReview, StoreAccessPackage, UpdateAccessPackage
@@ -146,13 +147,14 @@ resources/js/
 │   ├── partners/           # Index, Show, Create (wizard)
 │   ├── guests/             # Index, Show, Invite
 │   ├── templates/          # Index, Create, Edit
+│   ├── reports/            # Index (compliance dashboard with CSV export)
 │   ├── access-reviews/     # Index, Create, Show, Instance
 │   ├── conditional-access/ # Index, Show (read-only CA policy visibility)
 │   ├── entitlements/       # Index, Create (multi-step wizard), Show
 │   ├── admin/              # Graph settings, Collaboration, Users, Sync
 │   ├── activity/           # Index
 │   └── Dashboard.vue
-├── types/                  # TypeScript types for Partner, Guest (+ access types), AccessReview, ConditionalAccessPolicy, Entitlement, Paginated
+├── types/                  # TypeScript types for Partner, Guest (+ access types), AccessReview, ConditionalAccessPolicy, Entitlement, Compliance, Paginated
 └── components/             # shadcn-vue UI components + TrustScoreBadge
 
 tests/Feature/
@@ -162,6 +164,7 @@ tests/Feature/
 ├── Services/               # All Graph API service classes
 ├── PartnerOrganizationTest.php
 ├── GuestUserControllerTest.php
+├── ComplianceReportTest.php
 ├── CollaborationSettingsTest.php
 ├── AccessReviewServiceTest.php
 ├── AccessReviewControllerTest.php

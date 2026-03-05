@@ -131,6 +131,13 @@ Live-fetched from Microsoft Graph API. Responses are cached server-side for 5 mi
 | GET | `/conditional-access` | `ConditionalAccessPolicyController@index` | `conditional-access.index` | Any |
 | GET | `/conditional-access/{conditionalAccessPolicy}` | `ConditionalAccessPolicyController@show` | `conditional-access.show` | Any |
 
+### Compliance Reports
+
+| Method | URI | Controller@Method | Name | Role |
+|--------|-----|------------------|------|------|
+| GET | `/reports` | `ComplianceReportController@index` | `reports.index` | Any |
+| GET | `/reports/export` | `ComplianceReportController@export` | `reports.export` | Any |
+
 ### Activity Log
 
 | Method | URI | Controller@Method | Name | Role |
@@ -265,12 +272,49 @@ The `PartnerOrganization` type includes trust score fields and conditional acces
 }
 ```
 
+### Compliance Reports Index
+
+```typescript
+{
+    summary: {
+        compliance_score: number;       // 0-100, % of partners meeting baseline
+        partners_with_issues: number;
+        stale_guests_90: number;        // guests with 90+ days inactive or never signed in
+        total_partners: number;
+        total_guests: number;
+        avg_trust_score: number | null;
+    };
+    partnerCompliance: {
+        no_mfa_count: number;
+        no_device_trust_count: number;
+        overly_permissive_count: number;  // both B2B inbound + outbound enabled
+        no_ca_policies_count: number;
+        partners: NonCompliantPartner[];
+    };
+    guestHealth: {
+        stale_30_plus: number;
+        stale_60_plus: number;
+        stale_90_plus: number;
+        never_signed_in: number;
+        pending_invitations: number;
+        disabled_accounts: number;
+        guests: StaleGuest[];
+    };
+}
+```
+
+### Compliance Reports Export
+
+`GET /reports/export` returns a streamed CSV file with two sections:
+- **Partner Policy Compliance**: Partner Name, Domain, MFA Trust, Device Trust, B2B Inbound, B2B Outbound, Trust Score, CA Policy Count
+- **Guest Account Health**: Guest Email, Display Name, Partner, Last Sign-In, Days Inactive, Invitation Status, Account Enabled
+
 ### Guests Index
 
 ```typescript
 {
     guests: Paginated<GuestUser>;
-    filters: { search?: string; partner_id?: number; status?: string };
+    filters: { search?: string; partner_id?: number; status?: string; sort?: string; direction?: string };
     partners: { id: number; display_name: string }[];
 }
 ```

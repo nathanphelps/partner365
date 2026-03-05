@@ -180,6 +180,34 @@ class DevSeeder extends Seeder
             }
         }
 
+        // Intentionally stale guests for compliance reporting
+        $stalePartners = $partners->shuffle()->take(5);
+        foreach ($stalePartners as $partner) {
+            // 90+ day stale guest
+            $guests->push(GuestUser::factory()->create([
+                'email' => 'stale-90d-'.fake()->userName().'@'.$partner->domain,
+                'partner_organization_id' => $partner->id,
+                'invitation_status' => InvitationStatus::Accepted,
+                'invited_by_user_id' => $inviters->random()->id,
+                'invited_at' => fake()->dateTimeBetween('-180 days', '-120 days'),
+                'account_enabled' => true,
+                'last_sign_in_at' => fake()->dateTimeBetween('-180 days', '-91 days'),
+                'last_synced_at' => fake()->dateTimeBetween('-7 days', 'now'),
+            ]));
+
+            // Never signed in guest
+            $guests->push(GuestUser::factory()->create([
+                'email' => 'never-signed-in-'.fake()->userName().'@'.$partner->domain,
+                'partner_organization_id' => $partner->id,
+                'invitation_status' => InvitationStatus::Accepted,
+                'invited_by_user_id' => $inviters->random()->id,
+                'invited_at' => fake()->dateTimeBetween('-120 days', '-60 days'),
+                'account_enabled' => true,
+                'last_sign_in_at' => null,
+                'last_synced_at' => fake()->dateTimeBetween('-7 days', 'now'),
+            ]));
+        }
+
         // 5 orphaned guests with no partner
         for ($i = 0; $i < 5; $i++) {
             $guest = GuestUser::factory()->create([

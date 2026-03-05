@@ -42,6 +42,8 @@ resources/js/
 │   ├── conditional-access/
 │   │   ├── Index.vue       # CA policy list with gap detection banner
 │   │   └── Show.vue        # Policy detail + affected partners
+│   ├── reports/
+│   │   └── Index.vue       # Compliance dashboard with partner/guest tables, CSV export
 │   ├── admin/
 │   │   ├── Graph.vue          # Graph API settings, cloud env, admin consent
 │   │   ├── Collaboration.vue  # External collaboration settings
@@ -71,6 +73,7 @@ resources/js/
 ├── types/
 │   ├── partner.ts          # PartnerOrganization, Paginated<T>
 │   ├── guest.ts            # GuestUser, GuestGroup, GuestApp, GuestTeam, GuestSite
+│   ├── compliance.ts       # ComplianceSummary, PartnerCompliance, GuestHealth, NonCompliantPartner, StaleGuest
 │   ├── access-review.ts    # AccessReview, AccessReviewInstance, AccessReviewDecision
 │   ├── conditional-access.ts # ConditionalAccessPolicy
 │   ├── auth.ts             # Auth types

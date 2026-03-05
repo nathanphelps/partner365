@@ -32,6 +32,8 @@ Partner365 is a monolithic Laravel 12 + Vue 3 application using Inertia.js for s
 │  │  EntitlementService (access packages + Graph)  ││
 │  │  TrustScoreService (domain reputation scoring) ││
 │  │  DnsLookupService (DNS record queries)         ││
+│  │                                                ││
+│  │  ComplianceReportController (aggregation only) ││
 │  └──────┬──────────────────────────────────────────┘│
 │         │                                            │
 │  ┌──────▼──────┐  ┌───────────────────────────────────────┐ │
