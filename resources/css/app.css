@@ -59,6 +59,8 @@
     --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
     --color-sidebar-border: var(--sidebar-border);
     --color-sidebar-ring: var(--sidebar-ring);
+
+    --color-header: var(--header);
 }
 
 /*
@@ -90,7 +92,7 @@
 }
 
 :root {
-    --background: hsl(0 0% 100%);
+    --background: hsl(230 25% 97%);
     --foreground: hsl(0 0% 3.9%);
     --card: hsl(0 0% 100%);
     --card-foreground: hsl(0 0% 3.9%);
@@ -98,16 +100,16 @@
     --popover-foreground: hsl(0 0% 3.9%);
     --primary: hsl(239 84% 67%);
     --primary-foreground: hsl(0 0% 100%);
-    --secondary: hsl(0 0% 92.1%);
+    --secondary: hsl(230 15% 91%);
     --secondary-foreground: hsl(0 0% 9%);
-    --muted: hsl(0 0% 96.1%);
+    --muted: hsl(230 20% 95%);
     --muted-foreground: hsl(0 0% 45.1%);
-    --accent: hsl(0 0% 96.1%);
+    --accent: hsl(230 20% 95%);
     --accent-foreground: hsl(0 0% 9%);
     --destructive: hsl(0 84.2% 60.2%);
     --destructive-foreground: hsl(0 0% 98%);
-    --border: hsl(0 0% 92.8%);
-    --input: hsl(0 0% 89.8%);
+    --border: hsl(230 15% 91%);
+    --input: hsl(230 15% 89%);
     --ring: hsl(239 84% 67%);
     --chart-1: hsl(239 84% 67%);
     --chart-2: hsl(173 58% 39%);
@@ -124,10 +126,11 @@
     --sidebar-border: hsl(239 40% 20%);
     --sidebar-ring: hsl(239 84% 67%);
     --sidebar: hsl(243 47% 12%);
+    --header: hsl(232 30% 96%);
 }
 
 .dark {
-    --background: hsl(0 0% 3.9%);
+    --background: hsl(230 15% 7%);
     --foreground: hsl(0 0% 98%);
     --card: hsl(0 0% 3.9%);
     --card-foreground: hsl(0 0% 98%);
@@ -135,16 +138,16 @@
     --popover-foreground: hsl(0 0% 98%);
     --primary: hsl(239 84% 67%);
     --primary-foreground: hsl(0 0% 100%);
-    --secondary: hsl(0 0% 14.9%);
+    --secondary: hsl(230 15% 15%);
     --secondary-foreground: hsl(0 0% 98%);
-    --muted: hsl(0 0% 16.08%);
+    --muted: hsl(230 15% 16%);
     --muted-foreground: hsl(0 0% 63.9%);
-    --accent: hsl(0 0% 14.9%);
+    --accent: hsl(230 15% 15%);
     --accent-foreground: hsl(0 0% 98%);
     --destructive: hsl(0 84% 60%);
     --destructive-foreground: hsl(0 0% 98%);
-    --border: hsl(0 0% 14.9%);
-    --input: hsl(0 0% 14.9%);
+    --border: hsl(230 12% 15%);
+    --input: hsl(230 12% 15%);
     --ring: hsl(239 84% 67%);
     --chart-1: hsl(220 70% 50%);
     --chart-2: hsl(160 60% 45%);
@@ -160,6 +163,7 @@
     --sidebar-border: hsl(239 40% 16%);
     --sidebar-ring: hsl(239 84% 67%);
     --sidebar: hsl(243 47% 8%);
+    --header: hsl(232 20% 10%);
 }
 
 @layer base {
