@@ -32,4 +32,17 @@ enum ActivityAction: string
     case AssignmentDenied = 'assignment_denied';
     case AssignmentRevoked = 'assignment_revoked';
     case ConditionalAccessPoliciesSynced = 'conditional_access_policies_synced';
+    case TemplateUpdated = 'template_updated';
+    case TemplateDeleted = 'template_deleted';
+    case UserLoggedIn = 'user_logged_in';
+    case UserLoggedOut = 'user_logged_out';
+    case LoginFailed = 'login_failed';
+    case AccountLocked = 'account_locked';
+    case PasswordChanged = 'password_changed';
+    case TwoFactorEnabled = 'two_factor_enabled';
+    case TwoFactorDisabled = 'two_factor_disabled';
+    case ProfileUpdated = 'profile_updated';
+    case AccountDeleted = 'account_deleted';
+    case GraphConnectionTested = 'graph_connection_tested';
+    case ConsentGranted = 'consent_granted';
 }
