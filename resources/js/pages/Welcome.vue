@@ -27,12 +27,12 @@ const features = [
         <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
     </Head>
 
-    <div class="flex min-h-screen flex-col bg-white dark:bg-zinc-950">
+    <div class="flex min-h-screen flex-col bg-background">
         <!-- Header -->
         <header class="flex items-center justify-between px-6 py-4 lg:px-8">
             <div class="flex items-center gap-2.5">
                 <AppLogoIcon class="size-8 text-indigo-600 dark:text-indigo-400" />
-                <span class="text-lg font-semibold text-zinc-900 dark:text-zinc-100">Partner365</span>
+                <span class="text-lg font-semibold text-foreground">Partner365</span>
             </div>
             <nav class="flex items-center gap-3">
                 <Link
@@ -52,7 +52,7 @@ const features = [
                     <Link
                         v-if="canRegister"
                         :href="register()"
-                        class="rounded-lg border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                        class="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground transition hover:bg-accent"
                     >
                         Register
                     </Link>
@@ -68,10 +68,10 @@ const features = [
 
                 <div class="relative">
                     <AppLogoIcon class="mx-auto size-16 text-indigo-600 dark:text-indigo-400 lg:size-20" />
-                    <h1 class="mt-6 text-4xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100 lg:text-5xl">
+                    <h1 class="mt-6 text-4xl font-bold tracking-tight text-foreground lg:text-5xl">
                         Partner365
                     </h1>
-                    <p class="mx-auto mt-4 max-w-md text-lg text-zinc-600 dark:text-zinc-400">
+                    <p class="mx-auto mt-4 max-w-md text-lg text-muted-foreground">
                         Manage M365 partner organizations, cross-tenant policies, and guest users.
                     </p>
                     <div class="mt-8">
@@ -93,19 +93,19 @@ const features = [
                 <div
                     v-for="feature in features"
                     :key="feature.label"
-                    class="flex flex-col items-center rounded-xl border border-zinc-200 bg-white p-5 text-center shadow-sm dark:border-zinc-800 dark:bg-zinc-900"
+                    class="flex flex-col items-center rounded-xl border border-border bg-card p-5 text-center shadow-sm"
                 >
                     <div class="flex size-10 items-center justify-center rounded-lg bg-indigo-50 dark:bg-indigo-950">
                         <component :is="feature.icon" class="size-5 text-indigo-600 dark:text-indigo-400" />
                     </div>
-                    <h3 class="mt-3 text-sm font-semibold text-zinc-900 dark:text-zinc-100">{{ feature.label }}</h3>
-                    <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">{{ feature.description }}</p>
+                    <h3 class="mt-3 text-sm font-semibold text-foreground">{{ feature.label }}</h3>
+                    <p class="mt-1 text-xs text-muted-foreground">{{ feature.description }}</p>
                 </div>
             </div>
         </main>
 
         <!-- Footer -->
-        <footer class="px-6 py-6 text-center text-xs text-zinc-400 dark:text-zinc-600">
+        <footer class="px-6 py-6 text-center text-xs text-muted-foreground">
             &copy; {{ new Date().getFullYear() }} Partner365
         </footer>
     </div>

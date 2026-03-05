@@ -11,7 +11,7 @@ defineProps<{
 
 <template>
     <div
-        class="flex min-h-svh flex-col items-center justify-center gap-6 bg-gradient-to-b from-indigo-50 to-white p-6 md:p-10 dark:from-indigo-950 dark:to-zinc-950"
+        class="flex min-h-svh flex-col items-center justify-center gap-6 bg-gradient-to-b from-indigo-50 to-white p-6 md:p-10 dark:from-indigo-950 dark:to-background"
     >
         <div class="w-full max-w-sm">
             <div class="flex flex-col gap-8">
@@ -27,7 +27,7 @@ defineProps<{
                                 class="size-10 text-indigo-600 dark:text-indigo-400"
                             />
                         </div>
-                        <span class="text-lg font-semibold text-zinc-900 dark:text-zinc-100">Partner365</span>
+                        <span class="text-lg font-semibold text-foreground">Partner365</span>
                     </Link>
                     <div class="space-y-2 text-center">
                         <h1 class="text-xl font-medium">{{ title }}</h1>
