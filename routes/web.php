@@ -5,6 +5,7 @@ use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\ComplianceReportController;
 use App\Http\Controllers\ConditionalAccessPolicyController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DocsController;
 use App\Http\Controllers\EntitlementController;
 use App\Http\Controllers\GuestUserController;
 use App\Http\Controllers\PartnerOrganizationController;
@@ -55,6 +56,9 @@ Route::middleware(['auth', 'verified', 'approved'])->group(function () {
     Route::post('entitlements/{entitlement}/assignments/{assignment}/revoke', [EntitlementController::class, 'revokeAssignment'])->name('entitlements.assignments.revoke');
     Route::get('entitlements-groups', [EntitlementController::class, 'groups'])->name('entitlements.groups');
     Route::get('entitlements-sharepoint-sites', [EntitlementController::class, 'sharepointSites'])->name('entitlements.sharepoint-sites');
+
+    Route::get('docs', [DocsController::class, 'index'])->name('docs.index');
+    Route::get('docs/{path}', [DocsController::class, 'show'])->name('docs.show')->where('path', '.*');
 });
 
 Route::get('/health', function () {

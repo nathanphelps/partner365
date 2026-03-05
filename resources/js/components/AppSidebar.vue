@@ -3,6 +3,7 @@ import { Link, usePage } from '@inertiajs/vue3';
 import {
     Activity,
     BarChart3,
+    BookOpen,
     Building2,
     ClipboardCheck,
     FileStack,
@@ -54,6 +55,7 @@ const mainNavItems = computed<NavItem[]>(() => {
         },
         { title: 'Reports', href: '/reports', icon: BarChart3 },
         { title: 'Activity', href: '/activity', icon: Activity },
+        { title: 'Documentation', href: '/docs', icon: BookOpen },
     ];
 
     if (isAdmin.value) {
