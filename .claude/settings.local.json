@@ -31,7 +31,10 @@
       "Bash(git push:*)",
       "Bash(npx eslint:*)",
       "Bash(gh auth:*)",
-      "Bash(gh issue:*)"
+      "Bash(gh issue:*)",
+      "Bash(composer require:*)",
+      "Bash(docker build:*)",
+      "Bash(docker stop:*)"
     ]
   }
 }
