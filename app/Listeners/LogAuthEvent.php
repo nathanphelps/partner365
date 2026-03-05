@@ -60,5 +60,21 @@ class LogAuthEvent
                 'created_at' => now(),
             ]);
         });
+
+        Event::listen(\Laravel\Fortify\Events\TwoFactorAuthenticationConfirmed::class, function ($event) {
+            ActivityLog::create([
+                'user_id' => $event->user->id,
+                'action' => ActivityAction::TwoFactorEnabled,
+                'created_at' => now(),
+            ]);
+        });
+
+        Event::listen(\Laravel\Fortify\Events\TwoFactorAuthenticationDisabled::class, function ($event) {
+            ActivityLog::create([
+                'user_id' => $event->user->id,
+                'action' => ActivityAction::TwoFactorDisabled,
+                'created_at' => now(),
+            ]);
+        });
     }
 }

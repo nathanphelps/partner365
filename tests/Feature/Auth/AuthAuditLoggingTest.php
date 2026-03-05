@@ -30,6 +30,26 @@ test('failed login logs LoginFailed', function () {
     expect($log->details['email'])->toBe($user->email);
 });
 
+test('enabling 2FA logs TwoFactorEnabled', function () {
+    $user = User::factory()->create();
+
+    event(new \Laravel\Fortify\Events\TwoFactorAuthenticationConfirmed($user));
+
+    $log = ActivityLog::where('action', ActivityAction::TwoFactorEnabled)->first();
+    expect($log)->not->toBeNull();
+    expect($log->user_id)->toBe($user->id);
+});
+
+test('disabling 2FA logs TwoFactorDisabled', function () {
+    $user = User::factory()->create();
+
+    event(new \Laravel\Fortify\Events\TwoFactorAuthenticationDisabled($user));
+
+    $log = ActivityLog::where('action', ActivityAction::TwoFactorDisabled)->first();
+    expect($log)->not->toBeNull();
+    expect($log->user_id)->toBe($user->id);
+});
+
 test('logout logs UserLoggedOut', function () {
     $user = User::factory()->create();
 
