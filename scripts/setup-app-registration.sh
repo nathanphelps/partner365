@@ -47,6 +47,9 @@ declare -A PERMISSIONS=(
     ["Policy.ReadWrite.Authorization"]="edd3c878-b384-41fd-85c2-07c811cde6f8"
     ["CrossTenantInformation.ReadBasic.All"]="cac88765-0581-4025-9725-5ebc13f729ee"
     ["AccessReview.ReadWrite.All"]="ef5f7d5c-338f-44b0-86c3-351f46c8571f"
+    ["EntitlementManagement.ReadWrite.All"]="9acd699f-1e81-4958-b717-01d71473d8de"
+    ["Group.Read.All"]="5b567255-7703-4780-807c-7be8301ae99b"
+    ["Sites.Read.All"]="332a536c-c7ef-4017-ab91-336970924f0d"
 )
 
 RESOURCE_ACCESS_ITEMS=""

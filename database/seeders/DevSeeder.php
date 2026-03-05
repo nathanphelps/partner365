@@ -2,10 +2,16 @@
 
 namespace Database\Seeders;
 
+use App\Enums\AccessPackageResourceType;
 use App\Enums\ActivityAction;
+use App\Enums\AssignmentStatus;
 use App\Enums\InvitationStatus;
 use App\Enums\PartnerCategory;
 use App\Enums\UserRole;
+use App\Models\AccessPackage;
+use App\Models\AccessPackageAssignment;
+use App\Models\AccessPackageCatalog;
+use App\Models\AccessPackageResource;
 use App\Models\GuestUser;
 use App\Models\PartnerOrganization;
 use App\Models\PartnerTemplate;
@@ -25,6 +31,7 @@ class DevSeeder extends Seeder
         $partners = $this->seedPartners($users);
         $guests = $this->seedGuests($partners, $users);
         $templates = $this->seedTemplates($users['admin']);
+        $this->seedEntitlements($partners, $users);
         $this->seedActivityLogs($users, $partners, $guests, $templates);
         $this->seedSyncLogs();
         $this->seedSettings();
@@ -34,6 +41,10 @@ class DevSeeder extends Seeder
     {
         $tables = [
             'activity_log',
+            'access_package_assignments',
+            'access_package_resources',
+            'access_packages',
+            'access_package_catalogs',
             'guest_users',
             'partner_templates',
             'partner_organizations',
@@ -255,6 +266,110 @@ class DevSeeder extends Seeder
         }
 
         return $templates;
+    }
+
+    private function seedEntitlements(\Illuminate\Support\Collection $partners, array $users): void
+    {
+        $catalog = AccessPackageCatalog::create([
+            'graph_id' => fake()->uuid(),
+            'display_name' => 'General',
+            'description' => 'Default catalog for Partner365 access packages',
+            'is_default' => true,
+            'last_synced_at' => now(),
+        ]);
+
+        $approvers = collect([$users['admin']])->merge($users['operators']);
+
+        $packageNames = [
+            'Development Resources',
+            'Project Documentation',
+            'CI/CD Pipeline Access',
+            'Staging Environment',
+            'Support Portal',
+            'API Sandbox',
+            'Design Assets',
+            'Analytics Dashboard',
+        ];
+
+        $groupNames = [
+            'Dev Team', 'QA Team', 'Project Leads', 'External Contributors',
+            'Support Staff', 'API Users', 'Design Reviewers', 'Analytics Viewers',
+        ];
+
+        $siteNames = [
+            'Project Wiki', 'Shared Documents', 'Release Notes',
+            'Partner Portal', 'Knowledge Base', 'Design System',
+        ];
+
+        // Create 6-8 access packages across different partners
+        $selectedPartners = $partners->shuffle()->take(fake()->numberBetween(6, 8));
+
+        foreach ($selectedPartners as $i => $partner) {
+            $packageName = $packageNames[$i % count($packageNames)];
+            $approver = $approvers->random();
+
+            $package = AccessPackage::create([
+                'graph_id' => fake()->uuid(),
+                'catalog_id' => $catalog->id,
+                'partner_organization_id' => $partner->id,
+                'display_name' => $packageName,
+                'description' => fake()->sentence(),
+                'duration_days' => fake()->randomElement([30, 60, 90, 180]),
+                'approval_required' => fake()->boolean(80),
+                'approver_user_id' => $approver->id,
+                'is_active' => fake()->boolean(85),
+                'created_by_user_id' => $users['admin']->id,
+                'last_synced_at' => fake()->dateTimeBetween('-7 days', 'now'),
+            ]);
+
+            // Add 1-3 resources per package
+            $resourceCount = fake()->numberBetween(1, 3);
+            for ($r = 0; $r < $resourceCount; $r++) {
+                $isGroup = fake()->boolean(65);
+                AccessPackageResource::create([
+                    'access_package_id' => $package->id,
+                    'resource_type' => $isGroup ? AccessPackageResourceType::Group : AccessPackageResourceType::SharePointSite,
+                    'resource_id' => fake()->uuid(),
+                    'resource_display_name' => $isGroup
+                        ? $groupNames[array_rand($groupNames)]
+                        : $siteNames[array_rand($siteNames)],
+                    'graph_id' => fake()->uuid(),
+                ]);
+            }
+
+            // Add 2-6 assignments per package
+            $assignmentCount = fake()->numberBetween(2, 6);
+            for ($a = 0; $a < $assignmentCount; $a++) {
+                $status = fake()->randomElement([
+                    AssignmentStatus::Delivered,
+                    AssignmentStatus::Delivered,
+                    AssignmentStatus::Delivered,
+                    AssignmentStatus::PendingApproval,
+                    AssignmentStatus::Approved,
+                    AssignmentStatus::Expired,
+                    AssignmentStatus::Denied,
+                    AssignmentStatus::Revoked,
+                ]);
+
+                $requestedAt = fake()->dateTimeBetween('-60 days', '-1 day');
+                $isApproved = in_array($status, [AssignmentStatus::Approved, AssignmentStatus::Delivered, AssignmentStatus::Expired]);
+
+                AccessPackageAssignment::create([
+                    'graph_id' => fake()->uuid(),
+                    'access_package_id' => $package->id,
+                    'target_user_email' => fake()->userName().'@'.$partner->domain,
+                    'target_user_id' => $isApproved ? fake()->uuid() : null,
+                    'status' => $status,
+                    'approved_by_user_id' => $isApproved ? $approvers->random()->id : null,
+                    'expires_at' => $isApproved ? now()->addDays($package->duration_days) : null,
+                    'requested_at' => $requestedAt,
+                    'approved_at' => $isApproved ? fake()->dateTimeBetween($requestedAt, 'now') : null,
+                    'delivered_at' => $status === AssignmentStatus::Delivered ? fake()->dateTimeBetween($requestedAt, 'now') : null,
+                    'justification' => fake()->boolean(70) ? fake()->sentence() : null,
+                    'last_synced_at' => fake()->dateTimeBetween('-7 days', 'now'),
+                ]);
+            }
+        }
     }
 
     private function seedActivityLogs(

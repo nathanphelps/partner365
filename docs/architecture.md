@@ -28,6 +28,7 @@ Partner365 is a monolithic Laravel 12 + Vue 3 application using Inertia.js for s
 │  │  TenantResolverService (tenant lookup)          ││
 │  │  ActivityLogService (audit trail)               ││
 │  │  AccessReviewService (access review lifecycle) ││
+│  │  EntitlementService (access packages + Graph)  ││
 │  │  TrustScoreService (domain reputation scoring) ││
 │  │  DnsLookupService (DNS record queries)         ││
 │  └──────┬──────────────────────────────────────────┘│
@@ -37,6 +38,7 @@ Partner365 is a monolithic Laravel 12 + Vue 3 application using Inertia.js for s
 │  │  Models     │  │  sync:partners        (every 15 min)  │ │
 │  │             │  │  sync:guests          (every 15 min)  │ │
 │  │             │  │  sync:access-reviews  (every 15 min)  │ │
+│  │             │  │  sync:entitlements    (every 15 min)  │ │
 │  │             │  │  score:partners       (daily)         │ │
 │  └──────┬──────┘  └───────────────────────────────────────┘ │
 └─────────┼───────────────────────────────────────────┘
@@ -130,9 +132,48 @@ access_review_decisions
 ├── remediation_applied (boolean)
 └── timestamps
 
+access_package_catalogs
+├── id, graph_id (unique, nullable)
+├── display_name, description
+├── is_default (boolean)
+├── last_synced_at
+└── timestamps
+
+access_packages
+├── id, graph_id (unique, nullable)
+├── catalog_id (FK → access_package_catalogs)
+├── partner_organization_id (FK → partner_organizations)
+├── display_name, description
+├── duration_days (default: 90)
+├── approval_required (boolean)
+├── approver_user_id (FK → users, nullable)
+├── is_active (boolean)
+├── created_by_user_id (FK → users)
+├── last_synced_at
+└── timestamps
+
+access_package_resources
+├── id, access_package_id (FK → access_packages)
+├── resource_type (enum: group, sharepoint_site)
+├── resource_id (Graph object ID)
+├── resource_display_name
+├── graph_id (nullable)
+└── timestamps
+
+access_package_assignments
+├── id, graph_id (unique, nullable)
+├── access_package_id (FK → access_packages)
+├── target_user_email, target_user_id (nullable)
+├── status (enum: pending_approval, approved, denied, delivering, delivered, expired, revoked)
+├── approved_by_user_id (FK → users, nullable)
+├── expires_at, requested_at, approved_at, delivered_at
+├── justification (nullable)
+├── last_synced_at
+└── timestamps
+
 activity_log
 ├── id, user_id (FK → users)
-├── action (enum: partner_created, guest_invited, access_review_created, etc.)
+├── action (enum: partner_created, guest_invited, access_review_created, access_package_created, etc.)
 ├── subject_type, subject_id (polymorphic)
 ├── description, details (JSON)
 └── created_at
@@ -146,6 +187,10 @@ activity_log
 - `AccessReview` → belongs to `User` (reviewer, created_by), belongs to `PartnerOrganization` (scope), has many `AccessReviewInstance`
 - `AccessReviewInstance` → belongs to `AccessReview`, has many `AccessReviewDecision`
 - `AccessReviewDecision` → belongs to `AccessReviewInstance`, belongs to `User` (decided_by)
+- `AccessPackageCatalog` → has many `AccessPackage`
+- `AccessPackage` → belongs to `AccessPackageCatalog` (catalog), `PartnerOrganization`, `User` (approver, created_by), has many `AccessPackageResource`, `AccessPackageAssignment`
+- `AccessPackageResource` → belongs to `AccessPackage`
+- `AccessPackageAssignment` → belongs to `AccessPackage`, `User` (approved_by)
 - `ActivityLog` → belongs to `User`, morphs to subject
 
 ### Auto Partner Linking

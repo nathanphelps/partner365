@@ -27,6 +27,7 @@ Partner365 solves this with a single interface for IT admins, business owners, a
 - **Partner Templates** — Reusable policy configurations for consistent onboarding
 - **Background Sync** — Automatic 15-minute sync from Graph API keeps local data current
 - **Access Reviews** — Periodic certification of guest user and partner organization access with configurable remediation (flag, disable, remove)
+- **Entitlement Management** — Self-service access packages for external partner users with bundled group memberships and SharePoint site access, single-stage approval workflows, configurable expiration, and Graph API integration
 - **Activity Log** — Full audit trail of all partner and guest management actions
 - **3-Tier RBAC** — Admin, Operator, and Viewer roles with middleware-enforced access control
 
@@ -117,20 +118,24 @@ Dockerfile                     # Multi-stage build (Node + FrankenPHP)
 docker-compose.yml             # Local container deployment
 
 app/
-├── Console/Commands/       # sync:partners, sync:guests, sync:access-reviews, score:partners
+├── Console/Commands/       # sync:partners, sync:guests, sync:access-reviews, sync:entitlements, score:partners
 ├── Enums/                  # UserRole, PartnerCategory, InvitationStatus, ActivityAction, CloudEnvironment,
-│                           # ReviewType, RecurrenceType, RemediationAction, ReviewInstanceStatus, ReviewDecision
+│                           # ReviewType, RecurrenceType, RemediationAction, ReviewInstanceStatus, ReviewDecision,
+│                           # AccessPackageResourceType, AssignmentStatus
 ├── Exceptions/             # GraphApiException
 ├── Http/
-│   ├── Controllers/        # Partner, Guest, Template, Dashboard, ActivityLog, AccessReview, Admin
+│   ├── Controllers/        # Partner, Guest, Template, Dashboard, ActivityLog, AccessReview, Entitlement, Admin
 │   ├── Middleware/          # CheckRole (RBAC)
-│   └── Requests/           # StorePartner, UpdatePartner, InviteGuest, StoreTemplate, UpdateCollaboration, StoreAccessReview
+│   └── Requests/           # StorePartner, UpdatePartner, InviteGuest, StoreTemplate, UpdateCollaboration,
+│                           # StoreAccessReview, StoreAccessPackage, UpdateAccessPackage
 ├── Models/                 # PartnerOrganization, GuestUser, PartnerTemplate, ActivityLog,
-│                           # AccessReview, AccessReviewInstance, AccessReviewDecision
+│                           # AccessReview, AccessReviewInstance, AccessReviewDecision,
+│                           # AccessPackageCatalog, AccessPackage, AccessPackageResource, AccessPackageAssignment
 └── Services/               # MicrosoftGraphService, CrossTenantPolicyService,
                             # GuestUserService, TenantResolverService,
                             # CollaborationSettingsService, ActivityLogService,
-                            # AccessReviewService, TrustScoreService, DnsLookupService
+                            # AccessReviewService, EntitlementService,
+                            # TrustScoreService, DnsLookupService
 
 resources/js/
 ├── pages/
@@ -138,22 +143,25 @@ resources/js/
 │   ├── guests/             # Index, Show, Invite
 │   ├── templates/          # Index, Create, Edit
 │   ├── access-reviews/     # Index, Create, Show, Instance
+│   ├── entitlements/       # Index, Create (multi-step wizard), Show
 │   ├── admin/              # Graph settings, Collaboration, Users, Sync
 │   ├── activity/           # Index
 │   └── Dashboard.vue
-├── types/                  # TypeScript types for Partner, Guest, AccessReview, Paginated
+├── types/                  # TypeScript types for Partner, Guest, AccessReview, Entitlement, Paginated
 └── components/             # shadcn-vue UI components + TrustScoreBadge
 
 tests/Feature/
 ├── Commands/               # SyncPartners, SyncGuests, SyncAccessReviews
 ├── Middleware/              # CheckRole
 ├── Models/                 # PartnerOrganization
-├── Services/               # All 5 Graph API service classes
+├── Services/               # All Graph API service classes
 ├── PartnerOrganizationTest.php
 ├── GuestUserControllerTest.php
 ├── CollaborationSettingsTest.php
 ├── AccessReviewServiceTest.php
 ├── AccessReviewControllerTest.php
+├── EntitlementServiceTest.php
+├── EntitlementControllerTest.php
 ├── TrustScoreServiceTest.php
 ├── DnsLookupServiceTest.php
 └── ScorePartnersCommandTest.php

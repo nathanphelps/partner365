@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AccessReviewController;
 use App\Http\Controllers\ActivityLogController;
+use App\Http\Controllers\ConditionalAccessPolicyController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EntitlementController;
 use App\Http\Controllers\GuestUserController;
@@ -35,6 +36,9 @@ Route::middleware(['auth', 'verified', 'approved'])->group(function () {
     Route::get('access-reviews/{access_review}/instances/{instance}', [AccessReviewController::class, 'showInstance'])->name('access-reviews.instances.show');
     Route::post('access-reviews/decisions/{decision}', [AccessReviewController::class, 'submitDecision'])->name('access-reviews.decisions.submit');
     Route::post('access-reviews/instances/{instance}/apply', [AccessReviewController::class, 'applyRemediations'])->name('access-reviews.instances.apply');
+
+    Route::get('conditional-access', [ConditionalAccessPolicyController::class, 'index'])->name('conditional-access.index');
+    Route::get('conditional-access/{conditionalAccessPolicy}', [ConditionalAccessPolicyController::class, 'show'])->name('conditional-access.show');
 
     Route::resource('entitlements', EntitlementController::class)->except(['edit']);
     Route::post('entitlements/{entitlement}/assignments', [EntitlementController::class, 'createAssignment'])->name('entitlements.assignments.create');
