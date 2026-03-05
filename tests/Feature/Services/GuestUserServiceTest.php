@@ -77,3 +77,53 @@ test('it deletes a guest user', function () {
 
     Http::assertSent(fn ($request) => $request->method() === 'DELETE');
 });
+
+test('it enables a guest user', function () {
+    Http::fake([
+        'login.microsoftonline.com/*' => Http::response(['access_token' => 'fake', 'expires_in' => 3600]),
+        'graph.microsoft.com/v1.0/users/u1' => Http::response([], 204),
+    ]);
+
+    $service = app(GuestUserService::class);
+    $service->enableUser('u1');
+
+    Http::assertSent(fn ($request) => $request->method() === 'PATCH'
+        && str_contains($request->url(), '/users/u1')
+        && $request->data()['accountEnabled'] === true
+    );
+});
+
+test('it disables a guest user', function () {
+    Http::fake([
+        'login.microsoftonline.com/*' => Http::response(['access_token' => 'fake', 'expires_in' => 3600]),
+        'graph.microsoft.com/v1.0/users/u1' => Http::response([], 204),
+    ]);
+
+    $service = app(GuestUserService::class);
+    $service->disableUser('u1');
+
+    Http::assertSent(fn ($request) => $request->method() === 'PATCH'
+        && str_contains($request->url(), '/users/u1')
+        && $request->data()['accountEnabled'] === false
+    );
+});
+
+test('it resends an invitation', function () {
+    Http::fake([
+        'login.microsoftonline.com/*' => Http::response(['access_token' => 'fake', 'expires_in' => 3600]),
+        'graph.microsoft.com/v1.0/invitations' => Http::response([
+            'id' => 'inv-2',
+            'invitedUserEmailAddress' => 'guest@partner.com',
+            'status' => 'PendingAcceptance',
+            'invitedUser' => ['id' => 'u1'],
+        ], 201),
+    ]);
+
+    $service = app(GuestUserService::class);
+    $result = $service->resendInvitation('guest@partner.com', 'https://myapp.com');
+
+    expect($result['invitedUserEmailAddress'])->toBe('guest@partner.com');
+    Http::assertSent(fn ($request) => $request->method() === 'POST'
+        && str_contains($request->url(), '/invitations')
+    );
+});

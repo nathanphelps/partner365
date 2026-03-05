@@ -3,11 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Enums\ActivityAction;
+use App\Http\Requests\BulkGuestActionRequest;
 use App\Http\Requests\InviteGuestRequest;
+use App\Http\Requests\UpdateGuestRequest;
 use App\Models\GuestUser;
 use App\Models\PartnerOrganization;
+use App\Models\User;
 use App\Services\ActivityLogService;
 use App\Services\GuestUserService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -39,12 +43,17 @@ class GuestUserController extends Controller
             $query->where('invitation_status', $status);
         }
 
+        if ($request->has('account_enabled')) {
+            $query->where('account_enabled', $request->boolean('account_enabled'));
+        }
+
         $guests = $query->orderByDesc('created_at')->paginate(25)->withQueryString();
 
         return Inertia::render('guests/Index', [
             'guests' => $guests,
-            'filters' => $request->only(['search', 'partner_id', 'status']),
+            'filters' => $request->only(['search', 'partner_id', 'status', 'account_enabled']),
             'partners' => PartnerOrganization::orderBy('display_name')->get(['id', 'display_name']),
+            'canManage' => $request->user()->role->canManage(),
         ]);
     }
 
@@ -103,6 +112,80 @@ class GuestUserController extends Controller
         return redirect()->route('guests.index')->with('success', "Invitation sent to {$validated['email']}.");
     }
 
+    public function update(UpdateGuestRequest $request, GuestUser $guest): RedirectResponse
+    {
+        $validated = $request->validated();
+
+        if (isset($validated['display_name'])) {
+            $this->guestService->updateUser($guest->entra_user_id, [
+                'displayName' => $validated['display_name'],
+            ]);
+            $this->activityLog->log($request->user(), ActivityAction::GuestUpdated, $guest, [
+                'display_name' => $validated['display_name'],
+            ]);
+        }
+
+        if (isset($validated['account_enabled'])) {
+            if ($validated['account_enabled']) {
+                $this->guestService->enableUser($guest->entra_user_id);
+            } else {
+                $this->guestService->disableUser($guest->entra_user_id);
+            }
+
+            $action = $validated['account_enabled']
+                ? ActivityAction::GuestEnabled
+                : ActivityAction::GuestDisabled;
+            $this->activityLog->log($request->user(), $action, $guest, ['email' => $guest->email]);
+        }
+
+        $guest->update($validated);
+
+        return redirect()->back()->with('success', 'Guest user updated.');
+    }
+
+    public function resendInvitation(Request $request, GuestUser $guest): RedirectResponse
+    {
+        if (! $request->user()->role->canManage()) {
+            abort(403);
+        }
+
+        $this->guestService->resendInvitation(
+            $guest->email,
+            config('app.url'),
+        );
+
+        $this->activityLog->log($request->user(), ActivityAction::GuestInvited, $guest, [
+            'email' => $guest->email,
+            'resend' => true,
+        ]);
+
+        return redirect()->back()->with('success', "Invitation resent to {$guest->email}.");
+    }
+
+    public function bulkAction(BulkGuestActionRequest $request): JsonResponse
+    {
+        $validated = $request->validated();
+        $guests = GuestUser::whereIn('id', $validated['ids'])->get();
+        $succeeded = [];
+        $failed = [];
+
+        foreach ($guests as $guest) {
+            try {
+                match ($validated['action']) {
+                    'enable' => $this->handleBulkEnable($request->user(), $guest),
+                    'disable' => $this->handleBulkDisable($request->user(), $guest),
+                    'delete' => $this->handleBulkDelete($request->user(), $guest),
+                    'resend' => $this->handleBulkResend($request->user(), $guest),
+                };
+                $succeeded[] = $guest->id;
+            } catch (\Throwable $e) {
+                $failed[] = ['id' => $guest->id, 'error' => $e->getMessage()];
+            }
+        }
+
+        return response()->json(['succeeded' => $succeeded, 'failed' => $failed]);
+    }
+
     public function destroy(GuestUser $guest): RedirectResponse
     {
         if (! request()->user()->role->isAdmin()) {
@@ -118,5 +201,32 @@ class GuestUserController extends Controller
         $guest->delete();
 
         return redirect()->route('guests.index')->with('success', 'Guest user removed.');
+    }
+
+    private function handleBulkEnable(User $user, GuestUser $guest): void
+    {
+        $this->guestService->enableUser($guest->entra_user_id);
+        $guest->update(['account_enabled' => true]);
+        $this->activityLog->log($user, ActivityAction::GuestEnabled, $guest, ['email' => $guest->email]);
+    }
+
+    private function handleBulkDisable(User $user, GuestUser $guest): void
+    {
+        $this->guestService->disableUser($guest->entra_user_id);
+        $guest->update(['account_enabled' => false]);
+        $this->activityLog->log($user, ActivityAction::GuestDisabled, $guest, ['email' => $guest->email]);
+    }
+
+    private function handleBulkDelete(User $user, GuestUser $guest): void
+    {
+        $this->guestService->deleteUser($guest->entra_user_id);
+        $this->activityLog->log($user, ActivityAction::GuestRemoved, $guest, ['email' => $guest->email]);
+        $guest->delete();
+    }
+
+    private function handleBulkResend(User $user, GuestUser $guest): void
+    {
+        $this->guestService->resendInvitation($guest->email, config('app.url'));
+        $this->activityLog->log($user, ActivityAction::GuestInvited, $guest, ['email' => $guest->email, 'resend' => true]);
     }
 }

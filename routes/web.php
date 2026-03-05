@@ -18,8 +18,11 @@ Route::middleware(['auth', 'verified', 'approved'])->group(function () {
     Route::post('partners/resolve-tenant', [PartnerOrganizationController::class, 'resolveTenant'])
         ->name('partners.resolve-tenant');
     Route::resource('partners', PartnerOrganizationController::class)->except(['edit']);
+    Route::get('partners/{partner}/guests', [PartnerOrganizationController::class, 'guests'])->name('partners.guests');
 
-    Route::resource('guests', GuestUserController::class)->except(['edit', 'update']);
+    Route::post('guests/bulk', [GuestUserController::class, 'bulkAction'])->name('guests.bulk');
+    Route::resource('guests', GuestUserController::class)->except(['edit']);
+    Route::post('guests/{guest}/resend', [GuestUserController::class, 'resendInvitation'])->name('guests.resend');
 
     Route::resource('templates', PartnerTemplateController::class)->middleware('role:admin');
 

@@ -2,6 +2,7 @@
 
 use App\Enums\UserRole;
 use App\Models\GuestUser;
+use App\Models\PartnerOrganization;
 use App\Models\User;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -79,4 +80,114 @@ test('only admins can delete guest users', function () {
     $this->actingAs($operator)
         ->delete(route('guests.destroy', $guest))
         ->assertForbidden();
+});
+
+test('operators can update a guest user', function () {
+    $user = User::factory()->create(['role' => UserRole::Operator]);
+    $guest = GuestUser::factory()->create(['account_enabled' => true]);
+
+    Http::fake([
+        'login.microsoftonline.com/*' => Http::response(['access_token' => 'fake', 'expires_in' => 3600]),
+        'graph.microsoft.com/v1.0/users/*' => Http::response([], 204),
+    ]);
+
+    $this->actingAs($user)
+        ->patch(route('guests.update', $guest), [
+            'display_name' => 'New Name',
+        ])
+        ->assertRedirect();
+
+    expect($guest->fresh()->display_name)->toBe('New Name');
+});
+
+test('viewers cannot update a guest user', function () {
+    $user = User::factory()->create(['role' => UserRole::Viewer]);
+    $guest = GuestUser::factory()->create();
+
+    $this->actingAs($user)
+        ->patch(route('guests.update', $guest), ['display_name' => 'New Name'])
+        ->assertForbidden();
+});
+
+test('operators can toggle account enabled', function () {
+    $user = User::factory()->create(['role' => UserRole::Operator]);
+    $guest = GuestUser::factory()->create(['account_enabled' => true]);
+
+    Http::fake([
+        'login.microsoftonline.com/*' => Http::response(['access_token' => 'fake', 'expires_in' => 3600]),
+        'graph.microsoft.com/v1.0/users/*' => Http::response([], 204),
+    ]);
+
+    $this->actingAs($user)
+        ->patch(route('guests.update', $guest), [
+            'account_enabled' => false,
+        ])
+        ->assertRedirect();
+
+    expect($guest->fresh()->account_enabled)->toBeFalse();
+});
+
+test('operators can resend an invitation', function () {
+    $user = User::factory()->create(['role' => UserRole::Operator]);
+    $guest = GuestUser::factory()->create(['email' => 'guest@partner.com', 'invitation_status' => 'pending_acceptance']);
+
+    Http::fake([
+        'login.microsoftonline.com/*' => Http::response(['access_token' => 'fake', 'expires_in' => 3600]),
+        'graph.microsoft.com/v1.0/invitations' => Http::response([
+            'id' => 'inv-2',
+            'invitedUserEmailAddress' => 'guest@partner.com',
+            'status' => 'PendingAcceptance',
+            'invitedUser' => ['id' => 'entra-id'],
+        ], 201),
+    ]);
+
+    $this->actingAs($user)
+        ->post(route('guests.resend', $guest))
+        ->assertRedirect();
+});
+
+test('operators can perform bulk enable', function () {
+    $user = User::factory()->create(['role' => UserRole::Operator]);
+    $guests = GuestUser::factory()->count(3)->create(['account_enabled' => false]);
+
+    Http::fake([
+        'login.microsoftonline.com/*' => Http::response(['access_token' => 'fake', 'expires_in' => 3600]),
+        'graph.microsoft.com/v1.0/users/*' => Http::response([], 204),
+    ]);
+
+    $this->actingAs($user)
+        ->post(route('guests.bulk'), [
+            'action' => 'enable',
+            'ids' => $guests->pluck('id')->toArray(),
+        ])
+        ->assertOk()
+        ->assertJsonStructure(['succeeded', 'failed']);
+
+    foreach ($guests as $guest) {
+        expect($guest->fresh()->account_enabled)->toBeTrue();
+    }
+});
+
+test('only admins can bulk delete', function () {
+    $user = User::factory()->create(['role' => UserRole::Operator]);
+    $guests = GuestUser::factory()->count(2)->create();
+
+    $this->actingAs($user)
+        ->post(route('guests.bulk'), [
+            'action' => 'delete',
+            'ids' => $guests->pluck('id')->toArray(),
+        ])
+        ->assertForbidden();
+});
+
+test('users can view partner guests', function () {
+    $user = User::factory()->create(['role' => UserRole::Admin]);
+    $partner = PartnerOrganization::factory()->create();
+    GuestUser::factory()->count(5)->create(['partner_organization_id' => $partner->id]);
+    GuestUser::factory()->count(3)->create();
+
+    $this->actingAs($user)
+        ->get(route('partners.guests', $partner))
+        ->assertOk()
+        ->assertJsonCount(5, 'data');
 });

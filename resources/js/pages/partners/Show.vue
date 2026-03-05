@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import { Head, router, usePage } from '@inertiajs/vue3';
 import { ref, reactive, computed } from 'vue';
+import GuestUserTable from '@/components/GuestUserTable.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,14 +11,14 @@ import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { dashboard } from '@/routes';
-import guestRoutes from '@/routes/guests';
 import partners from '@/routes/partners';
 import type { BreadcrumbItem } from '@/types';
-import type { PartnerOrganization, GuestUser } from '@/types/partner';
+import type { PartnerOrganization, GuestUser, Paginated } from '@/types/partner';
 
 const props = defineProps<{
     partner: PartnerOrganization;
-    guests: GuestUser[];
+    guests: Paginated<GuestUser>;
+    canManage: boolean;
 }>();
 
 const page = usePage();
@@ -262,80 +263,14 @@ const isAdmin = computed(() => {
             <!-- Guest Users -->
             <Card>
                 <CardHeader>
-                    <CardTitle>Guest Users ({{ guests.length }})</CardTitle>
+                    <CardTitle>Guest Users ({{ guests.total }})</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <table v-if="guests.length > 0" class="w-full text-sm">
-                        <thead>
-                            <tr class="border-b">
-                                <th
-                                    class="pb-2 text-left font-medium text-muted-foreground"
-                                >
-                                    Name
-                                </th>
-                                <th
-                                    class="pb-2 text-left font-medium text-muted-foreground"
-                                >
-                                    Email
-                                </th>
-                                <th
-                                    class="pb-2 text-left font-medium text-muted-foreground"
-                                >
-                                    Status
-                                </th>
-                                <th
-                                    class="pb-2 text-left font-medium text-muted-foreground"
-                                >
-                                    Last Sign In
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr
-                                v-for="guest in guests"
-                                :key="guest.id"
-                                class="border-b last:border-0 hover:bg-muted/30"
-                            >
-                                <td class="py-2 pr-4">
-                                    <Link
-                                        :href="guestRoutes.show.url(guest.id)"
-                                        class="font-medium hover:underline"
-                                    >
-                                        {{ guest.display_name }}
-                                    </Link>
-                                </td>
-                                <td class="py-2 pr-4 text-muted-foreground">
-                                    {{ guest.email }}
-                                </td>
-                                <td class="py-2 pr-4">
-                                    <Badge
-                                        :variant="
-                                            guest.invitation_status ===
-                                            'accepted'
-                                                ? 'default'
-                                                : guest.invitation_status ===
-                                                    'failed'
-                                                  ? 'destructive'
-                                                  : 'outline'
-                                        "
-                                    >
-                                        {{
-                                            guest.invitation_status.replace(
-                                                '_',
-                                                ' ',
-                                            )
-                                        }}
-                                    </Badge>
-                                </td>
-                                <td class="py-2 text-muted-foreground">
-                                    {{ formatDate(guest.last_sign_in_at) }}
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    <p v-else class="text-sm text-muted-foreground">
-                        No guest users associated with this partner.
-                    </p>
+                    <GuestUserTable
+                        :guests="guests"
+                        :partner-id="partner.id"
+                        :can-manage="canManage"
+                    />
                 </CardContent>
             </Card>
 

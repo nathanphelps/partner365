@@ -9,6 +9,7 @@ export type GuestUser = {
     invited_by_user_id: number | null;
     invited_by?: { id: number; name: string };
     invitation_status: 'pending_acceptance' | 'accepted' | 'failed';
+    account_enabled: boolean;
     last_sign_in_at: string | null;
     last_synced_at: string | null;
     created_at: string;

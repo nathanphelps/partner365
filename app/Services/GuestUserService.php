@@ -52,4 +52,27 @@ class GuestUserService
     {
         return $this->graph->patch("/users/{$userId}", $data);
     }
+
+    public function enableUser(string $userId): array
+    {
+        return $this->graph->patch("/users/{$userId}", [
+            'accountEnabled' => true,
+        ]);
+    }
+
+    public function disableUser(string $userId): array
+    {
+        return $this->graph->patch("/users/{$userId}", [
+            'accountEnabled' => false,
+        ]);
+    }
+
+    public function resendInvitation(string $email, string $redirectUrl): array
+    {
+        return $this->graph->post('/invitations', [
+            'invitedUserEmailAddress' => $email,
+            'inviteRedirectUrl' => $redirectUrl,
+            'sendInvitationMessage' => true,
+        ]);
+    }
 }

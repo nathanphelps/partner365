@@ -98,14 +98,46 @@ class PartnerOrganizationController extends Controller
         return redirect()->route('partners.index')->with('success', "Partner '{$partner->display_name}' added.");
     }
 
-    public function show(PartnerOrganization $partner): Response
+    public function show(Request $request, PartnerOrganization $partner): Response
     {
-        $partner->load(['owner', 'guestUsers']);
+        $partner->load('owner');
+
+        $guests = $partner->guestUsers()
+            ->with('invitedBy')
+            ->orderByDesc('created_at')
+            ->paginate(25, ['*'], 'guests_page')
+            ->withQueryString();
 
         return Inertia::render('partners/Show', [
             'partner' => $partner,
+            'guests' => $guests,
             'activity' => $this->activityLog->forSubject($partner),
+            'canManage' => $request->user()->role->canManage(),
         ]);
+    }
+
+    public function guests(Request $request, PartnerOrganization $partner): JsonResponse
+    {
+        $query = $partner->guestUsers()->with('invitedBy');
+
+        if ($search = $request->input('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('display_name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        if ($status = $request->input('status')) {
+            $query->where('invitation_status', $status);
+        }
+
+        if ($request->has('account_enabled')) {
+            $query->where('account_enabled', $request->boolean('account_enabled'));
+        }
+
+        return response()->json(
+            $query->orderByDesc('created_at')->paginate(25)->withQueryString()
+        );
     }
 
     public function update(UpdatePartnerRequest $request, PartnerOrganization $partner): RedirectResponse

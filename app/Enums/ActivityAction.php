@@ -9,6 +9,9 @@ enum ActivityAction: string
     case PartnerDeleted = 'partner_deleted';
     case GuestInvited = 'guest_invited';
     case GuestRemoved = 'guest_removed';
+    case GuestEnabled = 'guest_enabled';
+    case GuestDisabled = 'guest_disabled';
+    case GuestUpdated = 'guest_updated';
     case PolicyChanged = 'policy_changed';
     case TemplateCreated = 'template_created';
     case SyncCompleted = 'sync_completed';
