@@ -6,6 +6,7 @@ import {
     ClipboardCheck,
     FileStack,
     LayoutGrid,
+    Package,
     Settings,
     Users,
 } from 'lucide-vue-next';
@@ -38,6 +39,11 @@ const mainNavItems = computed<NavItem[]>(() => {
             title: 'Access Reviews',
             href: '/access-reviews',
             icon: ClipboardCheck,
+        },
+        {
+            title: 'Entitlements',
+            href: '/entitlements',
+            icon: Package,
         },
         { title: 'Activity', href: '/activity', icon: Activity },
     ];

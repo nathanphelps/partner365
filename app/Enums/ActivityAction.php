@@ -24,4 +24,11 @@ enum ActivityAction: string
     case AccessReviewCompleted = 'access_review_completed';
     case AccessReviewDecisionMade = 'access_review_decision_made';
     case AccessReviewRemediationApplied = 'access_review_remediation_applied';
+    case AccessPackageCreated = 'access_package_created';
+    case AccessPackageUpdated = 'access_package_updated';
+    case AccessPackageDeleted = 'access_package_deleted';
+    case AssignmentRequested = 'assignment_requested';
+    case AssignmentApproved = 'assignment_approved';
+    case AssignmentDenied = 'assignment_denied';
+    case AssignmentRevoked = 'assignment_revoked';
 }

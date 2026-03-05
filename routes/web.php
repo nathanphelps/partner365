@@ -3,6 +3,7 @@
 use App\Http\Controllers\AccessReviewController;
 use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\EntitlementController;
 use App\Http\Controllers\GuestUserController;
 use App\Http\Controllers\PartnerOrganizationController;
 use App\Http\Controllers\PartnerTemplateController;
@@ -34,6 +35,14 @@ Route::middleware(['auth', 'verified', 'approved'])->group(function () {
     Route::get('access-reviews/{access_review}/instances/{instance}', [AccessReviewController::class, 'showInstance'])->name('access-reviews.instances.show');
     Route::post('access-reviews/decisions/{decision}', [AccessReviewController::class, 'submitDecision'])->name('access-reviews.decisions.submit');
     Route::post('access-reviews/instances/{instance}/apply', [AccessReviewController::class, 'applyRemediations'])->name('access-reviews.instances.apply');
+
+    Route::resource('entitlements', EntitlementController::class)->except(['edit']);
+    Route::post('entitlements/{entitlement}/assignments', [EntitlementController::class, 'createAssignment'])->name('entitlements.assignments.create');
+    Route::post('entitlements/{entitlement}/assignments/{assignment}/approve', [EntitlementController::class, 'approveAssignment'])->name('entitlements.assignments.approve');
+    Route::post('entitlements/{entitlement}/assignments/{assignment}/deny', [EntitlementController::class, 'denyAssignment'])->name('entitlements.assignments.deny');
+    Route::post('entitlements/{entitlement}/assignments/{assignment}/revoke', [EntitlementController::class, 'revokeAssignment'])->name('entitlements.assignments.revoke');
+    Route::get('entitlements-groups', [EntitlementController::class, 'groups'])->name('entitlements.groups');
+    Route::get('entitlements-sharepoint-sites', [EntitlementController::class, 'sharepointSites'])->name('entitlements.sharepoint-sites');
 });
 
 Route::get('/health', function () {
