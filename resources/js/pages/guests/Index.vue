@@ -10,7 +10,12 @@ import type { GuestUser, Paginated } from '@/types/partner';
 
 defineProps<{
     guests: Paginated<GuestUser>;
-    filters?: { search?: string; status?: string; account_enabled?: string; partner_id?: string };
+    filters?: {
+        search?: string;
+        status?: string;
+        account_enabled?: string;
+        partner_id?: string;
+    };
     partners?: { id: number; display_name: string }[];
     canManage: boolean;
 }>();
@@ -29,14 +34,21 @@ const breadcrumbs: BreadcrumbItem[] = [
             <div class="flex items-center justify-between">
                 <div>
                     <h1 class="text-2xl font-semibold">Guest Users</h1>
-                    <p class="mt-1 text-sm text-muted-foreground">Manage external guest users in your M365 tenant.</p>
+                    <p class="mt-1 text-sm text-muted-foreground">
+                        Manage external guest users in your M365 tenant.
+                    </p>
                 </div>
                 <Link v-if="canManage" :href="guestRoutes.create.url()">
                     <Button>Invite Guest</Button>
                 </Link>
             </div>
 
-            <GuestUserTable :guests="guests" :can-manage="canManage" :filters="filters" :partners="partners" />
+            <GuestUserTable
+                :guests="guests"
+                :can-manage="canManage"
+                :filters="filters"
+                :partners="partners"
+            />
         </div>
     </AppLayout>
 </template>

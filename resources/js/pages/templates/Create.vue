@@ -117,9 +117,7 @@ function submit() {
                                     class="flex items-center justify-between py-1.5"
                                 >
                                     <div>
-                                        <div
-                                            class="flex items-center gap-1.5"
-                                        >
+                                        <div class="flex items-center gap-1.5">
                                             <p class="text-sm font-medium">
                                                 {{ policy.label }}
                                             </p>
@@ -150,9 +148,8 @@ function submit() {
                                         "
                                         @update:model-value="
                                             (v: boolean) => {
-                                                form.policy_config[
-                                                    policy.key
-                                                ] = v;
+                                                form.policy_config[policy.key] =
+                                                    v;
                                             }
                                         "
                                     />

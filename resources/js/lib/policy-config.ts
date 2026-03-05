@@ -18,7 +18,7 @@ export const policyDefinitions: PolicyDefinition[] = [
         label: 'Device Trust',
         description: 'Trust device compliance from partner tenants.',
         tooltip:
-            "When enabled, your Conditional Access policies will accept device compliance and hybrid Azure AD joined claims from this partner. Their users can satisfy your device-based policies without re-enrolling. Only enable for partners whose device management you trust.",
+            'When enabled, your Conditional Access policies will accept device compliance and hybrid Azure AD joined claims from this partner. Their users can satisfy your device-based policies without re-enrolling. Only enable for partners whose device management you trust.',
     },
     {
         key: 'direct_connect_inbound_enabled',

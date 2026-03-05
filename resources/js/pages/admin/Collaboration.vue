@@ -35,7 +35,10 @@ const breadcrumbs: BreadcrumbItem[] = [
 const inviteOptions = [
     { value: 'none', label: 'No one' },
     { value: 'adminsAndGuestInviters', label: 'Admins and Guest Inviters' },
-    { value: 'adminsGuestInvitersAndAllMembers', label: 'Admins, Guest Inviters, and Members' },
+    {
+        value: 'adminsGuestInvitersAndAllMembers',
+        label: 'Admins, Guest Inviters, and Members',
+    },
     { value: 'everyone', label: 'Everyone (including guests)' },
 ];
 
@@ -62,7 +65,10 @@ function addDomain(list: 'allowed_domains' | 'blocked_domains') {
     newDomain.value = '';
 }
 
-function removeDomain(list: 'allowed_domains' | 'blocked_domains', index: number) {
+function removeDomain(
+    list: 'allowed_domains' | 'blocked_domains',
+    index: number,
+) {
     form[list].splice(index, 1);
 }
 
@@ -83,7 +89,9 @@ const submit = () => {
 
             <form class="space-y-6" @submit.prevent="submit">
                 <div class="grid gap-2">
-                    <Label for="allow_invites_from">Who can invite guests</Label>
+                    <Label for="allow_invites_from"
+                        >Who can invite guests</Label
+                    >
                     <Select v-model="form.allow_invites_from">
                         <SelectTrigger id="allow_invites_from">
                             <SelectValue />
@@ -108,20 +116,31 @@ const submit = () => {
                             <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="none">Allow all domains</SelectItem>
-                            <SelectItem value="allowList">Allow only specific domains</SelectItem>
-                            <SelectItem value="blockList">Block specific domains</SelectItem>
+                            <SelectItem value="none"
+                                >Allow all domains</SelectItem
+                            >
+                            <SelectItem value="allowList"
+                                >Allow only specific domains</SelectItem
+                            >
+                            <SelectItem value="blockList"
+                                >Block specific domains</SelectItem
+                            >
                         </SelectContent>
                     </Select>
                 </div>
 
-                <div v-if="form.domain_restriction_mode === 'allowList'" class="grid gap-2">
+                <div
+                    v-if="form.domain_restriction_mode === 'allowList'"
+                    class="grid gap-2"
+                >
                     <Label>Allowed domains</Label>
                     <div class="flex gap-2">
                         <Input
                             v-model="newDomain"
                             placeholder="contoso.com"
-                            @keydown.enter.prevent="addDomain('allowed_domains')"
+                            @keydown.enter.prevent="
+                                addDomain('allowed_domains')
+                            "
                         />
                         <Button
                             type="button"
@@ -145,13 +164,18 @@ const submit = () => {
                     <InputError :message="form.errors.allowed_domains" />
                 </div>
 
-                <div v-if="form.domain_restriction_mode === 'blockList'" class="grid gap-2">
+                <div
+                    v-if="form.domain_restriction_mode === 'blockList'"
+                    class="grid gap-2"
+                >
                     <Label>Blocked domains</Label>
                     <div class="flex gap-2">
                         <Input
                             v-model="newDomain"
                             placeholder="contoso.com"
-                            @keydown.enter.prevent="addDomain('blocked_domains')"
+                            @keydown.enter.prevent="
+                                addDomain('blocked_domains')
+                            "
                         />
                         <Button
                             type="button"

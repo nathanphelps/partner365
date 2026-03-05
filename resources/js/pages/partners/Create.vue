@@ -323,9 +323,7 @@ function submit() {
                                             </TooltipContent>
                                         </Tooltip>
                                     </div>
-                                    <p
-                                        class="text-xs text-muted-foreground"
-                                    >
+                                    <p class="text-xs text-muted-foreground">
                                         {{ policy.description }}
                                     </p>
                                 </div>

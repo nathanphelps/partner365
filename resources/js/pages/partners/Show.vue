@@ -29,7 +29,11 @@ import { policyDefinitions } from '@/lib/policy-config';
 import { dashboard } from '@/routes';
 import partners from '@/routes/partners';
 import type { BreadcrumbItem } from '@/types';
-import type { PartnerOrganization, GuestUser, Paginated } from '@/types/partner';
+import type {
+    PartnerOrganization,
+    GuestUser,
+    Paginated,
+} from '@/types/partner';
 
 const props = defineProps<{
     partner: PartnerOrganization;
@@ -60,8 +64,10 @@ const categoryLabel: Record<string, string> = {
 const policyForm = reactive({
     mfa_trust_enabled: props.partner.mfa_trust_enabled,
     device_trust_enabled: props.partner.device_trust_enabled,
-    direct_connect_inbound_enabled: props.partner.direct_connect_inbound_enabled,
-    direct_connect_outbound_enabled: props.partner.direct_connect_outbound_enabled,
+    direct_connect_inbound_enabled:
+        props.partner.direct_connect_inbound_enabled,
+    direct_connect_outbound_enabled:
+        props.partner.direct_connect_outbound_enabled,
     b2b_inbound_enabled: props.partner.b2b_inbound_enabled,
     b2b_outbound_enabled: props.partner.b2b_outbound_enabled,
 });
@@ -128,7 +134,6 @@ function formatDate(val: string | null): string {
     return new Date(val).toLocaleString();
 }
 
-
 const isAdmin = computed(() => {
     const auth = page.props.auth as { user?: { role?: string } };
     return auth?.user?.role === 'admin';
@@ -182,7 +187,6 @@ function removeApp(index: number) {
 function saveRestrictions() {
     savingRestrictions.value = true;
 
-     
     const json: Record<string, any> = {};
 
     if (appMode.value === 'all') {
@@ -237,7 +241,7 @@ const directConnectStatus = computed(() => {
             label: 'Active',
             variant: 'default' as const,
             description:
-                "Both inbound and outbound direct connect are enabled. The partner must also enable direct connect on their side for Teams shared channels to work.",
+                'Both inbound and outbound direct connect are enabled. The partner must also enable direct connect on their side for Teams shared channels to work.',
         };
     }
     if (inbound || outbound) {
@@ -291,189 +295,253 @@ const directConnectStatus = computed(() => {
 
             <!-- Policy Toggles + Notes -->
             <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
-            <Card>
-                <CardHeader>
-                    <CardTitle>Access Policies</CardTitle>
-                </CardHeader>
-                <CardContent class="flex flex-col gap-4">
-                    <TooltipProvider>
-                        <div
-                            v-for="policy in policyDefinitions"
-                            :key="policy.key"
-                            class="flex items-center justify-between py-2"
-                        >
-                            <div>
-                                <div class="flex items-center gap-1.5">
-                                    <p class="text-sm font-medium">
-                                        {{ policy.label }}
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Access Policies</CardTitle>
+                    </CardHeader>
+                    <CardContent class="flex flex-col gap-4">
+                        <TooltipProvider>
+                            <div
+                                v-for="policy in policyDefinitions"
+                                :key="policy.key"
+                                class="flex items-center justify-between py-2"
+                            >
+                                <div>
+                                    <div class="flex items-center gap-1.5">
+                                        <p class="text-sm font-medium">
+                                            {{ policy.label }}
+                                        </p>
+                                        <Tooltip>
+                                            <TooltipTrigger as-child>
+                                                <CircleHelp
+                                                    class="size-3.5 text-muted-foreground"
+                                                />
+                                            </TooltipTrigger>
+                                            <TooltipContent
+                                                class="max-w-xs"
+                                                side="right"
+                                            >
+                                                {{ policy.tooltip }}
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    </div>
+                                    <p class="text-xs text-muted-foreground">
+                                        {{ policy.description }}
                                     </p>
-                                    <Tooltip>
-                                        <TooltipTrigger as-child>
-                                            <CircleHelp
-                                                class="size-3.5 text-muted-foreground"
-                                            />
-                                        </TooltipTrigger>
-                                        <TooltipContent
-                                            class="max-w-xs"
-                                            side="right"
-                                        >
-                                            {{ policy.tooltip }}
-                                        </TooltipContent>
-                                    </Tooltip>
                                 </div>
+                                <Switch
+                                    :id="`policy-${policy.key}`"
+                                    :model-value="
+                                        (policyForm as any)[policy.key]
+                                    "
+                                    @update:model-value="
+                                        (val: boolean) => {
+                                            (policyForm as any)[policy.key] =
+                                                val;
+                                        }
+                                    "
+                                />
+                            </div>
+                        </TooltipProvider>
+
+                        <div class="flex items-center gap-3 pt-2">
+                            <Button
+                                @click="savePolicies"
+                                :disabled="savingPolicies"
+                            >
+                                {{
+                                    savingPolicies ? 'Saving…' : 'Save Policies'
+                                }}
+                            </Button>
+                            <span
+                                v-if="policiesSaved"
+                                class="text-sm text-green-600 dark:text-green-400"
+                                >Saved.</span
+                            >
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <!-- Direct Connect Status -->
+                <Card>
+                    <CardHeader>
+                        <CardTitle class="flex items-center gap-2">
+                            Direct Connect
+                            <Badge :variant="directConnectStatus.variant">
+                                {{ directConnectStatus.label }}
+                            </Badge>
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <p class="text-sm text-muted-foreground">
+                            {{ directConnectStatus.description }}
+                        </p>
+                    </CardContent>
+                </Card>
+
+                <!-- Tenant Restrictions -->
+                <Card v-if="canManage">
+                    <CardHeader>
+                        <CardTitle class="flex items-center gap-2">
+                            Tenant Restrictions
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger as-child>
+                                        <CircleHelp
+                                            class="size-3.5 text-muted-foreground"
+                                        />
+                                    </TooltipTrigger>
+                                    <TooltipContent
+                                        class="max-w-xs"
+                                        side="right"
+                                    >
+                                        Tenant Restrictions control what your
+                                        users can access when signing into this
+                                        partner's tenant. Requires Global Secure
+                                        Access or a corporate proxy to enforce.
+                                    </TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent class="flex flex-col gap-4">
+                        <div class="flex items-center justify-between py-2">
+                            <div>
+                                <p class="text-sm font-medium">
+                                    Enable Tenant Restrictions
+                                </p>
                                 <p class="text-xs text-muted-foreground">
-                                    {{ policy.description }}
+                                    Control which apps your users can access in
+                                    this partner's tenant.
                                 </p>
                             </div>
                             <Switch
-                                :id="`policy-${policy.key}`"
-                                :model-value="(policyForm as any)[policy.key]"
+                                :model-value="
+                                    restrictionsForm.tenant_restrictions_enabled
+                                "
                                 @update:model-value="
                                     (val: boolean) => {
-                                        (policyForm as any)[policy.key] = val;
+                                        restrictionsForm.tenant_restrictions_enabled =
+                                            val;
                                     }
                                 "
                             />
                         </div>
-                    </TooltipProvider>
 
-                    <div class="flex items-center gap-3 pt-2">
-                        <Button
-                            @click="savePolicies"
-                            :disabled="savingPolicies"
+                        <template
+                            v-if="restrictionsForm.tenant_restrictions_enabled"
                         >
-                            {{ savingPolicies ? 'Saving…' : 'Save Policies' }}
-                        </Button>
-                        <span
-                            v-if="policiesSaved"
-                            class="text-sm text-green-600 dark:text-green-400"
-                            >Saved.</span
-                        >
-                    </div>
-                </CardContent>
-            </Card>
+                            <Separator />
 
-            <!-- Direct Connect Status -->
-            <Card>
-                <CardHeader>
-                    <CardTitle class="flex items-center gap-2">
-                        Direct Connect
-                        <Badge :variant="directConnectStatus.variant">
-                            {{ directConnectStatus.label }}
-                        </Badge>
-                    </CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <p class="text-sm text-muted-foreground">
-                        {{ directConnectStatus.description }}
-                    </p>
-                </CardContent>
-            </Card>
-
-            <!-- Tenant Restrictions -->
-            <Card v-if="canManage">
-                <CardHeader>
-                    <CardTitle class="flex items-center gap-2">
-                        Tenant Restrictions
-                        <TooltipProvider>
-                            <Tooltip>
-                                <TooltipTrigger as-child>
-                                    <CircleHelp class="size-3.5 text-muted-foreground" />
-                                </TooltipTrigger>
-                                <TooltipContent class="max-w-xs" side="right">
-                                    Tenant Restrictions control what your users can access when signing into this partner's tenant. Requires Global Secure Access or a corporate proxy to enforce.
-                                </TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider>
-                    </CardTitle>
-                </CardHeader>
-                <CardContent class="flex flex-col gap-4">
-                    <div class="flex items-center justify-between py-2">
-                        <div>
-                            <p class="text-sm font-medium">Enable Tenant Restrictions</p>
-                            <p class="text-xs text-muted-foreground">
-                                Control which apps your users can access in this partner's tenant.
-                            </p>
-                        </div>
-                        <Switch
-                            :model-value="restrictionsForm.tenant_restrictions_enabled"
-                            @update:model-value="(val: boolean) => { restrictionsForm.tenant_restrictions_enabled = val; }"
-                        />
-                    </div>
-
-                    <template v-if="restrictionsForm.tenant_restrictions_enabled">
-                        <Separator />
-
-                        <div class="grid gap-2">
-                            <Label>Application access</Label>
-                            <Select v-model="appMode">
-                                <SelectTrigger>
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="all">Allow all applications</SelectItem>
-                                    <SelectItem value="allowList">Allow only specific applications</SelectItem>
-                                    <SelectItem value="blockList">Block specific applications</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-
-                        <div v-if="appMode !== 'all'" class="grid gap-2">
-                            <Label>{{ appMode === 'allowList' ? 'Allowed' : 'Blocked' }} applications</Label>
-                            <div class="flex gap-2">
-                                <Input v-model="newAppId" placeholder="Application ID" class="flex-1" />
-                                <Input v-model="newAppName" placeholder="Display name (optional)" class="flex-1" />
-                                <Button type="button" variant="secondary" @click="addApp">Add</Button>
+                            <div class="grid gap-2">
+                                <Label>Application access</Label>
+                                <Select v-model="appMode">
+                                    <SelectTrigger>
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all"
+                                            >Allow all applications</SelectItem
+                                        >
+                                        <SelectItem value="allowList"
+                                            >Allow only specific
+                                            applications</SelectItem
+                                        >
+                                        <SelectItem value="blockList"
+                                            >Block specific
+                                            applications</SelectItem
+                                        >
+                                    </SelectContent>
+                                </Select>
                             </div>
-                            <div class="flex flex-wrap gap-1">
-                                <Badge
-                                    v-for="(app, i) in appTargets"
-                                    :key="app.target"
-                                    variant="secondary"
-                                    class="cursor-pointer"
-                                    @click="removeApp(i)"
+
+                            <div v-if="appMode !== 'all'" class="grid gap-2">
+                                <Label
+                                    >{{
+                                        appMode === 'allowList'
+                                            ? 'Allowed'
+                                            : 'Blocked'
+                                    }}
+                                    applications</Label
                                 >
-                                    {{ app.name }} &times;
-                                </Badge>
+                                <div class="flex gap-2">
+                                    <Input
+                                        v-model="newAppId"
+                                        placeholder="Application ID"
+                                        class="flex-1"
+                                    />
+                                    <Input
+                                        v-model="newAppName"
+                                        placeholder="Display name (optional)"
+                                        class="flex-1"
+                                    />
+                                    <Button
+                                        type="button"
+                                        variant="secondary"
+                                        @click="addApp"
+                                        >Add</Button
+                                    >
+                                </div>
+                                <div class="flex flex-wrap gap-1">
+                                    <Badge
+                                        v-for="(app, i) in appTargets"
+                                        :key="app.target"
+                                        variant="secondary"
+                                        class="cursor-pointer"
+                                        @click="removeApp(i)"
+                                    >
+                                        {{ app.name }} &times;
+                                    </Badge>
+                                </div>
                             </div>
+                        </template>
+
+                        <div class="flex items-center gap-3 pt-2">
+                            <Button
+                                @click="saveRestrictions"
+                                :disabled="savingRestrictions"
+                            >
+                                {{
+                                    savingRestrictions
+                                        ? 'Saving…'
+                                        : 'Save Restrictions'
+                                }}
+                            </Button>
+                            <span
+                                v-if="restrictionsSaved"
+                                class="text-sm text-green-600 dark:text-green-400"
+                                >Saved.</span
+                            >
                         </div>
-                    </template>
+                    </CardContent>
+                </Card>
 
-                    <div class="flex items-center gap-3 pt-2">
-                        <Button @click="saveRestrictions" :disabled="savingRestrictions">
-                            {{ savingRestrictions ? 'Saving…' : 'Save Restrictions' }}
-                        </Button>
-                        <span v-if="restrictionsSaved" class="text-sm text-green-600 dark:text-green-400">Saved.</span>
-                    </div>
-                </CardContent>
-            </Card>
-
-            <Card>
-                <CardHeader>
-                    <CardTitle>Notes</CardTitle>
-                </CardHeader>
-                <CardContent class="flex flex-col gap-3">
-                    <Textarea
-                        v-model="notes"
-                        placeholder="Add notes about this partner organization..."
-                        class="min-h-[120px]"
-                    />
-                    <div class="flex items-center gap-3">
-                        <Button
-                            @click="saveNotes"
-                            :disabled="savingNotes"
-                            variant="secondary"
-                        >
-                            {{ savingNotes ? 'Saving…' : 'Save Notes' }}
-                        </Button>
-                        <span
-                            v-if="notesSaved"
-                            class="text-sm text-green-600 dark:text-green-400"
-                            >Saved.</span
-                        >
-                    </div>
-                </CardContent>
-            </Card>
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Notes</CardTitle>
+                    </CardHeader>
+                    <CardContent class="flex flex-col gap-3">
+                        <Textarea
+                            v-model="notes"
+                            placeholder="Add notes about this partner organization..."
+                            class="min-h-[120px]"
+                        />
+                        <div class="flex items-center gap-3">
+                            <Button
+                                @click="saveNotes"
+                                :disabled="savingNotes"
+                                variant="secondary"
+                            >
+                                {{ savingNotes ? 'Saving…' : 'Save Notes' }}
+                            </Button>
+                            <span
+                                v-if="notesSaved"
+                                class="text-sm text-green-600 dark:text-green-400"
+                                >Saved.</span
+                            >
+                        </div>
+                    </CardContent>
+                </Card>
             </div>
 
             <!-- Guest Users -->
