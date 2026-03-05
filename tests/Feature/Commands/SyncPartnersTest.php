@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\PartnerOrganization;
+use App\Models\SyncLog;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 
@@ -82,4 +83,36 @@ test('sync:partners updates existing partner records', function () {
     expect(PartnerOrganization::count())->toBe(1);
     expect(PartnerOrganization::first()->display_name)->toBe('Updated Corp');
     expect(PartnerOrganization::first()->mfa_trust_enabled)->toBeTrue();
+});
+
+test('sync:partners creates a SyncLog entry on success', function () {
+    Http::fake([
+        'login.microsoftonline.com/*' => Http::response(['access_token' => 'fake', 'expires_in' => 3600]),
+        'graph.microsoft.com/v1.0/policies/crossTenantAccessPolicy/partners' => Http::response(['value' => []]),
+    ]);
+
+    $this->artisan('sync:partners')->assertSuccessful();
+
+    $log = SyncLog::where('type', 'partners')->first();
+    expect($log)->not->toBeNull();
+    expect($log->status)->toBe('completed');
+    expect($log->records_synced)->toBe(0);
+    expect($log->completed_at)->not->toBeNull();
+});
+
+test('sync:partners creates a failed SyncLog entry on error', function () {
+    Http::fake([
+        'login.microsoftonline.com/*' => Http::response(['access_token' => 'fake', 'expires_in' => 3600]),
+        'graph.microsoft.com/v1.0/policies/crossTenantAccessPolicy/partners' => Http::response(
+            ['error' => ['code' => 'Forbidden', 'message' => 'Insufficient privileges']],
+            403
+        ),
+    ]);
+
+    $this->artisan('sync:partners')->assertFailed();
+
+    $log = SyncLog::where('type', 'partners')->first();
+    expect($log)->not->toBeNull();
+    expect($log->status)->toBe('failed');
+    expect($log->error_message)->not->toBeNull();
 });

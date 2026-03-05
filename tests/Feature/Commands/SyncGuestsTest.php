@@ -2,6 +2,7 @@
 
 use App\Models\GuestUser;
 use App\Models\PartnerOrganization;
+use App\Models\SyncLog;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 
@@ -62,4 +63,18 @@ test('sync:guests matches guests to partner organizations by domain', function (
     $this->artisan('sync:guests')->assertSuccessful();
 
     expect(GuestUser::first()->partner_organization_id)->toBe($partner->id);
+});
+
+test('sync:guests creates a SyncLog entry on success', function () {
+    Http::fake([
+        'login.microsoftonline.com/*' => Http::response(['access_token' => 'fake', 'expires_in' => 3600]),
+        'graph.microsoft.com/v1.0/users*' => Http::response(['value' => []]),
+    ]);
+
+    $this->artisan('sync:guests')->assertSuccessful();
+
+    $log = SyncLog::where('type', 'guests')->first();
+    expect($log)->not->toBeNull();
+    expect($log->status)->toBe('completed');
+    expect($log->records_synced)->toBe(0);
 });
