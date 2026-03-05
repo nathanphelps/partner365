@@ -16,7 +16,10 @@ export type PartnerOrganization = {
     b2b_outbound_enabled: boolean;
     mfa_trust_enabled: boolean;
     device_trust_enabled: boolean;
-    direct_connect_enabled: boolean;
+    direct_connect_inbound_enabled: boolean;
+    direct_connect_outbound_enabled: boolean;
+    tenant_restrictions_enabled: boolean;
+    tenant_restrictions_json: Record<string, unknown> | null;
     last_synced_at: string | null;
     created_at: string;
     guest_users_count?: number;

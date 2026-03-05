@@ -303,7 +303,7 @@ function formatDate(val: string | null): string {
             <thead>
                 <tr class="border-b bg-muted/50">
                     <th v-if="canManage" class="w-10 px-4 py-3">
-                        <Checkbox :model-value="allSelected" @update:model-value="toggleAll" />
+                        <Checkbox :model-value="allSelected" @update:model-value="(val: boolean | 'indeterminate') => toggleAll(val === true)" />
                     </th>
                     <th class="px-4 py-3 text-left font-medium text-muted-foreground">Name</th>
                     <th class="px-4 py-3 text-left font-medium text-muted-foreground">Email</th>
@@ -323,7 +323,7 @@ function formatDate(val: string | null): string {
                     <td v-if="canManage" class="w-10 px-4 py-3">
                         <Checkbox
                             :model-value="selectedIds.has(guest.id)"
-                            @update:model-value="(val: boolean) => toggleOne(guest.id, val)"
+                            @update:model-value="(val: boolean | 'indeterminate') => toggleOne(guest.id, val === true)"
                         />
                     </td>
                     <td class="px-4 py-3">

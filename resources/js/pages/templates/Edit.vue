@@ -39,7 +39,8 @@ const breadcrumbs: BreadcrumbItem[] = [
 const defaultPolicyConfig: Record<string, boolean> = {
     mfa_trust_enabled: false,
     device_trust_enabled: false,
-    direct_connect_enabled: false,
+    direct_connect_inbound_enabled: false,
+    direct_connect_outbound_enabled: false,
     b2b_inbound_enabled: false,
     b2b_outbound_enabled: false,
 };

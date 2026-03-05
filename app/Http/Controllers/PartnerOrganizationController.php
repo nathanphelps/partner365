@@ -87,7 +87,8 @@ class PartnerOrganizationController extends Controller
             'b2b_outbound_enabled' => $validated['b2b_outbound_enabled'] ?? false,
             'mfa_trust_enabled' => $validated['mfa_trust_enabled'] ?? false,
             'device_trust_enabled' => $validated['device_trust_enabled'] ?? false,
-            'direct_connect_enabled' => $validated['direct_connect_enabled'] ?? false,
+            'direct_connect_inbound_enabled' => $validated['direct_connect_inbound_enabled'] ?? false,
+            'direct_connect_outbound_enabled' => $validated['direct_connect_outbound_enabled'] ?? false,
             'last_synced_at' => now(),
         ]);
 
@@ -224,6 +225,42 @@ class PartnerOrganizationController extends Controller
                     'targets' => [['target' => 'AllApplications', 'targetType' => 'application']],
                 ],
             ];
+        }
+
+        if (isset($data['direct_connect_inbound_enabled'])) {
+            $accessType = $data['direct_connect_inbound_enabled'] ? 'allowed' : 'blocked';
+            $config['b2bDirectConnectInbound'] = [
+                'usersAndGroups' => [
+                    'accessType' => $accessType,
+                    'targets' => [['target' => 'AllUsers', 'targetType' => 'user']],
+                ],
+                'applications' => [
+                    'accessType' => $accessType,
+                    'targets' => [['target' => 'AllApplications', 'targetType' => 'application']],
+                ],
+            ];
+        }
+
+        if (isset($data['direct_connect_outbound_enabled'])) {
+            $accessType = $data['direct_connect_outbound_enabled'] ? 'allowed' : 'blocked';
+            $config['b2bDirectConnectOutbound'] = [
+                'usersAndGroups' => [
+                    'accessType' => $accessType,
+                    'targets' => [['target' => 'AllUsers', 'targetType' => 'user']],
+                ],
+                'applications' => [
+                    'accessType' => $accessType,
+                    'targets' => [['target' => 'AllApplications', 'targetType' => 'application']],
+                ],
+            ];
+        }
+
+        if (isset($data['tenant_restrictions_enabled'])) {
+            if ($data['tenant_restrictions_enabled'] && ! empty($data['tenant_restrictions_json'])) {
+                $config['tenantRestrictions'] = $data['tenant_restrictions_json'];
+            } elseif (! $data['tenant_restrictions_enabled']) {
+                $config['tenantRestrictions'] = null;
+            }
         }
 
         return $config;

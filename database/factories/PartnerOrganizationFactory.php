@@ -22,7 +22,8 @@ class PartnerOrganizationFactory extends Factory
             'b2b_outbound_enabled' => fake()->boolean(),
             'mfa_trust_enabled' => fake()->boolean(),
             'device_trust_enabled' => false,
-            'direct_connect_enabled' => false,
+            'direct_connect_inbound_enabled' => false,
+            'direct_connect_outbound_enabled' => false,
         ];
     }
 }

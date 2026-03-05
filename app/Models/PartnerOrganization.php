@@ -15,7 +15,9 @@ class PartnerOrganization extends Model
     protected $fillable = [
         'tenant_id', 'display_name', 'domain', 'category', 'owner_user_id', 'notes',
         'b2b_inbound_enabled', 'b2b_outbound_enabled', 'mfa_trust_enabled',
-        'device_trust_enabled', 'direct_connect_enabled', 'raw_policy_json', 'last_synced_at',
+        'device_trust_enabled', 'direct_connect_inbound_enabled', 'direct_connect_outbound_enabled',
+        'tenant_restrictions_enabled', 'tenant_restrictions_json',
+        'raw_policy_json', 'last_synced_at',
     ];
 
     protected function casts(): array
@@ -26,7 +28,10 @@ class PartnerOrganization extends Model
             'b2b_outbound_enabled' => 'boolean',
             'mfa_trust_enabled' => 'boolean',
             'device_trust_enabled' => 'boolean',
-            'direct_connect_enabled' => 'boolean',
+            'direct_connect_inbound_enabled' => 'boolean',
+            'direct_connect_outbound_enabled' => 'boolean',
+            'tenant_restrictions_enabled' => 'boolean',
+            'tenant_restrictions_json' => 'array',
             'raw_policy_json' => 'array',
             'last_synced_at' => 'datetime',
         ];

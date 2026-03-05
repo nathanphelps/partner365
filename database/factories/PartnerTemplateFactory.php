@@ -19,7 +19,8 @@ class PartnerTemplateFactory extends Factory
                 'b2b_outbound_enabled' => true,
                 'mfa_trust_enabled' => true,
                 'device_trust_enabled' => false,
-                'direct_connect_enabled' => false,
+                'direct_connect_inbound_enabled' => false,
+                'direct_connect_outbound_enabled' => false,
             ],
         ];
     }

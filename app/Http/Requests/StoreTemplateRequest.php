@@ -21,7 +21,8 @@ class StoreTemplateRequest extends FormRequest
             'policy_config.b2b_outbound_enabled' => ['boolean'],
             'policy_config.mfa_trust_enabled' => ['boolean'],
             'policy_config.device_trust_enabled' => ['boolean'],
-            'policy_config.direct_connect_enabled' => ['boolean'],
+            'policy_config.direct_connect_inbound_enabled' => ['boolean'],
+            'policy_config.direct_connect_outbound_enabled' => ['boolean'],
         ];
     }
 }

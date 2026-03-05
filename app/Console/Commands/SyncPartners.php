@@ -44,7 +44,9 @@ class SyncPartners extends Command
                 $inboundTrust = $partner['inboundTrust'] ?? [];
                 $b2bInbound = $partner['b2bCollaborationInbound'] ?? [];
                 $b2bOutbound = $partner['b2bCollaborationOutbound'] ?? [];
-                $directConnect = $partner['b2bDirectConnectInbound'] ?? [];
+                $directConnectInbound = $partner['b2bDirectConnectInbound'] ?? [];
+                $directConnectOutbound = $partner['b2bDirectConnectOutbound'] ?? [];
+                $tenantRestrictions = $partner['tenantRestrictions'] ?? null;
 
                 PartnerOrganization::updateOrCreate(
                     ['tenant_id' => $tenantId],
@@ -55,7 +57,10 @@ class SyncPartners extends Command
                         'device_trust_enabled' => $inboundTrust['isCompliantDeviceAccepted'] ?? false,
                         'b2b_inbound_enabled' => ($b2bInbound['usersAndGroups']['accessType'] ?? '') === 'allowed',
                         'b2b_outbound_enabled' => ($b2bOutbound['usersAndGroups']['accessType'] ?? '') === 'allowed',
-                        'direct_connect_enabled' => ($directConnect['usersAndGroups']['accessType'] ?? '') === 'allowed',
+                        'direct_connect_inbound_enabled' => ($directConnectInbound['usersAndGroups']['accessType'] ?? '') === 'allowed',
+                        'direct_connect_outbound_enabled' => ($directConnectOutbound['usersAndGroups']['accessType'] ?? '') === 'allowed',
+                        'tenant_restrictions_enabled' => $tenantRestrictions !== null,
+                        'tenant_restrictions_json' => $tenantRestrictions,
                         'raw_policy_json' => $partner,
                         'last_synced_at' => now(),
                     ]

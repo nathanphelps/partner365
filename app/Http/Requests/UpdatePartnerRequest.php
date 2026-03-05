@@ -23,7 +23,8 @@ class UpdatePartnerRequest extends FormRequest
             'b2b_inbound_enabled' => ['boolean'],
             'b2b_outbound_enabled' => ['boolean'],
             'device_trust_enabled' => ['boolean'],
-            'direct_connect_enabled' => ['boolean'],
+            'direct_connect_inbound_enabled' => ['boolean'],
+            'direct_connect_outbound_enabled' => ['boolean'],
         ];
     }
 }

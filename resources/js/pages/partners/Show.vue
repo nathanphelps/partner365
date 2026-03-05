@@ -51,7 +51,8 @@ const categoryLabel: Record<string, string> = {
 const policyForm = reactive({
     mfa_trust_enabled: props.partner.mfa_trust_enabled,
     device_trust_enabled: props.partner.device_trust_enabled,
-    direct_connect_enabled: props.partner.direct_connect_enabled,
+    direct_connect_inbound_enabled: props.partner.direct_connect_inbound_enabled,
+    direct_connect_outbound_enabled: props.partner.direct_connect_outbound_enabled,
     b2b_inbound_enabled: props.partner.b2b_inbound_enabled,
     b2b_outbound_enabled: props.partner.b2b_outbound_enabled,
 });
@@ -122,6 +123,33 @@ function formatDate(val: string | null): string {
 const isAdmin = computed(() => {
     const auth = page.props.auth as { user?: { role?: string } };
     return auth?.user?.role === 'admin';
+});
+
+const directConnectStatus = computed(() => {
+    const inbound = props.partner.direct_connect_inbound_enabled;
+    const outbound = props.partner.direct_connect_outbound_enabled;
+
+    if (inbound && outbound) {
+        return {
+            label: 'Active',
+            variant: 'default' as const,
+            description:
+                "Both inbound and outbound direct connect are enabled. The partner must also enable direct connect on their side for Teams shared channels to work.",
+        };
+    }
+    if (inbound || outbound) {
+        return {
+            label: 'Partial',
+            variant: 'secondary' as const,
+            description: `Only ${inbound ? 'inbound' : 'outbound'} direct connect is enabled. Enable both directions and ensure the partner has also enabled direct connect for full functionality.`,
+        };
+    }
+    return {
+        label: 'Disabled',
+        variant: 'outline' as const,
+        description:
+            'Direct connect is disabled. Enable inbound and outbound toggles in Access Policies above to allow Teams shared channels with this partner.',
+    };
 });
 </script>
 
@@ -196,7 +224,7 @@ const isAdmin = computed(() => {
                             </div>
                             <Switch
                                 :id="`policy-${policy.key}`"
-                                :model-value="policyForm[policy.key]"
+                                :model-value="(policyForm as any)[policy.key]"
                                 @update:model-value="
                                     (val: boolean) => {
                                         (policyForm as any)[policy.key] = val;

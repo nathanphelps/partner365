@@ -94,7 +94,8 @@ const selectedTemplateId = ref<number | ''>('');
 const defaultPolicies: Record<string, boolean> = {
     mfa_trust_enabled: false,
     device_trust_enabled: false,
-    direct_connect_enabled: false,
+    direct_connect_inbound_enabled: false,
+    direct_connect_outbound_enabled: false,
     b2b_inbound_enabled: true,
     b2b_outbound_enabled: true,
 };

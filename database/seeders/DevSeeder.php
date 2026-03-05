@@ -103,7 +103,8 @@ class DevSeeder extends Seeder
                     'b2b_outbound_enabled' => $policyProfile === 'permissive',
                     'mfa_trust_enabled' => $policyProfile !== 'restrictive',
                     'device_trust_enabled' => $policyProfile === 'permissive',
-                    'direct_connect_enabled' => $policyProfile === 'permissive' && fake()->boolean(30),
+                    'direct_connect_inbound_enabled' => $policyProfile === 'permissive' && fake()->boolean(30),
+                    'direct_connect_outbound_enabled' => $policyProfile === 'permissive' && fake()->boolean(30),
                     'last_synced_at' => fake()->dateTimeBetween('-7 days', 'now'),
                     'notes' => fake()->boolean(60) ? fake()->paragraph() : null,
                 ]);
@@ -186,7 +187,8 @@ class DevSeeder extends Seeder
                     'b2b_outbound_enabled' => false,
                     'mfa_trust_enabled' => false,
                     'device_trust_enabled' => false,
-                    'direct_connect_enabled' => false,
+                    'direct_connect_inbound_enabled' => false,
+                    'direct_connect_outbound_enabled' => false,
                 ],
             ],
             [
@@ -197,7 +199,8 @@ class DevSeeder extends Seeder
                     'b2b_outbound_enabled' => true,
                     'mfa_trust_enabled' => true,
                     'device_trust_enabled' => true,
-                    'direct_connect_enabled' => true,
+                    'direct_connect_inbound_enabled' => true,
+                    'direct_connect_outbound_enabled' => true,
                 ],
             ],
             [
@@ -208,7 +211,8 @@ class DevSeeder extends Seeder
                     'b2b_outbound_enabled' => false,
                     'mfa_trust_enabled' => true,
                     'device_trust_enabled' => false,
-                    'direct_connect_enabled' => false,
+                    'direct_connect_inbound_enabled' => false,
+                    'direct_connect_outbound_enabled' => false,
                 ],
             ],
             [
@@ -219,7 +223,8 @@ class DevSeeder extends Seeder
                     'b2b_outbound_enabled' => false,
                     'mfa_trust_enabled' => false,
                     'device_trust_enabled' => false,
-                    'direct_connect_enabled' => false,
+                    'direct_connect_inbound_enabled' => false,
+                    'direct_connect_outbound_enabled' => false,
                 ],
             ],
             [
@@ -230,7 +235,8 @@ class DevSeeder extends Seeder
                     'b2b_outbound_enabled' => true,
                     'mfa_trust_enabled' => true,
                     'device_trust_enabled' => false,
-                    'direct_connect_enabled' => false,
+                    'direct_connect_inbound_enabled' => false,
+                    'direct_connect_outbound_enabled' => false,
                 ],
             ],
         ];

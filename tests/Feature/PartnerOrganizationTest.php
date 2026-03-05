@@ -70,7 +70,8 @@ test('operators can create partners', function () {
             'b2b_inbound_enabled' => true,
             'b2b_outbound_enabled' => false,
             'device_trust_enabled' => false,
-            'direct_connect_enabled' => false,
+            'direct_connect_inbound_enabled' => false,
+            'direct_connect_outbound_enabled' => false,
         ])
         ->assertRedirect(route('partners.index'));
 
@@ -108,7 +109,8 @@ test('operators can update partner policy', function () {
             'b2b_inbound_enabled' => true,
             'b2b_outbound_enabled' => true,
             'device_trust_enabled' => false,
-            'direct_connect_enabled' => false,
+            'direct_connect_inbound_enabled' => false,
+            'direct_connect_outbound_enabled' => false,
         ])
         ->assertRedirect();
 

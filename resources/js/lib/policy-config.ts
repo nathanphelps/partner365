@@ -21,11 +21,18 @@ export const policyDefinitions: PolicyDefinition[] = [
             "When enabled, your Conditional Access policies will accept device compliance and hybrid Azure AD joined claims from this partner. Their users can satisfy your device-based policies without re-enrolling. Only enable for partners whose device management you trust.",
     },
     {
-        key: 'direct_connect_enabled',
-        label: 'Direct Connect',
-        description: 'Allow Teams direct connect.',
+        key: 'direct_connect_inbound_enabled',
+        label: 'Direct Connect Inbound',
+        description: 'Allow their users to connect to our shared channels.',
         tooltip:
-            "When enabled, users from this partner can join your Teams shared channels directly without being added as guests. They appear as external members and access is scoped to specific channels.",
+            'When enabled, users from this partner can join your Teams shared channels as external members. Both organizations must enable direct connect for shared channels to work.',
+    },
+    {
+        key: 'direct_connect_outbound_enabled',
+        label: 'Direct Connect Outbound',
+        description: 'Allow our users to connect to their shared channels.',
+        tooltip:
+            "When enabled, your users can join shared channels in this partner's Teams environment. Both organizations must enable direct connect for shared channels to work.",
     },
     {
         key: 'b2b_inbound_enabled',
