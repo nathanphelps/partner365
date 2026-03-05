@@ -36,7 +36,8 @@
       "Bash(docker build:*)",
       "Bash(docker stop:*)",
       "WebFetch(domain:gd-ots.com)",
-      "WebFetch(domain:www.gdots.com)"
+      "WebFetch(domain:www.gdots.com)",
+      "Bash(npx prettier:*)"
     ]
   }
 }
