@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Enums\InvitationStatus;
+use App\Enums\ReviewInstanceStatus;
+use App\Models\AccessReview;
+use App\Models\AccessReviewInstance;
 use App\Models\GuestUser;
 use App\Models\PartnerOrganization;
 use App\Services\ActivityLogService;
@@ -27,6 +30,11 @@ class DashboardController extends Controller
                 'partners_by_category' => PartnerOrganization::selectRaw('category, count(*) as count')
                     ->groupBy('category')
                     ->pluck('count', 'category'),
+                'active_reviews' => AccessReview::count(),
+                'overdue_reviews' => AccessReviewInstance::whereIn('status', [
+                    ReviewInstanceStatus::Pending,
+                    ReviewInstanceStatus::InProgress,
+                ])->where('due_at', '<', now())->count(),
             ],
             'recentActivity' => $activityLog->recent(20),
         ]);

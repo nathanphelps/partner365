@@ -3,6 +3,7 @@ import { Link, usePage } from '@inertiajs/vue3';
 import {
     Activity,
     Building2,
+    ClipboardCheck,
     FileStack,
     LayoutGrid,
     Settings,
@@ -33,6 +34,11 @@ const mainNavItems = computed<NavItem[]>(() => {
         { title: 'Partners', href: '/partners', icon: Building2 },
         { title: 'Guests', href: '/guests', icon: Users },
         { title: 'Templates', href: '/templates', icon: FileStack },
+        {
+            title: 'Access Reviews',
+            href: '/access-reviews',
+            icon: ClipboardCheck,
+        },
         { title: 'Activity', href: '/activity', icon: Activity },
     ];
 
