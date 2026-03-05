@@ -5,14 +5,14 @@ title: Compliance Reports
 # Compliance Reports
 
 The Reports page provides a structured view of your organization's external collaboration posture.
-Use it to assess whether your [partner](/docs/glossary/01-glossary) configurations, [guest](/docs/glossary/01-glossary) lifecycle management, and [access reviews](/docs/glossary/01-glossary) align with your security standards — and to identify areas that need attention.
+Use it to assess whether your [partner](/docs/glossary/glossary) configurations, [guest](/docs/glossary/glossary) lifecycle management, and [access reviews](/docs/glossary/glossary) align with your security standards — and to identify areas that need attention.
 
 ## What Is Compliance in This Context?
 
 Compliance in Partner365 refers to how well your external collaboration setup adheres to your organization's policies and security best practices.
 The compliance report measures three dimensions:
 
-- **Partner configuration** — Are your [cross-tenant access policies](/docs/glossary/01-glossary) properly configured?
+- **Partner configuration** — Are your [cross-tenant access policies](/docs/glossary/glossary) properly configured?
   Do they enforce MFA trust, restrict overly permissive access, and have conditional access policy coverage?
 - **Guest lifecycle management** — Are guest accounts actively monitored?
   Are stale or inactive guests being identified and addressed before they become a security risk?
@@ -83,4 +83,4 @@ Narrow the report data using the available filter controls:
 Combine filters to answer targeted questions, such as "Which partners added in the last quarter have no MFA trust configured?"
 Use filters to focus your remediation efforts on the highest-priority items first.
 
-See also: [Using Reports](/docs/users/reports/02-using-reports) for guidance on incorporating reports into your regular workflow.
+See also: [Using Reports](/docs/reports/using-reports) for guidance on incorporating reports into your regular workflow.

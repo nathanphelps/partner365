@@ -4,7 +4,7 @@ title: Reviewing Decisions
 
 # Reviewing Decisions
 
-Once an access review has been created and instances generated, the assigned reviewer works through each [guest user](/docs/glossary/01-glossary) decision. This page explains what the review interface looks like, how to make well-informed decisions, and how to apply remediations once the review is complete.
+Once an access review has been created and instances generated, the assigned reviewer works through each [guest user](/docs/glossary/glossary) decision. This page explains what the review interface looks like, how to make well-informed decisions, and how to apply remediations once the review is complete.
 
 ## The Review Interface
 
@@ -13,7 +13,7 @@ Open a review from the **Access Reviews** list to reach its detail page. At the 
 Below the summary, a table lists each guest instance with the following columns:
 
 - **Guest name and email** — The display name and email address of the guest account in your tenant.
-- **Partner** — The [partner organization](/docs/glossary/01-glossary) the guest is associated with.
+- **Partner** — The [partner organization](/docs/glossary/glossary) the guest is associated with.
 - **Last sign-in date** — When the guest most recently authenticated to your tenant. This is one of the strongest signals for whether the guest is still active.
 - **Decision** — A dropdown to approve or deny continued access, along with an optional justification field.
 
@@ -29,7 +29,7 @@ Recent sign-in activity is the clearest indicator that a guest is actively using
 
 ### Partner Relationship Status
 
-Is the [partner organization](/docs/glossary/01-glossary) still actively collaborating with your team? If a project has ended, a vendor contract has expired, or a partner relationship has changed, the guests from that partner may no longer need access. Check the partner detail page for context on the relationship's current state and [trust score](/docs/glossary/01-glossary).
+Is the [partner organization](/docs/glossary/glossary) still actively collaborating with your team? If a project has ended, a vendor contract has expired, or a partner relationship has changed, the guests from that partner may no longer need access. Check the partner detail page for context on the relationship's current state and [trust score](/docs/glossary/glossary).
 
 ### Access Scope
 
@@ -60,10 +60,10 @@ After all decisions in a review are submitted (compliance reaches 100%), the **A
 Before applying, take these precautions:
 
 1. **Review the denial list one final time.** The review detail page shows a summary of all denied guests. Scan through it to confirm every denial is intentional.
-2. **Understand that this action is irreversible.** Once a guest is removed, their access to all tenant resources is revoked immediately. If they need access again in the future, they must be re-invited through the standard [guest invitation](/docs/glossary/01-glossary) process.
+2. **Understand that this action is irreversible.** Once a guest is removed, their access to all tenant resources is revoked immediately. If they need access again in the future, they must be re-invited through the standard [guest invitation](/docs/glossary/glossary) process.
 3. **Apply promptly.** Delaying remediation after completing a review means denied guests retain access longer than intended, undermining the purpose of the review. See [Best Practices](04-best-practices.md) for more on remediation timing.
 
-> **Good to know:** If remediation fails for individual guests (due to Graph API errors or permission issues), check the [activity log](/docs/glossary/01-glossary) for detailed error messages. You can remove failed guests manually from their detail page. See [Troubleshooting](05-troubleshooting.md) for common remediation issues.
+> **Good to know:** If remediation fails for individual guests (due to Graph API errors or permission issues), check the [activity log](/docs/glossary/glossary) for detailed error messages. You can remove failed guests manually from their detail page. See [Troubleshooting](05-troubleshooting.md) for common remediation issues.
 
 ## Review History
 

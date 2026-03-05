@@ -4,7 +4,7 @@ title: Best Practices
 
 # Entitlement Best Practices
 
-These guidelines will help you design [access packages](/docs/users/entitlements/01-access-packages) that are easy to manage, secure by default, and straightforward to audit. They are drawn from common patterns in external collaboration scenarios and Microsoft's own recommendations for [entitlement management](/docs/glossary/01-glossary).
+These guidelines will help you design [access packages](/docs/entitlements/access-packages) that are easy to manage, secure by default, and straightforward to audit. They are drawn from common patterns in external collaboration scenarios and Microsoft's own recommendations for [entitlement management](/docs/glossary/glossary).
 
 ## Package Design
 
@@ -18,13 +18,13 @@ Create packages around a specific project or collaboration scenario, not around 
 
 ## Duration Strategy
 
-Every access package has a duration that controls how long each [assignment](/docs/users/entitlements/02-assignments) lasts. Choosing the right duration is a balance between convenience and security.
+Every access package has a duration that controls how long each [assignment](/docs/entitlements/assignments) lasts. Choosing the right duration is a balance between convenience and security.
 
 - **Short-term projects (30-90 days)** — Use for time-boxed engagements like consulting projects, audits, or seasonal work. The short window ensures access is automatically cleaned up when the engagement ends.
 - **Medium-term partnerships (90-180 days)** — Appropriate for ongoing projects with a defined timeline, such as a product development cycle or a multi-month integration effort.
 - **Long-term partnerships (180-365 days)** — For strategic partners with ongoing collaboration. Even here, avoid indefinite access. A 365-day duration with periodic access reviews is safer than unlimited access that no one remembers to revoke.
 
-When a package duration expires, the guest loses access to all resources in the package but remains in your [directory](/docs/glossary/01-glossary) as a guest user. You can reassign the same package to extend their access. This deliberate re-assignment acts as a natural review point — someone must actively decide to continue the access rather than letting it persist by default.
+When a package duration expires, the guest loses access to all resources in the package but remains in your [directory](/docs/glossary/glossary) as a guest user. You can reassign the same package to extend their access. This deliberate re-assignment acts as a natural review point — someone must actively decide to continue the access rather than letting it persist by default.
 
 > **Good to know:** Pair duration-based expiry with regular access reviews for defense in depth. Durations handle the common case automatically, while access reviews catch situations where access should have been revoked before the duration elapsed.
 
@@ -53,10 +53,10 @@ Access packages and their assignments accumulate over time. Without periodic mai
 - **Deactivate completed packages.** When a project ends, set the package status to Inactive. This prevents new assignments while keeping existing ones (and their audit history) intact. Existing active assignments will continue until they expire or are revoked.
 - **Do not delete packages with historical assignments.** Even after all assignments have expired or been revoked, the package record provides audit context. Deleting it removes the ability to understand what access was granted in the past.
 
-> **Good to know:** Use [access reviews](/docs/glossary/01-glossary) alongside manual cleanup for automated, recurring checks on who still needs access. Reviews can flag stale assignments that you might otherwise miss.
+> **Good to know:** Use [access reviews](/docs/glossary/glossary) alongside manual cleanup for automated, recurring checks on who still needs access. Reviews can flag stale assignments that you might otherwise miss.
 
 ## Related Pages
 
-- [Access Packages](/docs/users/entitlements/01-access-packages) — Creating and managing packages
-- [Assignments](/docs/users/entitlements/02-assignments) — Assignment lifecycle and approvals
-- [Troubleshooting](/docs/users/entitlements/04-troubleshooting) — Common issues and solutions
+- [Access Packages](/docs/entitlements/access-packages) — Creating and managing packages
+- [Assignments](/docs/entitlements/assignments) — Assignment lifecycle and approvals
+- [Troubleshooting](/docs/entitlements/troubleshooting) — Common issues and solutions

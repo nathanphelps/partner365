@@ -11,7 +11,7 @@ It serves as your primary record for understanding who changed what, when, and w
 
 Every write operation in Partner365 is recorded automatically.
 You do not need to enable logging — it is always active.
-The following action types are tracked, each corresponding to an [ActivityAction](/docs/glossary/01-glossary) enum value and displayed with a distinctive color-coded badge:
+The following action types are tracked, each corresponding to an [ActivityAction](/docs/glossary/glossary) enum value and displayed with a distinctive color-coded badge:
 
 - **Partner created / updated / deleted** — Any change to a partner organization's record, including initial creation from a template or manual setup, modifications to metadata, and removal.
 - **Guest invited / updated / removed** — Guest lifecycle events from initial invitation through profile updates to eventual removal from the directory.
@@ -73,7 +73,7 @@ If something changed in Partner365, there is a corresponding log entry.
 This makes it a reliable single source of truth for understanding the history of any resource.
 
 > **Good to know:** The activity log is essential for compliance audits.
-> Export filtered logs regularly and archive them alongside your [compliance reports](/docs/users/reports/01-compliance-reports).
+> Export filtered logs regularly and archive them alongside your [compliance reports](/docs/reports/compliance-reports).
 > Together, they provide a complete picture: the compliance report shows your current posture, and the activity log shows the actions that shaped it.
 
 ## Retention

@@ -4,7 +4,7 @@ title: Understanding Policies
 
 # Understanding Conditional Access Policies
 
-[Conditional access policies](/docs/glossary/01-glossary) are the primary mechanism in Microsoft Entra ID for enforcing security requirements at sign-in time. This page explains how these policies affect your guest users, the patterns most commonly used for external access, and how they interact with other Partner365 features like cross-tenant trust.
+[Conditional access policies](/docs/glossary/glossary) are the primary mechanism in Microsoft Entra ID for enforcing security requirements at sign-in time. This page explains how these policies affect your guest users, the patterns most commonly used for external access, and how they interact with other Partner365 features like cross-tenant trust.
 
 ## How Conditional Access Affects Guests
 
@@ -54,14 +54,14 @@ This "most restrictive wins" behavior means you should be careful about overlapp
 
 ## Interaction with Cross-Tenant Trust
 
-Conditional access and [cross-tenant access policies](/docs/concepts/01-cross-tenant-policies) work together to determine the guest experience. The most significant interaction involves MFA trust:
+Conditional access and [cross-tenant access policies](/docs/concepts/cross-tenant-policies) work together to determine the guest experience. The most significant interaction involves MFA trust:
 
 - **Without MFA trust** — When a guest signs in, your tenant's conditional access policy requires MFA. The guest must complete MFA *in your tenant*, even if they already completed MFA in their home tenant. This means the guest may be prompted for MFA twice — once at home and once in your tenant.
 - **With MFA trust enabled** — If you configure the partner's cross-tenant access policy to trust their MFA claims, the guest's home-tenant MFA satisfies your conditional access requirement. The guest experiences seamless access without a second MFA prompt.
 
 This distinction has a real impact on user experience. Trusted partners get frictionless access while maintaining your security requirements. Untrusted partners face additional prompts that can cause confusion and support tickets. When deciding whether to enable MFA trust for a partner, consider the partner's security posture and whether their MFA implementation meets your standards.
 
-For details on configuring cross-tenant trust, see [Cross-Tenant Policies](/docs/concepts/01-cross-tenant-policies).
+For details on configuring cross-tenant trust, see [Cross-Tenant Policies](/docs/concepts/cross-tenant-policies).
 
 ## Why Policies Are Read-Only in Partner365
 

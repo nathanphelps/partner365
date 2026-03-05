@@ -4,7 +4,7 @@ title: Assignments
 
 # Entitlement Assignments
 
-Assignments connect [guest users](/docs/glossary/01-glossary) to [access packages](/docs/users/entitlements/01-access-packages). Each assignment represents one guest's access to one package and tracks the full lifecycle from initial request through approval, active access, and eventual expiry or revocation. All assignment transitions are recorded in the [activity log](/docs/glossary/01-glossary) for audit purposes.
+Assignments connect [guest users](/docs/glossary/glossary) to [access packages](/docs/entitlements/access-packages). Each assignment represents one guest's access to one package and tracks the full lifecycle from initial request through approval, active access, and eventual expiry or revocation. All assignment transitions are recorded in the [activity log](/docs/glossary/glossary) for audit purposes.
 
 ## Assignment Lifecycle
 
@@ -34,7 +34,7 @@ On the access package detail page, the **Assignments** table shows all current a
 - **Active assignments** display a **Revoke** button. Revoking an assignment immediately removes the guest from all resources in the package. This action cannot be undone — to restore access, you would need to create a new assignment.
 - **Expired, Denied, and Revoked assignments** are displayed for audit purposes. They cannot be modified but provide a complete history of who had access and when.
 
-Every approval, denial, and revocation is logged in the [activity log](/docs/glossary/01-glossary) with the acting user's identity, a timestamp, and the justification note if one was provided.
+Every approval, denial, and revocation is logged in the [activity log](/docs/glossary/glossary) with the acting user's identity, a timestamp, and the justification note if one was provided.
 
 ## Approval Workflow
 
@@ -51,7 +51,7 @@ When you approve or deny, add a justification note explaining your decision. Thi
 
 ## Requesting Access
 
-Operators and Admins can request an assignment on behalf of a [guest user](/docs/glossary/01-glossary). On the entitlement detail page, click **Request Assignment** to begin.
+Operators and Admins can request an assignment on behalf of a [guest user](/docs/glossary/glossary). On the entitlement detail page, click **Request Assignment** to begin.
 
 1. **Select the guest** — Search for a guest user from the partner organization associated with the package. Only guests from the correct partner are shown.
 2. **Add a justification** (optional) — Provide context for why this guest needs the access. This is especially helpful when the package requires approval, as the reviewer will see this note.
@@ -61,6 +61,6 @@ Operators and Admins can request an assignment on behalf of a [guest user](/docs
 
 ## Related Pages
 
-- [Access Packages](/docs/users/entitlements/01-access-packages) — Creating and managing packages
-- [Best Practices](/docs/users/entitlements/03-best-practices) — Design guidance for durations and approvals
-- [Troubleshooting](/docs/users/entitlements/04-troubleshooting) — Common issues and solutions
+- [Access Packages](/docs/entitlements/access-packages) — Creating and managing packages
+- [Best Practices](/docs/entitlements/best-practices) — Design guidance for durations and approvals
+- [Troubleshooting](/docs/entitlements/troubleshooting) — Common issues and solutions

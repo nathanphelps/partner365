@@ -12,7 +12,7 @@ Quarterly reviews are a strong default for most organizations. This cadence alig
 
 However, not all partners warrant the same frequency:
 
-- **Monthly** — Use for high-risk partners: those with low [trust scores](/docs/glossary/01-glossary), a large number of [guest users](/docs/glossary/01-glossary), or access to sensitive resources such as financial data or intellectual property. Monthly reviews ensure that changes in the collaboration relationship are reflected quickly in access decisions.
+- **Monthly** — Use for high-risk partners: those with low [trust scores](/docs/glossary/glossary), a large number of [guest users](/docs/glossary/glossary), or access to sensitive resources such as financial data or intellectual property. Monthly reviews ensure that changes in the collaboration relationship are reflected quickly in access decisions.
 - **Quarterly** — The standard cadence for partners with moderate risk profiles and stable guest populations. Most partners fall into this category.
 - **One-time** — Use for situational reviews: post-project cleanup, investigating a specific partner after a security incident, or evaluating guests before a compliance audit.
 
@@ -39,7 +39,7 @@ Consistent decision criteria across reviewers produce a more defensible audit tr
 
 **Approve** when all of the following are true:
 - The guest has signed in within the last 90 days, indicating active use.
-- The collaboration with the [partner organization](/docs/glossary/01-glossary) is ongoing.
+- The collaboration with the [partner organization](/docs/glossary/glossary) is ongoing.
 - The guest's access level is appropriate for their current role in the collaboration.
 
 **Deny** when any of the following are true:
@@ -68,4 +68,4 @@ Apply remediations promptly after a review reaches completion. Every day between
 
 Aim to apply remediations within 24-48 hours of review completion. If your organization requires an approval step before guest removal, build that into the review timeline by setting due dates earlier to allow time for the approval-then-remediation sequence.
 
-> **Good to know:** After applying remediations, spot-check a few removed guests in the [activity log](/docs/glossary/01-glossary) to confirm the removals completed successfully. If any failed, address them individually from the guest detail page. See [Troubleshooting](05-troubleshooting.md) for common remediation failure causes.
+> **Good to know:** After applying remediations, spot-check a few removed guests in the [activity log](/docs/glossary/glossary) to confirm the removals completed successfully. If any failed, address them individually from the guest detail page. See [Troubleshooting](05-troubleshooting.md) for common remediation failure causes.

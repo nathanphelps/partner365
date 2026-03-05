@@ -4,7 +4,7 @@ title: Guest Details
 
 # Guest Details
 
-The guest detail page provides a comprehensive view of a single [B2B guest user](/docs/glossary/01-glossary), including their profile information, invitation status, and — critically — the full scope of what they can access in your tenant. This is the page to visit when you need to understand exactly what a guest can do in your organization before making changes to their account.
+The guest detail page provides a comprehensive view of a single [B2B guest user](/docs/glossary/glossary), including their profile information, invitation status, and — critically — the full scope of what they can access in your tenant. This is the page to visit when you need to understand exactly what a guest can do in your organization before making changes to their account.
 
 ## Overview
 
@@ -12,9 +12,9 @@ The top section of the guest detail page displays the guest's core profile and s
 
 - **Display Name** — The guest's name as it appears across your Microsoft 365 services. This is set during invitation and may be updated by the guest through their home tenant profile.
 - **Email** — The guest's external email address at their home organization. This is their primary identifier and the address that received the original invitation.
-- **User Principal Name (UPN)** — The technical identifier for the guest in your [Entra ID](/docs/glossary/01-glossary) directory. Guest UPNs follow the `#EXT#` format, which looks like `jane.doe_contoso.com#EXT#@yourtenant.onmicrosoft.com`. The `#EXT#` suffix indicates this is an external identity, not a member of your tenant. The part before `#EXT#` is derived from the guest's email address with the `@` replaced by an underscore. You will encounter this format in audit logs, PowerShell queries, and conditional access policy evaluations.
+- **User Principal Name (UPN)** — The technical identifier for the guest in your [Entra ID](/docs/glossary/glossary) directory. Guest UPNs follow the `#EXT#` format, which looks like `jane.doe_contoso.com#EXT#@yourtenant.onmicrosoft.com`. The `#EXT#` suffix indicates this is an external identity, not a member of your tenant. The part before `#EXT#` is derived from the guest's email address with the `@` replaced by an underscore. You will encounter this format in audit logs, PowerShell queries, and conditional access policy evaluations.
 - **Invitation Status** — The current state of the guest's invitation: **Pending** (awaiting redemption), **Accepted** (active account), or **Failed** (error during invitation). The date of the most recent status change is displayed alongside the status badge, so you can see exactly when the guest accepted or when a failure occurred.
-- **Partner Organization** — The [partner organization](/docs/glossary/01-glossary) this guest is associated with. Click the link to navigate to the partner detail page, where you can view cross-tenant policies, other guests from the same organization, and the overall collaboration relationship.
+- **Partner Organization** — The [partner organization](/docs/glossary/glossary) this guest is associated with. Click the link to navigate to the partner detail page, where you can view cross-tenant policies, other guests from the same organization, and the overall collaboration relationship.
 - **Last Sign-In** — The most recent time the guest authenticated to your tenant. If the guest has not signed in recently, a staleness indicator appears to flag the account for review. An accepted guest with no sign-in activity is a potential security concern and should be investigated — they may no longer need access.
 - **Created Date** — When the original invitation was sent. Combined with Last Sign-In, this gives you a clear picture of the guest's account age and activity level.
 
@@ -26,7 +26,7 @@ Below the overview section, five tabs provide detailed information about what th
 
 Displays the Microsoft 365 groups and security groups the guest belongs to in your tenant. Group memberships are the primary mechanism that determines what resources a guest can access — a guest added to a SharePoint-connected group gains access to that group's SharePoint site, Planner plans, shared mailbox, and other associated resources.
 
-Review group memberships carefully. If a guest belongs to many groups, they may have accumulated more access than originally intended, especially if groups were added over time for different projects. Periodic review of group memberships is essential for maintaining the [principle of least privilege](/docs/users/guests/04-best-practices).
+Review group memberships carefully. If a guest belongs to many groups, they may have accumulated more access than originally intended, especially if groups were added over time for different projects. Periodic review of group memberships is essential for maintaining the [principle of least privilege](/docs/guests/best-practices).
 
 ### Applications
 
@@ -66,7 +66,7 @@ Because removal is permanent and far-reaching, confirm that the guest's access i
 
 ## Related Pages
 
-- [Guest List](/docs/users/guests/01-guest-list) — View and manage all guest users
-- [Inviting Guests](/docs/users/guests/02-inviting-guests) — How to add new guest users
-- [Best Practices](/docs/users/guests/04-best-practices) — Recommendations for guest lifecycle management
-- [Troubleshooting](/docs/users/guests/05-troubleshooting) — Common issues and solutions
+- [Guest List](/docs/guests/guest-list) — View and manage all guest users
+- [Inviting Guests](/docs/guests/inviting-guests) — How to add new guest users
+- [Best Practices](/docs/guests/best-practices) — Recommendations for guest lifecycle management
+- [Troubleshooting](/docs/guests/troubleshooting) — Common issues and solutions

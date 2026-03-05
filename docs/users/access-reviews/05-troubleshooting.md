@@ -8,11 +8,11 @@ This page covers common issues you may encounter when creating, conducting, or r
 
 ## No Instances Generated
 
-After creating a review, you expect to see one instance per [guest user](/docs/glossary/01-glossary) in scope. If the review shows zero instances, the most likely causes are:
+After creating a review, you expect to see one instance per [guest user](/docs/glossary/glossary) in scope. If the review shows zero instances, the most likely causes are:
 
-- **The scoped partner has no guests.** Navigate to the **Partners** page and check the guest count for the selected [partner organization](/docs/glossary/01-glossary). If the count is zero, there are no guests to review. This can happen if guests were removed between when you planned the review and when you created it.
+- **The scoped partner has no guests.** Navigate to the **Partners** page and check the guest count for the selected [partner organization](/docs/glossary/glossary). If the count is zero, there are no guests to review. This can happen if guests were removed between when you planned the review and when you created it.
 - **Guests were removed externally.** If guests were deleted directly in Microsoft Entra ID (outside of Partner365), the local database may still show a guest count, but instance generation uses live data. Trigger a guest sync from **Admin > Sync** to reconcile the local database, then create a new review.
-- **A sync or generation error occurred.** Check the [activity log](/docs/glossary/01-glossary) for error entries around the time the review was created. Errors during instance generation are logged with details about what failed. If you find an error, address the underlying cause and create a new review.
+- **A sync or generation error occurred.** Check the [activity log](/docs/glossary/glossary) for error entries around the time the review was created. Errors during instance generation are logged with details about what failed. If you find an error, address the underlying cause and create a new review.
 
 > **Good to know:** Always verify guest counts on the Partners page before creating a review. This avoids the confusion of empty reviews and ensures your time is spent on reviews that will produce actionable decisions.
 
@@ -40,8 +40,8 @@ If the number of instances in a review does not match what you expected based on
 
 If the **Create Review** button is disabled or you receive an error when attempting to create a review, check the following:
 
-- **Role requirements.** Only users with the **Operator** or **Admin** [role](/docs/glossary/01-glossary) can create reviews. If you have the Viewer role, ask an administrator to upgrade your access.
+- **Role requirements.** Only users with the **Operator** or **Admin** [role](/docs/glossary/glossary) can create reviews. If you have the Viewer role, ask an administrator to upgrade your access.
 - **No partners with guests.** At least one partner organization must exist in Partner365 with associated guest users. If your tenant has no partners or no guests, there is nothing to review. Add partners and invite guests first, or wait for the next sync cycle to import them.
 - **Validation errors.** Ensure all required fields are filled in: name, review type, due date, and reviewer. If you selected a partner-scoped review, a scope partner must also be selected. Check for validation messages next to each field.
 
-If none of these apply and you are still unable to create a review, check the [activity log](/docs/glossary/01-glossary) for error details and contact your system administrator.
+If none of these apply and you are still unable to create a review, check the [activity log](/docs/glossary/glossary) for error details and contact your system administrator.

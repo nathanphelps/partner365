@@ -5,7 +5,7 @@ admin: true
 
 # Graph API Settings
 
-The Admin > Graph page is where administrators view and manage the Microsoft [Graph API](/docs/glossary/01-glossary) connection that Partner365 relies on for all interactions with your Entra ID tenant.
+The Admin > Graph page is where administrators view and manage the Microsoft [Graph API](/docs/glossary/glossary) connection that Partner365 relies on for all interactions with your Entra ID tenant.
 Every operation — reading partner data, inviting guests, modifying cross-tenant policies — flows through this connection.
 
 ## Connection Configuration
@@ -61,9 +61,9 @@ Once granted, it remains in effect until explicitly revoked in the Entra admin c
 The permissions section lists the Graph API permissions currently granted to Partner365.
 Each permission enables specific functionality:
 
-- **`Policy.ReadWrite.CrossTenantAccess`** — Create, read, update, and delete [cross-tenant access policies](/docs/glossary/01-glossary).
+- **`Policy.ReadWrite.CrossTenantAccess`** — Create, read, update, and delete [cross-tenant access policies](/docs/glossary/glossary).
   Required for all partner policy management.
-- **`User.Invite.All`** — Send [guest](/docs/glossary/01-glossary) invitations to external users.
+- **`User.Invite.All`** — Send [guest](/docs/glossary/glossary) invitations to external users.
   Required for the guest invitation workflow.
 - **`User.ReadWrite.All`** — Read and update user profiles, including guest accounts.
   Required for guest lifecycle management and profile synchronization.

@@ -5,7 +5,7 @@ admin: true
 
 # Partner Templates
 
-Templates let administrators define reusable [cross-tenant access policy](/docs/glossary/01-glossary) configurations that can be applied when onboarding new [partner](/docs/glossary/01-glossary) organizations.
+Templates let administrators define reusable [cross-tenant access policy](/docs/glossary/glossary) configurations that can be applied when onboarding new [partner](/docs/glossary/glossary) organizations.
 Instead of manually configuring each policy toggle for every new partner, you select a template that represents the appropriate access pattern and the policy is configured automatically.
 
 ## Why Templates
@@ -40,7 +40,7 @@ The creation form includes:
 - **Description** — An explanation of when to use this template and what type of partner relationship it represents.
   Operators rely on this to choose the right template, so be specific.
 - **Policy Toggles** — Six toggles that mirror the settings available on the partner detail page:
-  - **Inbound B2B collaboration** — Whether users from the partner organization can be invited as [guests](/docs/glossary/01-glossary) into your tenant.
+  - **Inbound B2B collaboration** — Whether users from the partner organization can be invited as [guests](/docs/glossary/glossary) into your tenant.
   - **Outbound B2B collaboration** — Whether your users can be invited as guests into the partner's tenant.
   - **Inbound B2B direct connect** — Whether the partner's users can access your shared channels in Teams via direct connect (without becoming guests).
   - **Outbound B2B direct connect** — Whether your users can access the partner's shared channels via direct connect.

@@ -10,11 +10,11 @@ For each issue, the diagnostic steps are listed in order of likelihood — start
 
 ## Sync Failures
 
-When background sync fails, check the sync history table on the [Sync page](/docs/users/admin/02-sync-configuration) for error messages.
+When background sync fails, check the sync history table on the [Sync page](/docs/admin/sync-configuration) for error messages.
 Common causes:
 
 - **Graph API connection lost** — The most frequent cause.
-  Go to Admin > [Graph](/docs/users/admin/03-graph-settings) and click Test Connection.
+  Go to Admin > [Graph](/docs/admin/graph-settings) and click Test Connection.
   If the test fails, the sync cannot reach the Graph API.
   Check the connection configuration and resolve any authentication errors before retrying.
 - **Client secret expired** — Client secrets have a finite lifetime set in Azure.
@@ -27,14 +27,14 @@ Common causes:
   These typically self-resolve.
   If failures persist, check network connectivity between Partner365 and `graph.microsoft.com`.
 
-The [activity log](/docs/users/activity/01-activity-log) may contain additional error details for failed sync operations.
+The [activity log](/docs/activity/activity-log) may contain additional error details for failed sync operations.
 Filter by Action Type "Sync" to find relevant entries.
 
 ## Graph API Permission Issues
 
 If specific operations fail with "Insufficient privileges" or "Authorization_RequestDenied" errors:
 
-1. Go to Admin > [Graph](/docs/users/admin/03-graph-settings) and review the Permissions section.
+1. Go to Admin > [Graph](/docs/admin/graph-settings) and review the Permissions section.
 2. Verify all required permissions are listed: `Policy.ReadWrite.CrossTenantAccess`, `User.Invite.All`, `User.ReadWrite.All`, `Directory.Read.All`, `Policy.Read.ConditionalAccess`.
 3. If any are missing, add them to the app registration in the Azure portal under API Permissions.
 4. Return to the Graph page and click **Grant Admin Consent**.
@@ -42,14 +42,14 @@ If specific operations fail with "Insufficient privileges" or "Authorization_Req
 5. After granting consent, click **Test Connection** to verify.
 
 Specific permission gaps cause specific feature failures.
-For example, if [guest](/docs/glossary/01-glossary) invitations fail but everything else works, `User.Invite.All` is likely missing.
-If [cross-tenant access policy](/docs/glossary/01-glossary) changes fail, check `Policy.ReadWrite.CrossTenantAccess`.
+For example, if [guest](/docs/glossary/glossary) invitations fail but everything else works, `User.Invite.All` is likely missing.
+If [cross-tenant access policy](/docs/glossary/glossary) changes fail, check `Policy.ReadWrite.CrossTenantAccess`.
 
 ## Users Cannot Access the App
 
 Walk through this diagnostic flow:
 
-1. **Is the user registered?** Check the [Users page](/docs/users/admin/01-user-management).
+1. **Is the user registered?** Check the [Users page](/docs/admin/user-management).
    If they do not appear in the list, they have not registered or signed in via SSO yet.
    Ask them to visit the login page.
 2. **Is the user approved?** Users with Pending status see a "Pending Approval" page and cannot access any application functionality.
@@ -68,10 +68,10 @@ Walk through this diagnostic flow:
 
 If the data shown in Partner365 does not match what you see in the Microsoft Entra admin center:
 
-1. Go to the [Sync page](/docs/users/admin/02-sync-configuration) and click **Sync Now** for the relevant sync type (Partner Sync or Guest Sync).
+1. Go to the [Sync page](/docs/admin/sync-configuration) and click **Sync Now** for the relevant sync type (Partner Sync or Guest Sync).
 2. Wait for the sync to complete and check whether the data is now current.
 3. If sync succeeds but the data is still incorrect, verify that the app registration has read permissions for the relevant data type.
-   For example, conditional access data requires `Policy.Read.ConditionalAccess`, and [collaboration settings](/docs/users/admin/04-collaboration-settings) require `Policy.Read.All`.
+   For example, conditional access data requires `Policy.Read.ConditionalAccess`, and [collaboration settings](/docs/admin/collaboration-settings) require `Policy.Read.All`.
 4. Some data types in Entra ID have propagation delays.
    If a change was made very recently (within the last few minutes), wait a few minutes and sync again.
 
@@ -90,7 +90,7 @@ If you observe frequent errors in the sync history or activity log:
 
 ## SSO Login Failures
 
-If users cannot sign in via [SSO](/docs/glossary/01-glossary):
+If users cannot sign in via [SSO](/docs/glossary/glossary):
 
 - **Redirect URI mismatch** — The redirect URI configured in the Entra app registration must match exactly what Partner365 sends during the OAuth flow, including the scheme (`https://`), domain, port (if non-standard), and path.
   Even a trailing slash difference will cause the login to fail.

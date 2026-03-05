@@ -1,3 +1,8 @@
+---
+title: SSO Settings
+admin: true
+---
+
 # SSO Settings
 
 The SSO settings page lets administrators enable Entra ID (Azure AD) single sign-on for the application.

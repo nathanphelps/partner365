@@ -12,7 +12,7 @@ Sync ensures that changes made outside Partner365 — whether in the Entra admin
 
 Partner365 uses a write-through plus background reconciliation pattern for data management:
 
-1. **Write-through** — When you make a change in Partner365 (add a partner, invite a guest, modify a policy), the application writes to the [Graph API](/docs/glossary/01-glossary) immediately and updates the local database in the same operation.
+1. **Write-through** — When you make a change in Partner365 (add a partner, invite a guest, modify a policy), the application writes to the [Graph API](/docs/glossary/glossary) immediately and updates the local database in the same operation.
    You see the result right away.
 2. **Background reconciliation** — Sync jobs run on a configurable interval to pull the latest state from Entra ID and update the local database.
    This catches any changes made outside Partner365 and corrects any drift between the local database and the authoritative source (Entra ID).
@@ -27,10 +27,10 @@ This dual approach means your actions are reflected instantly while the system a
 
 Two distinct sync jobs run independently:
 
-- **Partner Sync** — Updates partner organization details, [cross-tenant access policies](/docs/glossary/01-glossary), trust scores, conditional access policy coverage, sensitivity labels, and SharePoint site associations.
+- **Partner Sync** — Updates partner organization details, [cross-tenant access policies](/docs/glossary/glossary), trust scores, conditional access policy coverage, sensitivity labels, and SharePoint site associations.
   This ensures the partner list and policy configurations shown in Partner365 match what is actually configured in Entra ID.
-- **Guest Sync** — Updates [guest](/docs/glossary/01-glossary) user profiles, sign-in activity timestamps, and invitation status.
-  This keeps the guest list current and ensures activity metrics (used by [compliance reports](/docs/users/reports/01-compliance-reports) and access reviews) reflect the latest data from Entra ID.
+- **Guest Sync** — Updates [guest](/docs/glossary/glossary) user profiles, sign-in activity timestamps, and invitation status.
+  This keeps the guest list current and ensures activity metrics (used by [compliance reports](/docs/reports/compliance-reports) and access reviews) reflect the latest data from Entra ID.
 
 Each sync type runs independently and can be configured with its own interval.
 

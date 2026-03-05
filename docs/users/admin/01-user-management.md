@@ -31,7 +31,7 @@ The three roles provide progressively more capability:
 - **Viewer** — Read-only access to all data.
   Suitable for team members who need visibility into external collaboration status but should not make changes.
   This is the recommended default for new users.
-- **Operator** — Can manage [partners](/docs/glossary/01-glossary), invite and remove [guests](/docs/glossary/01-glossary), run access reviews, and perform day-to-day management tasks.
+- **Operator** — Can manage [partners](/docs/glossary/glossary), invite and remove [guests](/docs/glossary/glossary), run access reviews, and perform day-to-day management tasks.
   Assign this to team members responsible for ongoing partner and guest lifecycle management.
 - **Admin** — Full access including system configuration, user management, template management, and all operator capabilities.
   Reserve this for people who need to configure Partner365 itself.
@@ -42,7 +42,7 @@ Follow the principle of least privilege: start users at Viewer and elevate only 
 
 ## Approving Users
 
-New users who register directly or sign in via [SSO](/docs/glossary/01-glossary) (when auto-approve is disabled) appear in the user list with a Pending status.
+New users who register directly or sign in via [SSO](/docs/glossary/glossary) (when auto-approve is disabled) appear in the user list with a Pending status.
 These users see a "Pending Approval" page when they try to access the application — they cannot view or interact with any Partner365 data until approved.
 
 Before approving a user:
@@ -64,7 +64,7 @@ This action:
 - Prevents the user from signing in to Partner365 going forward.
 - **Does not** affect their Entra ID account, email, Microsoft 365 licenses, or any other Microsoft services.
   Removal is scoped entirely to the Partner365 application.
-- Is recorded in the [activity log](/docs/users/activity/01-activity-log) with the admin who performed the removal and the timestamp.
+- Is recorded in the [activity log](/docs/activity/activity-log) with the admin who performed the removal and the timestamp.
 
 Use removal when someone leaves the team, changes roles within the organization, or no longer needs access to external collaboration management.
 If the person needs access again later, they would need to register or sign in via SSO and be re-approved.

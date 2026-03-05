@@ -4,21 +4,21 @@ title: Inviting Guests
 
 # Inviting Guests
 
-Inviting a [B2B guest user](/docs/glossary/01-glossary) creates an external identity in your [Entra ID](/docs/glossary/01-glossary) tenant and sends the person an email with a redemption link. Once the guest accepts, they can access resources you have explicitly shared with them — nothing more.
+Inviting a [B2B guest user](/docs/glossary/glossary) creates an external identity in your [Entra ID](/docs/glossary/glossary) tenant and sends the person an email with a redemption link. Once the guest accepts, they can access resources you have explicitly shared with them — nothing more.
 
 ## Prerequisites
 
 Before you can invite a guest, the following conditions must be met:
 
-- **Partner organization exists** — A [partner organization](/docs/glossary/01-glossary) must already be configured in Partner365 for the guest's company. If the partner does not exist yet, create it first from the [Partners page](/docs/partners/01-partner-list). The guest will be associated with this partner for tracking, policy enforcement, and reporting purposes.
+- **Partner organization exists** — A [partner organization](/docs/glossary/glossary) must already be configured in Partner365 for the guest's company. If the partner does not exist yet, create it first from the [Partners page](/docs/partners/viewing-partners). The guest will be associated with this partner for tracking, policy enforcement, and reporting purposes.
 - **Graph API connection** — The Microsoft Graph API must be connected and authenticated. If the connection is down, invitations cannot be sent. Check the Admin page if you encounter connectivity errors.
-- **Sufficient permissions** — Your account must have the **Operator** or **Admin** role. Viewers can see the guest list but cannot send invitations. See the [glossary](/docs/glossary/01-glossary) for role definitions.
+- **Sufficient permissions** — Your account must have the **Operator** or **Admin** role. Viewers can see the guest list but cannot send invitations. See the [glossary](/docs/glossary/glossary) for role definitions.
 
 ## Steps
 
 1. **Navigate to Guests and click "Invite Guest"** — This opens the invitation form. You can also initiate an invitation from a partner's detail page, which pre-selects the partner organization for you.
 
-2. **Select the Partner Organization** — Choose the partner this guest belongs to from the dropdown. The guest will be linked to this partner for the duration of their account lifecycle. This association determines which [cross-tenant access policies](/docs/glossary/01-glossary) apply to the guest and ensures the guest appears in partner-scoped reports and access reviews.
+2. **Select the Partner Organization** — Choose the partner this guest belongs to from the dropdown. The guest will be linked to this partner for the duration of their account lifecycle. This association determines which [cross-tenant access policies](/docs/glossary/glossary) apply to the guest and ensures the guest appears in partner-scoped reports and access reviews.
 
 3. **Enter the Email Address** — This must be the guest's external work email address at their home organization (for example, `jane.doe@contoso.com`). Do not use an internal address from your own tenant or a consumer email like Gmail or Outlook.com, as these will either fail or create a guest account that cannot be governed by cross-tenant policies.
 
@@ -40,12 +40,12 @@ Every guest invitation progresses through a defined set of states:
 
 - **Pending** — The invitation has been sent but the guest has not yet clicked the redemption link. This is the initial state for all new invitations. Invitations do not expire by default, but a guest who remains pending for an extended period may need a reminder.
 - **Accepted** — The guest successfully redeemed the invitation and their account is active in your tenant. They can now access resources based on the groups, applications, and sites you have assigned to them.
-- **Failed** — An error occurred during the invitation process. Common causes include invalid email addresses, cross-tenant policy blocks, and collaboration domain restrictions. Check the error details on the [guest detail page](/docs/users/guests/03-guest-details) for specifics. See also the [troubleshooting guide](/docs/users/guests/05-troubleshooting).
+- **Failed** — An error occurred during the invitation process. Common causes include invalid email addresses, cross-tenant policy blocks, and collaboration domain restrictions. Check the error details on the [guest detail page](/docs/guests/guest-details) for specifics. See also the [troubleshooting guide](/docs/guests/troubleshooting).
 
-Invitations can be resent from the guest detail page or via [bulk actions](/docs/users/guests/01-guest-list) on the guest list. Resending generates a new redemption link and sends a fresh email to the guest.
+Invitations can be resent from the guest detail page or via [bulk actions](/docs/guests/guest-list) on the guest list. Resending generates a new redemption link and sends a fresh email to the guest.
 
 ## Related Pages
 
-- [Guest List](/docs/users/guests/01-guest-list) — View and manage all guest users
-- [Guest Details](/docs/users/guests/03-guest-details) — Detailed view of individual guests
-- [Troubleshooting](/docs/users/guests/05-troubleshooting) — Common invitation issues and solutions
+- [Guest List](/docs/guests/guest-list) — View and manage all guest users
+- [Guest Details](/docs/guests/guest-details) — Detailed view of individual guests
+- [Troubleshooting](/docs/guests/troubleshooting) — Common invitation issues and solutions

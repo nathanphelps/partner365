@@ -45,7 +45,7 @@ This creates four distinct policy areas to configure for each partner:
 3. **Inbound B2B Direct Connect** -- Which partner users can access your shared channels
 4. **Outbound B2B Direct Connect** -- Which of your users can access the partner's shared channels
 
-> **Good to know:** Most organizations rely primarily on B2B collaboration. B2B direct connect is newer and mainly relevant if you use Teams shared channels extensively. If you are unsure which to configure, start with B2B collaboration settings. See [B2B Collaboration](/docs/concepts/02-b2b-collaboration) for a deeper discussion.
+> **Good to know:** Most organizations rely primarily on B2B collaboration. B2B direct connect is newer and mainly relevant if you use Teams shared channels extensively. If you are unsure which to configure, start with B2B collaboration settings. See [B2B Collaboration](/docs/concepts/b2b-collaboration) for a deeper discussion.
 
 ## Policy Composition
 
@@ -61,7 +61,7 @@ For each policy area (inbound collaboration, outbound collaboration, etc.), you 
 - **Block all** -- No access is granted
 - **Target specific** -- Only specified users, groups, or applications are permitted
 
-> **Good to know:** If you are unsure, start with the default policy and only create partner-specific overrides when needed. This keeps your configuration manageable and avoids policy sprawl. You can review partner-specific settings on the [Partner Details](/docs/partners/03-partner-details) page.
+> **Good to know:** If you are unsure, start with the default policy and only create partner-specific overrides when needed. This keeps your configuration manageable and avoids policy sprawl. You can review partner-specific settings on the [Partner Details](/docs/partners/partner-details) page.
 
 ## Trust Settings
 
@@ -74,7 +74,7 @@ Trust settings determine whether your tenant accepts security claims from the pa
 When to enable these settings depends on your relationship with the partner:
 
 - **Trusted subsidiaries or close partners** -- Enable both. These organizations likely have security standards comparable to yours.
-- **Unknown vendors or new partners** -- Leave trust settings disabled until you have evaluated their security posture. See [Trust Score](/docs/concepts/03-trust-score) for how Partner365 helps you assess partner trustworthiness.
+- **Unknown vendors or new partners** -- Leave trust settings disabled until you have evaluated their security posture. See [Trust Score](/docs/concepts/trust-score) for how Partner365 helps you assess partner trustworthiness.
 
 > **Good to know:** Trust settings only affect how conditional access evaluates the partner's claims. They do not grant any additional access on their own. You still need the appropriate inbound collaboration or direct connect settings in place.
 
@@ -95,7 +95,7 @@ Partner365 manages these settings via the Microsoft Graph API, so you do not nee
 
 ## Further Reading
 
-- [B2B Collaboration](/docs/concepts/02-b2b-collaboration) -- Guest account lifecycle and invitation flow
-- [Trust Score](/docs/concepts/03-trust-score) -- How Partner365 evaluates partner security posture
-- [Partner Details](/docs/partners/03-partner-details) -- Configuring policies for a specific partner
-- [Glossary](/docs/glossary/01-glossary) -- Definitions of key terms used throughout this documentation
+- [B2B Collaboration](/docs/concepts/b2b-collaboration) -- Guest account lifecycle and invitation flow
+- [Trust Score](/docs/concepts/trust-score) -- How Partner365 evaluates partner security posture
+- [Partner Details](/docs/partners/partner-details) -- Configuring policies for a specific partner
+- [Glossary](/docs/glossary/glossary) -- Definitions of key terms used throughout this documentation

@@ -8,9 +8,9 @@ The partner detail page is the central hub for managing a specific external orga
 
 ## Cross-Tenant Access Policies
 
-The policy section displays the six core [cross-tenant access policy](/docs/concepts/01-cross-tenant-policies) toggles that govern how your tenant interacts with this partner. Each toggle can be set to allow all, block all, or target specific users, groups, or applications.
+The policy section displays the six core [cross-tenant access policy](/docs/concepts/cross-tenant-policies) toggles that govern how your tenant interacts with this partner. Each toggle can be set to allow all, block all, or target specific users, groups, or applications.
 
-- **Inbound B2B Collaboration** — Controls which users from the partner organization can be invited as [guest users](/docs/glossary/01-glossary) in your tenant. Enable this for partners you actively collaborate with. Disable or restrict it if you want to block guest invitations from this organization entirely.
+- **Inbound B2B Collaboration** — Controls which users from the partner organization can be invited as [guest users](/docs/glossary/glossary) in your tenant. Enable this for partners you actively collaborate with. Disable or restrict it if you want to block guest invitations from this organization entirely.
 
 - **Outbound B2B Collaboration** — Controls which of your users can accept guest invitations to the partner's tenant. Enable this when your staff need to access resources in the partner's environment. Restrict it to specific groups if only certain teams collaborate externally.
 
@@ -18,7 +18,7 @@ The policy section displays the six core [cross-tenant access policy](/docs/conc
 
 - **Outbound B2B Direct Connect** — Allows your users to participate in the partner's Teams shared channels. Similar considerations as inbound — enable when your teams need shared-channel access to the partner's environment.
 
-- **MFA Trust** — When enabled, your tenant accepts [multi-factor authentication](/docs/glossary/01-glossary) claims from the partner's tenant. This means partner users who have already completed MFA in their home tenant are not prompted again when accessing your resources. Enable this for partners with mature MFA policies to reduce friction. Disable it if you are unsure about the partner's MFA enforcement.
+- **MFA Trust** — When enabled, your tenant accepts [multi-factor authentication](/docs/glossary/glossary) claims from the partner's tenant. This means partner users who have already completed MFA in their home tenant are not prompted again when accessing your resources. Enable this for partners with mature MFA policies to reduce friction. Disable it if you are unsure about the partner's MFA enforcement.
 
 - **Device Compliance Trust** — When enabled, your tenant trusts the partner's Intune device compliance status. Partner users on compliant devices can satisfy your conditional access policies without re-evaluation. Enable this for partners with managed device fleets (typically subsidiaries or closely integrated vendors).
 
@@ -37,14 +37,14 @@ When to use tenant restrictions:
 This section lists all guest users in your tenant who are associated with this partner organization. For each guest, you can see their display name, email, invitation status, and last sign-in date.
 
 From here you can:
-- Click any guest to open their full [guest details](/docs/users/guests/02-guest-details) page.
+- Click any guest to open their full [guest details](/docs/guests/guest-details) page.
 - Click **Invite Guest** to send a new B2B invitation for a user from this partner's domain.
 
-> **Good to know:** If a guest has not signed in for an extended period, consider running an [access review](/docs/users/guests/04-access-reviews) to determine whether their access is still needed.
+> **Good to know:** If a guest has not signed in for an extended period, consider running an [access review](/docs/access-reviews/overview) to determine whether their access is still needed.
 
 ## Trust Score
 
-The [trust score](/docs/concepts/03-trust-score) section shows the partner's overall score (0-100) along with a detailed breakdown of each contributing factor. The breakdown table displays each factor, its status (pass or fail), and its weight in the overall calculation.
+The [trust score](/docs/concepts/trust-score) section shows the partner's overall score (0-100) along with a detailed breakdown of each contributing factor. The breakdown table displays each factor, its status (pass or fail), and its weight in the overall calculation.
 
 | Factor | What it measures | If failing |
 |---|---|---|
@@ -65,10 +65,10 @@ Beyond the main policy and trust score views, the partner detail page includes s
 
 ## Actions
 
-The actions available depend on your [role](/docs/glossary/01-glossary):
+The actions available depend on your [role](/docs/glossary/glossary):
 
 - **Edit category and notes** (Operator or Admin) — Update the partner's classification or add internal notes for your team.
 - **Update policies** (Operator or Admin) — Modify any of the six cross-tenant access policy toggles described above. Changes are pushed to Entra ID immediately.
 - **Delete partner** (Operator or Admin) — Removes the partner from Partner365 and deletes the corresponding `crossTenantAccessPolicy/partners` entry from Microsoft Entra ID. This action is irreversible. All explicit policy configuration for this partner is lost, and the tenant default policy will apply to any future interactions with their users.
 
-> **Good to know:** Before deleting a partner, review their guest user list. Deleting the partner does not automatically remove guest accounts — run an access review or manually remove guests if the collaboration has ended. See [Best Practices](/docs/users/partners/04-best-practices) for recommended cleanup steps.
+> **Good to know:** Before deleting a partner, review their guest user list. Deleting the partner does not automatically remove guest accounts — run an access review or manually remove guests if the collaboration has ended. See [Best Practices](/docs/partners/best-practices) for recommended cleanup steps.

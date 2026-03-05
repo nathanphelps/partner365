@@ -4,14 +4,14 @@ title: Creating Reviews
 
 # Creating Access Reviews
 
-Creating an access review is the first step in evaluating whether your [guest users](/docs/glossary/01-glossary) still need access to your tenant. A well-scoped review with clear parameters makes the reviewer's job easier and produces a more meaningful audit trail.
+Creating an access review is the first step in evaluating whether your [guest users](/docs/glossary/glossary) still need access to your tenant. A well-scoped review with clear parameters makes the reviewer's job easier and produces a more meaningful audit trail.
 
 ## Prerequisites
 
 Before creating a review, ensure the following:
 
-- Your account has the **Operator** or **Admin** [role](/docs/glossary/01-glossary). Viewers cannot create reviews.
-- At least one [partner organization](/docs/glossary/01-glossary) exists in Partner365 with associated guest users. A review with no guests in scope will generate zero instances, which is not useful.
+- Your account has the **Operator** or **Admin** [role](/docs/glossary/glossary). Viewers cannot create reviews.
+- At least one [partner organization](/docs/glossary/glossary) exists in Partner365 with associated guest users. A review with no guests in scope will generate zero instances, which is not useful.
 - Guest data is reasonably current. If you suspect guest information may be stale, trigger a sync from **Admin > Sync** before creating the review. This ensures you are working with the latest guest list from Microsoft Entra ID.
 
 ## Steps
@@ -31,7 +31,7 @@ Select the scope of the review:
 
 ### Scope Partner
 
-If you selected a partner-scoped review, choose which [partner organization](/docs/glossary/01-glossary) to review. Consider prioritizing partners based on risk factors: those with low [trust scores](/docs/glossary/01-glossary), a large number of guests, or access to sensitive resources should be reviewed first and more frequently.
+If you selected a partner-scoped review, choose which [partner organization](/docs/glossary/glossary) to review. Consider prioritizing partners based on risk factors: those with low [trust scores](/docs/glossary/glossary), a large number of guests, or access to sensitive resources should be reviewed first and more frequently.
 
 ### Recurrence
 

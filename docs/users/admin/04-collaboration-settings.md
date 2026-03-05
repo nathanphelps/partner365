@@ -6,8 +6,8 @@ admin: true
 # Collaboration Settings
 
 The Admin > Collaboration page displays your tenant's external collaboration settings as configured in Microsoft Entra ID.
-These are tenant-wide defaults that apply to all [partner](/docs/glossary/01-glossary) organizations and [guest](/docs/glossary/01-glossary) accounts as a baseline.
-Partner-specific [cross-tenant access policies](/docs/glossary/01-glossary) can override some of these defaults for individual partners, but the settings shown here represent the global floor.
+These are tenant-wide defaults that apply to all [partner](/docs/glossary/glossary) organizations and [guest](/docs/glossary/glossary) accounts as a baseline.
+Partner-specific [cross-tenant access policies](/docs/glossary/glossary) can override some of these defaults for individual partners, but the settings shown here represent the global floor.
 
 ## What These Settings Control
 
@@ -81,4 +81,4 @@ Changes must be made in the Microsoft Entra admin center (under External Identit
 Partner365 shows these settings so that administrators can see the full picture in one place — global collaboration settings alongside partner-specific cross-tenant policies.
 This makes it easier to understand why a particular invitation might be blocked or why guests have certain access levels, without needing to switch between Partner365 and the Entra admin center.
 
-The settings are refreshed during each [partner sync](/docs/users/admin/02-sync-configuration) cycle to stay current.
+The settings are refreshed during each [partner sync](/docs/admin/sync-configuration) cycle to stay current.

@@ -4,7 +4,7 @@ title: Troubleshooting
 
 # Troubleshooting Conditional Access
 
-This page covers common issues related to [conditional access policies](/docs/glossary/01-glossary) and guest users, along with steps to diagnose and resolve them using information available in Partner365.
+This page covers common issues related to [conditional access policies](/docs/glossary/glossary) and guest users, along with steps to diagnose and resolve them using information available in Partner365.
 
 ## Guest Blocked by Conditional Access
 

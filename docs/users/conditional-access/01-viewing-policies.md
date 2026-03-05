@@ -4,7 +4,7 @@ title: Viewing Policies
 
 # Viewing Conditional Access Policies
 
-The Conditional Access page gives you visibility into [conditional access policies](/docs/glossary/01-glossary) synced from Microsoft Entra ID that affect external and guest users in your tenant. This is a read-only view — Partner365 pulls these policies so you can understand what security controls apply to your partners without switching to the Entra admin center.
+The Conditional Access page gives you visibility into [conditional access policies](/docs/glossary/glossary) synced from Microsoft Entra ID that affect external and guest users in your tenant. This is a read-only view — Partner365 pulls these policies so you can understand what security controls apply to your partners without switching to the Entra admin center.
 
 ## Policy List
 

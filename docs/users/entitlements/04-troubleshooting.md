@@ -4,7 +4,7 @@ title: Troubleshooting
 
 # Entitlement Troubleshooting
 
-This page covers the most common issues you may encounter when working with [access packages](/docs/users/entitlements/01-access-packages) and [assignments](/docs/users/entitlements/02-assignments), along with steps to diagnose and resolve them.
+This page covers the most common issues you may encounter when working with [access packages](/docs/entitlements/access-packages) and [assignments](/docs/entitlements/assignments), along with steps to diagnose and resolve them.
 
 ## Assignment Stuck in Pending
 
@@ -29,8 +29,8 @@ This page covers the most common issues you may encounter when working with [acc
 
 **Resolution:**
 
-1. Check the [activity log](/docs/glossary/01-glossary) for the assignment's approval event. Look for any error messages associated with the provisioning step.
-2. Verify that the guest's [invitation](/docs/glossary/01-glossary) has been accepted. A guest in "Pending Acceptance" status cannot be added to most resources. Navigate to the guest's profile to check their invitation status.
+1. Check the [activity log](/docs/glossary/glossary) for the assignment's approval event. Look for any error messages associated with the provisioning step.
+2. Verify that the guest's [invitation](/docs/glossary/glossary) has been accepted. A guest in "Pending Acceptance" status cannot be added to most resources. Navigate to the guest's profile to check their invitation status.
 3. Confirm that the groups and SharePoint sites included in the package still exist in your tenant. If a resource was deleted or renamed after the package was created, provisioning will fail for that resource.
 4. If the activity log shows errors, try revoking the assignment and creating a new one. This re-triggers the provisioning process.
 5. If the issue persists, check the Microsoft Entra admin center directly to verify whether the guest was added to the group. The problem may be on the resource side (e.g., a conditional access policy blocking the guest).
@@ -44,7 +44,7 @@ This page covers the most common issues you may encounter when working with [acc
 **Resolution:**
 
 1. **Check the package's approval setting.** If the package does not require approval, assignments are auto-approved and skip the review queue entirely. Verify the package policy on its detail page.
-2. **Verify the reviewer's role.** Only users with the Operator or Admin [role](/docs/glossary/01-glossary) can see and act on pending approvals. Users with the Viewer role cannot approve requests and will not see the approval controls.
+2. **Verify the reviewer's role.** Only users with the Operator or Admin [role](/docs/glossary/glossary) can see and act on pending approvals. Users with the Viewer role cannot approve requests and will not see the approval controls.
 3. **Check whether the request was already handled.** Another Operator or Admin may have approved or denied the request. Look in the assignments table for recently approved or denied entries.
 4. **Confirm the request was submitted.** Ask the person who initiated the request to verify it was actually submitted. If the form submission failed (e.g., a network error), no request would have been created.
 
@@ -57,7 +57,7 @@ This page covers the most common issues you may encounter when working with [acc
 **Resolution:**
 
 1. Check that the **queue worker is running**. Navigate to **Admin > Sync** to see queue status. If the queue is stopped or backed up, expired assignments will not be processed until it catches up.
-2. If the queue is healthy, check the [activity log](/docs/glossary/01-glossary) for the expiry event. Look for error messages that indicate a failed Graph API call (e.g., the group no longer exists, or a transient API error occurred).
+2. If the queue is healthy, check the [activity log](/docs/glossary/glossary) for the expiry event. Look for error messages that indicate a failed Graph API call (e.g., the group no longer exists, or a transient API error occurred).
 3. As an immediate fix, **manually revoke** the assignment from the entitlement detail page. This triggers a fresh removal attempt through the queue.
 4. If manual revocation also fails, you may need to remove the guest from the specific groups or SharePoint sites directly through the Microsoft Entra admin center or SharePoint admin center.
 
@@ -65,6 +65,6 @@ This page covers the most common issues you may encounter when working with [acc
 
 ## Related Pages
 
-- [Access Packages](/docs/users/entitlements/01-access-packages) — Package configuration and creation
-- [Assignments](/docs/users/entitlements/02-assignments) — Assignment lifecycle and management
-- [Best Practices](/docs/users/entitlements/03-best-practices) — Design guidance to avoid common issues
+- [Access Packages](/docs/entitlements/access-packages) — Package configuration and creation
+- [Assignments](/docs/entitlements/assignments) — Assignment lifecycle and management
+- [Best Practices](/docs/entitlements/best-practices) — Design guidance to avoid common issues

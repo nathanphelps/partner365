@@ -69,6 +69,20 @@ class DocsController extends Controller
         ]);
     }
 
+    private const SECTION_ORDER = [
+        'getting-started',
+        'concepts',
+        'partners',
+        'guests',
+        'access-reviews',
+        'conditional-access',
+        'entitlements',
+        'reports',
+        'activity',
+        'admin',
+        'glossary',
+    ];
+
     private function buildSidebar(): array
     {
         $sections = [];
@@ -77,7 +91,10 @@ class DocsController extends Controller
             return [];
         }
 
-        $directories = collect(File::directories($this->docsPath))->sort()->values();
+        $order = array_flip(self::SECTION_ORDER);
+        $directories = collect(File::directories($this->docsPath))
+            ->sortBy(fn ($dir) => $order[basename($dir)] ?? 999)
+            ->values();
 
         foreach ($directories as $dir) {
             $dirName = basename($dir);

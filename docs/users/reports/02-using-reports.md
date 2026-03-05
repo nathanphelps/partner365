@@ -4,7 +4,7 @@ title: Using Reports
 
 # Using Reports
 
-The [compliance report](/docs/users/reports/01-compliance-reports) is most valuable when used as part of a regular workflow rather than only when an audit is imminent.
+The [compliance report](/docs/reports/compliance-reports) is most valuable when used as part of a regular workflow rather than only when an audit is imminent.
 This page covers practical strategies for getting the most out of your report data.
 
 ## Regular Monitoring
@@ -14,7 +14,7 @@ Key indicators to watch:
 
 - **Compliance score trajectory** — Is the overall score improving, stable, or declining?
   A declining score suggests new partners are being added without proper configuration, or existing configurations are drifting.
-- **Stale guest count** — An increasing count of inactive [guests](/docs/glossary/01-glossary) indicates that lifecycle management is not keeping pace with invitation volume.
+- **Stale guest count** — An increasing count of inactive [guests](/docs/glossary/glossary) indicates that lifecycle management is not keeping pace with invitation volume.
   This is one of the most common audit findings.
 - **Partner issue count** — Compare month-over-month to identify whether new issues are appearing faster than existing ones are being resolved.
 
@@ -29,11 +29,11 @@ Subsequent runs become meaningful when you can compare against that baseline and
 Export compliance reports well before audit periods begin, not the day before.
 The report provides concrete evidence of:
 
-- **Partner policy configuration** — Demonstrates that [cross-tenant access policies](/docs/glossary/01-glossary) are deliberately configured rather than left at permissive defaults.
+- **Partner policy configuration** — Demonstrates that [cross-tenant access policies](/docs/glossary/glossary) are deliberately configured rather than left at permissive defaults.
 - **Guest lifecycle management** — Shows that inactive guests are identified and addressed, not left with indefinite access.
 - **Access review completion rates** — Proves that periodic reviews are happening and decisions are being acted upon.
 
-Pair compliance report exports with [activity log](/docs/users/activity/01-activity-log) exports for a complete audit trail.
+Pair compliance report exports with [activity log](/docs/activity/activity-log) exports for a complete audit trail.
 The compliance report shows the current state, while the activity log shows how you got there — who made changes, when, and why.
 
 Most compliance frameworks that cover external access — including SOC 2, ISO 27001, and NIST 800-53 — require evidence of periodic access reviews and controls over external collaboration.
@@ -44,7 +44,7 @@ The compliance report maps directly to these requirements.
 
 ## Identifying Issues
 
-Use the partner compliance tab to find [partners](/docs/glossary/01-glossary) that need attention.
+Use the partner compliance tab to find [partners](/docs/glossary/glossary) that need attention.
 Practical filtering strategies:
 
 - **Filter by "no MFA trust"** — These partners have guests who can sign in without your organization's MFA requirements being enforced.
@@ -73,7 +73,7 @@ When creating a monthly summary for stakeholders, highlight:
 - Overall compliance score and its trend direction (improving, stable, or declining).
 - Number of issues resolved since the last report, demonstrating active management.
 - Any new issues that have been identified and require attention or resources.
-- Upcoming [access review](/docs/glossary/01-glossary) deadlines that may need stakeholder involvement.
+- Upcoming [access review](/docs/glossary/glossary) deadlines that may need stakeholder involvement.
 - Guest account cleanup statistics showing lifecycle management is active.
 
 A consistent reporting cadence builds confidence with stakeholders that external collaboration is being actively governed rather than left unmanaged.

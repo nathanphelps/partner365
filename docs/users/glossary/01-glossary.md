@@ -12,37 +12,37 @@ This glossary defines key terms used throughout the Partner365 documentation. Te
 
 A bundle of resources (groups, SharePoint sites) that can be requested by external users through entitlement management. Access packages standardize and simplify granting access to multiple resources at once. They are the primary mechanism for controlled, self-service resource provisioning.
 
-[Learn more](/docs/entitlements/01-access-packages)
+[Learn more](/docs/entitlements/access-packages)
 
 ## Access Review
 
 A periodic process to verify that guest users still need access to your tenant. Reviews support compliance requirements and reduce risk from stale accounts. Organizations typically schedule reviews on a quarterly or semi-annual basis.
 
-[Learn more](/docs/access-reviews/01-overview)
+[Learn more](/docs/access-reviews/overview)
 
 ## B2B Collaboration
 
 Microsoft's model for inviting external users as guests into your tenant. Guests get an account in your directory and can access shared resources. This is the most common pattern for cross-organization collaboration in Microsoft 365.
 
-[Learn more](/docs/concepts/02-b2b-collaboration)
+[Learn more](/docs/concepts/b2b-collaboration)
 
 ## B2B Direct Connect
 
 A model where external users access shared channels in Microsoft Teams without being added as guests. No guest account is created in your directory. This approach is suited for scenarios where persistent directory presence is unnecessary.
 
-[Learn more](/docs/concepts/02-b2b-collaboration)
+[Learn more](/docs/concepts/b2b-collaboration)
 
 ## Conditional Access
 
 Entra ID policies that enforce controls (MFA, device compliance, location restrictions) when users access resources. These policies evaluate every sign-in attempt and can require additional verification or block access entirely. Conditional access is a critical layer in securing both internal and external collaboration.
 
-[Learn more](/docs/conditional-access/01-viewing-policies)
+[Learn more](/docs/conditional-access/viewing-policies)
 
 ## Cross-Tenant Access Policy
 
 Settings in Entra ID that control how your organization collaborates with a specific external tenant. Includes inbound/outbound rules for B2B collaboration and direct connect, plus trust settings for MFA and device compliance. Each partner organization in Partner365 has an associated cross-tenant access policy.
 
-[Learn more](/docs/concepts/01-cross-tenant-policies)
+[Learn more](/docs/concepts/cross-tenant-policies)
 
 ## Device Compliance
 
@@ -52,25 +52,25 @@ A status indicating whether a device meets your organization's security requirem
 
 Entra ID's system for governing access requests, approvals, and lifecycle for internal and external users. In Partner365, this translates to access packages that bundle resources for guest users. Entitlement management automates the approval workflow and enforces expiration policies.
 
-[Learn more](/docs/entitlements/01-access-packages)
+[Learn more](/docs/entitlements/access-packages)
 
 ## Guest User
 
 An external user invited into your Microsoft 365 tenant via B2B collaboration. Guest accounts have a directory object but limited default permissions compared to member users. Partner365 tracks guest user status, activity, and associated partner organization.
 
-[Learn more](/docs/guests/01-guest-list)
+[Learn more](/docs/guests/guest-list)
 
 ## MFA Trust
 
 A cross-tenant trust setting where your organization accepts multi-factor authentication claims from a partner's tenant. When enabled, partner users don't need to complete MFA again in your tenant if they've already authenticated with MFA in their home tenant. This reduces sign-in friction while preserving strong authentication requirements.
 
-[Learn more](/docs/concepts/01-cross-tenant-policies)
+[Learn more](/docs/concepts/cross-tenant-policies)
 
 ## Partner Organization
 
 An external Microsoft 365 tenant that your organization collaborates with. Partner365 tracks each partner with cross-tenant access policies, trust scores, and associated guest users. Partners are the central organizing entity in the application.
 
-[Learn more](/docs/partners/01-viewing-partners)
+[Learn more](/docs/partners/viewing-partners)
 
 ## Remediation
 
@@ -88,4 +88,4 @@ Access grants for guest users to specific SharePoint Online sites. Partner365 sy
 
 A 0-100 score calculated by Partner365 reflecting a partner's security posture. Based on policy configuration, guest activity, MFA trust settings, and other factors. Higher scores indicate better security alignment with your organization's requirements.
 
-[Learn more](/docs/concepts/03-trust-score)
+[Learn more](/docs/concepts/trust-score)
