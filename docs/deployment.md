@@ -1,6 +1,124 @@
 # Deployment
 
-## Requirements
+## Docker (Recommended)
+
+The simplest way to deploy Partner365 is with Docker. The single container includes FrankenPHP (via Laravel Octane), a queue worker, and the task scheduler — no external dependencies required.
+
+### Quick Start
+
+```bash
+# Build and run
+docker compose up -d --build
+
+# Or build and run directly
+docker build -t partner365:latest .
+docker run -d -p 8000:8000 \
+  -e APP_KEY=base64:your-key-here \
+  -e MICROSOFT_GRAPH_TENANT_ID=your-tenant-id \
+  -e MICROSOFT_GRAPH_CLIENT_ID=your-client-id \
+  -e MICROSOFT_GRAPH_CLIENT_SECRET=your-secret \
+  -v partner365-db:/app/database \
+  partner365:latest
+```
+
+### What's Inside the Container
+
+| Process | Description |
+|---------|-------------|
+| FrankenPHP (Octane) | Web server on port 8000 |
+| Queue Worker | Processes background jobs (`database` driver) |
+| Scheduler | Runs `schedule:work` for sync commands |
+
+All processes are managed by supervisord. The container exits if the web server dies.
+
+### Database
+
+SQLite by default — the database file lives at `/app/database/database.sqlite`. Mount a volume to persist data:
+
+```bash
+docker run -v partner365-db:/app/database ...
+```
+
+To use an external database instead, set env vars:
+
+```env
+DB_CONNECTION=pgsql
+DB_HOST=your-db-host
+DB_PORT=5432
+DB_DATABASE=partner365
+DB_USERNAME=partner365
+DB_PASSWORD=your-password
+```
+
+### Health Check
+
+The container exposes a health check at `GET /health` that returns:
+
+```json
+{"status": "ok", "database": "ok"}
+```
+
+Docker's built-in `HEALTHCHECK` polls this endpoint every 30 seconds.
+
+### Docker Compose
+
+The included `docker-compose.yml` provides a ready-to-use setup:
+
+```bash
+# Copy and configure .env
+cp .env.example .env
+# Edit .env with your APP_KEY and Graph API credentials
+
+# Build and start
+docker compose up -d --build
+
+# View logs
+docker compose logs -f
+
+# Stop
+docker compose down
+```
+
+The Compose file maps port 8000 (configurable via `APP_PORT` env var) and creates a named volume for the SQLite database.
+
+### Reverse Proxy
+
+In production, place a reverse proxy (Nginx, Caddy, Traefik) in front of the container to handle TLS:
+
+```nginx
+server {
+    listen 443 ssl;
+    server_name partner365.yourdomain.com;
+
+    ssl_certificate /etc/ssl/certs/partner365.pem;
+    ssl_certificate_key /etc/ssl/private/partner365.key;
+
+    location / {
+        proxy_pass http://localhost:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+```
+
+### Updating (Docker)
+
+```bash
+git pull origin main
+docker compose up -d --build
+```
+
+The entrypoint script automatically runs migrations on container start.
+
+---
+
+## Bare Metal / VM
+
+For deployments without Docker.
+
+### Requirements
 
 - PHP 8.2+ with extensions: `mbstring`, `xml`, `ctype`, `json`, `bcmath`, `pdo_pgsql` (or `pdo_sqlite`)
 - Composer 2.x
@@ -188,7 +306,7 @@ After deployment, you'll need to:
 
 3. **Create onboarding templates** — Log in as admin and navigate to Templates to create reusable policy configurations.
 
-## Updating
+## Updating (Bare Metal)
 
 ```bash
 git pull origin main
@@ -202,7 +320,8 @@ php artisan view:cache
 
 ## Monitoring
 
-- **Laravel logs** — `storage/logs/laravel.log`
+- **Health check** — `GET /health` returns JSON with app and database status
+- **Laravel logs** — `storage/logs/laravel.log` (bare metal) or `docker compose logs` (Docker)
 - **Sync output** — Run commands manually to check: `php artisan sync:partners -v`
 - **Graph API errors** — Check logs for `GraphApiException` entries
 - **Failed jobs** — `php artisan queue:failed` (if using queues)
@@ -210,7 +329,7 @@ php artisan view:cache
 ## Backups
 
 Back up regularly:
-- Database (PostgreSQL `pg_dump`)
+- Database (PostgreSQL `pg_dump` or copy SQLite file / Docker volume)
 - `.env` file (contains secrets)
 - `storage/` directory (logs, cache)
 

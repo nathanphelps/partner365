@@ -125,6 +125,10 @@ The OAuth2 client credentials token is cached for 3500 seconds (just under the 3
 
 All Graph API calls happen server-side. The Vue frontend never sees tokens or makes direct API calls. The only AJAX call from the frontend is the tenant resolution during partner onboarding, which goes through a Laravel controller endpoint.
 
+### Single-Container Deployment
+
+The Docker image runs FrankenPHP (via Laravel Octane) with supervisord managing three processes: the web server, queue worker, and task scheduler. This keeps deployment simple — one container with no external dependencies (SQLite by default). For higher-scale deployments, the queue worker and scheduler can be split into separate containers using the same image with different entrypoint commands.
+
 ### Multi-Tenant Ready
 
 The architecture supports adding a `managed_tenant_id` column in the future to manage multiple Entra tenants from a single Partner365 instance. Not implemented in v1.

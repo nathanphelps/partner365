@@ -85,6 +85,26 @@ Http::fake([
 - `InvitationStatus` — pending_acceptance, accepted, failed
 - `PartnerCategory` — partner classification
 
+### Docker
+
+Single-container deployment using FrankenPHP (Laravel Octane) + supervisord:
+- `Dockerfile` — Multi-stage build (Node for frontend, FrankenPHP for runtime)
+- `docker/supervisord.conf` — Manages octane, queue worker, scheduler
+- `docker/entrypoint.sh` — Auto-migration, permissions, starts supervisord
+- `docker-compose.yml` — Local container deployment
+- `vite.config.ts` — Wayfinder plugin is skipped when `DOCKER_BUILD=1` (set in Dockerfile) since generated route helpers are already committed
+
+```bash
+# Build and run with Docker Compose
+docker compose up -d --build
+
+# Build image directly
+docker build -t partner365:latest .
+
+# Health check
+curl http://localhost:8000/health
+```
+
 ## Environment
 
 Requires `MICROSOFT_GRAPH_TENANT_ID`, `MICROSOFT_GRAPH_CLIENT_ID`, `MICROSOFT_GRAPH_CLIENT_SECRET` in `.env`. Config in `config/graph.php`.

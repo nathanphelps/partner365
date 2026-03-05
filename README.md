@@ -25,6 +25,7 @@ Partner365 solves this with a single interface for IT admins, business owners, a
 - **Onboarding Wizard** — 3-step partner creation with tenant resolution, optional templates, and policy configuration
 - **Partner Templates** — Reusable policy configurations for consistent onboarding
 - **Background Sync** — Automatic 15-minute sync from Graph API keeps local data current
+- **Access Reviews** — Periodic certification of guest user and partner organization access with configurable remediation (flag, disable, remove)
 - **Activity Log** — Full audit trail of all partner and guest management actions
 - **3-Tier RBAC** — Admin, Operator, and Viewer roles with middleware-enforced access control
 
@@ -36,36 +37,40 @@ Partner365 solves this with a single interface for IT admins, business owners, a
 | Frontend | Vue 3 + Inertia.js |
 | UI Components | shadcn-vue + Tailwind CSS |
 | API Integration | Microsoft Graph API v1.0 (direct HTTP, no SDK) |
-| Testing | Pest PHP (160 tests) |
-| Database | SQLite (dev) / PostgreSQL (prod) |
+| Testing | Pest PHP |
+| Database | SQLite (dev/single-server) / PostgreSQL (prod) |
 | Auth | Laravel Fortify (dev) / Entra ID SSO (prod) |
+| Deployment | Docker (FrankenPHP + Octane) or bare metal |
 
 ## Quick Start
 
-### Prerequisites
-
-- PHP 8.2+
-- Composer
-- Node.js 18+
-- An Azure AD app registration with the required Graph API permissions
-
-### Installation
+### Docker (Recommended)
 
 ```bash
-# Clone the repository
 git clone https://github.com/nathanphelps/partner365.git
 cd partner365
 
-# Install dependencies
+cp .env.example .env
+# Edit .env — set APP_KEY, Graph API credentials
+
+docker compose up -d --build
+# App is running at http://localhost:8000
+```
+
+### Local Development
+
+**Prerequisites:** PHP 8.2+, Composer, Node.js 18+, an Azure AD app registration
+
+```bash
+git clone https://github.com/nathanphelps/partner365.git
+cd partner365
+
 composer install
 npm install
 
-# Configure environment
 cp .env.example .env
 php artisan key:generate
 ```
-
-### Configure Graph API
 
 Add your Azure AD app registration credentials to `.env`:
 
@@ -77,20 +82,9 @@ MICROSOFT_GRAPH_CLIENT_SECRET=your-client-secret
 
 See [docs/azure-setup.md](docs/azure-setup.md) for detailed Azure configuration instructions.
 
-### Run
-
 ```bash
-# Run migrations
 php artisan migrate
-
-# Build frontend
-npm run build
-
-# Start the dev server
-php artisan serve
-
-# In a separate terminal, for hot-reload during development:
-npm run dev
+composer run dev    # Starts Laravel, queue worker, and Vite dev server
 ```
 
 ### Run Tests
@@ -115,28 +109,38 @@ php artisan test
 ## Project Structure
 
 ```
+docker/
+├── entrypoint.sh              # Container startup (migrations, permissions, supervisord)
+└── supervisord.conf           # Process manager for web, queue, scheduler
+Dockerfile                     # Multi-stage build (Node + FrankenPHP)
+docker-compose.yml             # Local container deployment
+
 app/
-├── Console/Commands/       # sync:partners, sync:guests
-├── Enums/                  # UserRole, PartnerCategory, InvitationStatus, ActivityAction, CloudEnvironment
+├── Console/Commands/       # sync:partners, sync:guests, sync:access-reviews
+├── Enums/                  # UserRole, PartnerCategory, InvitationStatus, ActivityAction, CloudEnvironment,
+│                           # ReviewType, RecurrenceType, RemediationAction, ReviewInstanceStatus, ReviewDecision
 ├── Exceptions/             # GraphApiException
 ├── Http/
-│   ├── Controllers/        # Partner, Guest, Template, Dashboard, ActivityLog, Admin
+│   ├── Controllers/        # Partner, Guest, Template, Dashboard, ActivityLog, AccessReview, Admin
 │   ├── Middleware/          # CheckRole (RBAC)
-│   └── Requests/           # StorePartner, UpdatePartner, InviteGuest, StoreTemplate, UpdateCollaboration
-├── Models/                 # PartnerOrganization, GuestUser, PartnerTemplate, ActivityLog
+│   └── Requests/           # StorePartner, UpdatePartner, InviteGuest, StoreTemplate, UpdateCollaboration, StoreAccessReview
+├── Models/                 # PartnerOrganization, GuestUser, PartnerTemplate, ActivityLog,
+│                           # AccessReview, AccessReviewInstance, AccessReviewDecision
 └── Services/               # MicrosoftGraphService, CrossTenantPolicyService,
                             # GuestUserService, TenantResolverService,
-                            # CollaborationSettingsService, ActivityLogService
+                            # CollaborationSettingsService, ActivityLogService,
+                            # AccessReviewService
 
 resources/js/
 ├── pages/
 │   ├── partners/           # Index, Show, Create (wizard)
 │   ├── guests/             # Index, Show, Invite
 │   ├── templates/          # Index, Create, Edit
+│   ├── access-reviews/     # Index, Create, Show, Instance
 │   ├── admin/              # Graph settings, Collaboration, Users, Sync
 │   ├── activity/           # Index
 │   └── Dashboard.vue
-├── types/                  # TypeScript types for Partner, Guest, Paginated
+├── types/                  # TypeScript types for Partner, Guest, AccessReview, Paginated
 └── components/             # shadcn-vue UI components
 
 tests/Feature/
