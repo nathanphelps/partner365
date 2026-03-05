@@ -44,6 +44,13 @@ All routes require authentication (`auth` + `verified` middleware) unless noted 
 | PUT | `/templates/{template}` | `PartnerTemplateController@update` | `templates.update` |
 | DELETE | `/templates/{template}` | `PartnerTemplateController@destroy` | `templates.destroy` |
 
+### Admin — Collaboration Settings
+
+| Method | URI | Controller@Method | Name | Role |
+|--------|-----|------------------|------|------|
+| GET | `/admin/collaboration` | `AdminCollaborationController@edit` | `admin.collaboration.edit` | Admin |
+| PUT | `/admin/collaboration` | `AdminCollaborationController@update` | `admin.collaboration.update` | Admin |
+
 ### Activity Log
 
 | Method | URI | Controller@Method | Name | Role |
@@ -64,7 +71,8 @@ All routes require authentication (`auth` + `verified` middleware) unless noted 
     "b2b_inbound_enabled": "boolean",
     "b2b_outbound_enabled": "boolean",
     "device_trust_enabled": "boolean",
-    "direct_connect_enabled": "boolean"
+    "direct_connect_inbound_enabled": "boolean",
+    "direct_connect_outbound_enabled": "boolean"
 }
 ```
 
@@ -73,12 +81,22 @@ All routes require authentication (`auth` + `verified` middleware) unless noted 
 ```json
 {
     "category": "sometimes|in:vendor,contractor,strategic_partner,customer,other",
-    "notes": "nullable|string|max:1000",
-    "mfa_trust_enabled": "sometimes|boolean",
-    "b2b_inbound_enabled": "sometimes|boolean",
-    "b2b_outbound_enabled": "sometimes|boolean",
-    "device_trust_enabled": "sometimes|boolean",
-    "direct_connect_enabled": "sometimes|boolean"
+    "notes": "nullable|string|max:5000",
+    "owner_user_id": "nullable|exists:users,id",
+    "mfa_trust_enabled": "boolean",
+    "b2b_inbound_enabled": "boolean",
+    "b2b_outbound_enabled": "boolean",
+    "device_trust_enabled": "boolean",
+    "direct_connect_inbound_enabled": "boolean",
+    "direct_connect_outbound_enabled": "boolean",
+    "tenant_restrictions_enabled": "boolean",
+    "tenant_restrictions_json": "nullable|array",
+    "tenant_restrictions_json.applications": "nullable|array",
+    "tenant_restrictions_json.applications.accessType": "nullable|string|in:allowed,blocked",
+    "tenant_restrictions_json.applications.targets": "nullable|array",
+    "tenant_restrictions_json.usersAndGroups": "nullable|array",
+    "tenant_restrictions_json.usersAndGroups.accessType": "nullable|string|in:allowed,blocked",
+    "tenant_restrictions_json.usersAndGroups.targets": "nullable|array"
 }
 ```
 
@@ -104,7 +122,8 @@ All routes require authentication (`auth` + `verified` middleware) unless noted 
     "policy_config.b2b_inbound_enabled": "boolean",
     "policy_config.b2b_outbound_enabled": "boolean",
     "policy_config.device_trust_enabled": "boolean",
-    "policy_config.direct_connect_enabled": "boolean"
+    "policy_config.direct_connect_inbound_enabled": "boolean",
+    "policy_config.direct_connect_outbound_enabled": "boolean"
 }
 ```
 
@@ -152,6 +171,19 @@ All routes require authentication (`auth` + `verified` middleware) unless noted 
     guests: Paginated<GuestUser>;
     filters: { search?: string; partner_id?: number; status?: string };
     partners: { id: number; display_name: string }[];
+}
+```
+
+### UpdateCollaborationSettingsRequest
+
+```json
+{
+    "allow_invites_from": "required|in:none,adminsAndGuestInviters,adminsGuestInvitersAndAllMembers,everyone",
+    "domain_restriction_mode": "required|in:none,allowList,blockList",
+    "allowed_domains": "required_if:domain_restriction_mode,allowList|array",
+    "allowed_domains.*": "string",
+    "blocked_domains": "required_if:domain_restriction_mode,blockList|array",
+    "blocked_domains.*": "string"
 }
 ```
 

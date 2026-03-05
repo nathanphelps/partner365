@@ -43,6 +43,7 @@ declare -A PERMISSIONS=(
     ["User.Invite.All"]="09850681-111b-4a89-9bed-3f2cae46d706"
     ["Policy.Read.All"]="246dd0d5-5bd0-4def-940b-0421030a5b68"
     ["Policy.ReadWrite.CrossTenantAccess"]="338163d7-f101-4c92-94ba-ca46fe52447c"
+    ["Policy.ReadWrite.Authorization"]="edd3c878-b384-41fd-85c2-07c811cde6f8"
     ["CrossTenantInformation.ReadBasic.All"]="cac88765-0581-4025-9725-5ebc13f729ee"
 )
 

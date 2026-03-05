@@ -2,7 +2,7 @@
 
 ## Overview
 
-Partner365 uses [Pest PHP](https://pestphp.com/) for testing. The test suite contains 86 tests with 249 assertions covering services, controllers, middleware, models, and commands.
+Partner365 uses [Pest PHP](https://pestphp.com/) for testing. The test suite contains 148 tests with 448 assertions covering services, controllers, middleware, models, and commands.
 
 ## Running Tests
 
@@ -46,6 +46,7 @@ tests/
     │   └── PartnerOrganizationTest.php         (3 tests)
     ├── PartnerOrganizationTest.php             (8 tests — controller)
     ├── GuestUserControllerTest.php             (5 tests — controller)
+    ├── CollaborationSettingsTest.php           (6 tests — admin collaboration)
     ├── DashboardTest.php                       (2 tests)
     └── ExampleTest.php                         (1 test)
 ```

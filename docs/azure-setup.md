@@ -37,6 +37,7 @@ From the app registration overview page, copy:
 |-----------|---------|
 | `Policy.Read.All` | Read cross-tenant access policies |
 | `Policy.ReadWrite.CrossTenantAccess` | Create/update/delete partner policies |
+| `Policy.ReadWrite.Authorization` | Manage external collaboration settings (invitation controls, domain lists) |
 | `User.Invite.All` | Send B2B guest invitations |
 | `User.Read.All` | List and read guest user profiles |
 | `User.ReadWrite.All` | Update and delete guest users |

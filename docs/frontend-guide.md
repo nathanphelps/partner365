@@ -34,6 +34,8 @@ resources/js/
 │   │   ├── Index.vue       # Template list
 │   │   ├── Create.vue      # New template form
 │   │   └── Edit.vue        # Edit template form
+│   ├── admin/
+│   │   └── Collaboration.vue  # External collaboration settings (admin only)
 │   └── activity/
 │       └── Index.vue       # Paginated activity log
 ├── components/

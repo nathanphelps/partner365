@@ -15,6 +15,9 @@ Partner365 solves this with a single interface for IT admins, business owners, a
 ## Features
 
 - **Partner Management** — View, create, update, and delete cross-tenant access policies with simple toggle controls
+- **B2B Direct Connect** — Separate inbound/outbound controls with combined status display
+- **Tenant Restrictions v2** — Per-partner app access controls with application targeting
+- **External Collaboration Settings** — Admin controls for guest invitation policies and domain allow/block lists
 - **Guest User Lifecycle** — Invite B2B guests, track invitation status, monitor sign-in activity, identify inactive accounts
 - **Dashboard** — At-a-glance stats for partners, guests, MFA trust coverage, and pending invitations
 - **Onboarding Wizard** — 3-step partner creation with tenant resolution, optional templates, and policy configuration
@@ -31,7 +34,7 @@ Partner365 solves this with a single interface for IT admins, business owners, a
 | Frontend | Vue 3 + Inertia.js |
 | UI Components | shadcn-vue + Tailwind CSS |
 | API Integration | Microsoft Graph API v1.0 (direct HTTP, no SDK) |
-| Testing | Pest PHP (86 tests) |
+| Testing | Pest PHP (148 tests) |
 | Database | SQLite (dev) / PostgreSQL (prod) |
 | Auth | Laravel Fortify (dev) / Entra ID SSO (prod) |
 
@@ -115,18 +118,20 @@ app/
 ├── Enums/                  # UserRole, PartnerCategory, InvitationStatus, ActivityAction
 ├── Exceptions/             # GraphApiException
 ├── Http/
-│   ├── Controllers/        # Partner, Guest, Template, Dashboard, ActivityLog
+│   ├── Controllers/        # Partner, Guest, Template, Dashboard, ActivityLog, Admin
 │   ├── Middleware/          # CheckRole (RBAC)
-│   └── Requests/           # StorePartner, UpdatePartner, InviteGuest, StoreTemplate
+│   └── Requests/           # StorePartner, UpdatePartner, InviteGuest, StoreTemplate, UpdateCollaboration
 ├── Models/                 # PartnerOrganization, GuestUser, PartnerTemplate, ActivityLog
 └── Services/               # MicrosoftGraphService, CrossTenantPolicyService,
-                            # GuestUserService, TenantResolverService, ActivityLogService
+                            # GuestUserService, TenantResolverService,
+                            # CollaborationSettingsService, ActivityLogService
 
 resources/js/
 ├── pages/
 │   ├── partners/           # Index, Show, Create (wizard)
 │   ├── guests/             # Index, Show, Invite
 │   ├── templates/          # Index, Create, Edit
+│   ├── admin/              # Collaboration settings
 │   ├── activity/           # Index
 │   └── Dashboard.vue
 ├── types/                  # TypeScript types for Partner, Guest, Paginated
@@ -138,7 +143,8 @@ tests/Feature/
 ├── Models/                 # PartnerOrganization
 ├── Services/               # All 5 service classes
 ├── PartnerOrganizationTest.php
-└── GuestUserControllerTest.php
+├── GuestUserControllerTest.php
+└── CollaborationSettingsTest.php
 ```
 
 ## License

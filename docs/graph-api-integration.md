@@ -7,10 +7,11 @@ Partner365 communicates with Microsoft Graph API v1.0 using a custom service lay
 ## Service Architecture
 
 ```
-MicrosoftGraphService          ← Core HTTP client + token management
-├── CrossTenantPolicyService   ← Partner policy CRUD
-├── GuestUserService           ← Guest invitations + user management
-└── TenantResolverService      ← Tenant info lookup
+MicrosoftGraphService               ← Core HTTP client + token management
+├── CrossTenantPolicyService        ← Partner policy CRUD + tenant restrictions
+├── CollaborationSettingsService    ← Authorization policy (invites + domains)
+├── GuestUserService                ← Guest invitations + user management
+└── TenantResolverService           ← Tenant info lookup
 ```
 
 ## MicrosoftGraphService
@@ -66,6 +67,8 @@ Manages cross-tenant access policies for partner organizations.
 | `deletePartner(tenantId)` | DELETE `/policies/crossTenantAccessPolicy/partners/{tenantId}` | Remove partner policy |
 | `getDefaults()` | GET `/policies/crossTenantAccessPolicy/default` | Get default policy |
 | `updateDefaults(config)` | PATCH `/policies/crossTenantAccessPolicy/default` | Update default policy |
+| `getTenantRestrictions(tenantId)` | GET `/policies/crossTenantAccessPolicy/partners/{tenantId}` | Get tenant restrictions config |
+| `updateTenantRestrictions(tenantId, config)` | PATCH `/policies/crossTenantAccessPolicy/partners/{tenantId}` | Update tenant restrictions |
 
 ### Graph API Policy Structure
 
@@ -78,6 +81,10 @@ $validated = [
     'device_trust_enabled' => false,
     'b2b_inbound_enabled' => true,
     'b2b_outbound_enabled' => false,
+    'direct_connect_inbound_enabled' => true,
+    'direct_connect_outbound_enabled' => false,
+    'tenant_restrictions_enabled' => true,
+    'tenant_restrictions_json' => ['applications' => ['accessType' => 'blocked', 'targets' => [...]]],
 ];
 
 // Output: Graph API structure
@@ -96,8 +103,52 @@ $config = [
             'accessType' => 'blocked',
         ],
     ],
+    'b2bDirectConnectInbound' => [
+        'usersAndGroups' => [
+            'accessType' => 'allowed',
+        ],
+    ],
+    'b2bDirectConnectOutbound' => [
+        'usersAndGroups' => [
+            'accessType' => 'blocked',
+        ],
+    ],
+    'tenantRestrictions' => [
+        'applications' => ['accessType' => 'blocked', 'targets' => [...]],
+    ],
 ];
 ```
+
+## CollaborationSettingsService
+
+Manages the tenant-wide authorization policy that controls guest invitation permissions and domain restrictions.
+
+### Endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `getSettings()` | GET `/policies/authorizationPolicy` | Get invitation and domain settings |
+| `updateSettings(config)` | PATCH `/policies/authorizationPolicy` | Update invitation and domain settings |
+
+### Graph API Structure
+
+```php
+// GET response
+[
+    'allowInvitesFrom' => 'adminsAndGuestInviters',
+    'allowedToInvite' => [['allowedDomainName' => 'contoso.com']],
+    'blockedFromInvite' => [],
+]
+
+// PATCH payload
+[
+    'allowInvitesFrom' => 'everyone',
+    'allowedToInvite' => [['allowedDomainName' => 'contoso.com']],
+    'blockedFromInvite' => [],
+]
+```
+
+> **Required Permission:** `Policy.ReadWrite.Authorization` (application permission)
 
 ## GuestUserService
 

@@ -23,6 +23,7 @@ Partner365 is a monolithic Laravel 12 + Vue 3 application using Inertia.js for s
 │  │              Service Layer                       ││
 │  │  MicrosoftGraphService (HTTP client + tokens)   ││
 │  │  CrossTenantPolicyService (partner policies)    ││
+│  │  CollaborationSettingsService (auth policy)     ││
 │  │  GuestUserService (invitations + users)         ││
 │  │  TenantResolverService (tenant lookup)          ││
 │  │  ActivityLogService (audit trail)               ││
@@ -68,7 +69,9 @@ partner_organizations
 ├── notes
 ├── b2b_inbound_enabled, b2b_outbound_enabled
 ├── mfa_trust_enabled, device_trust_enabled
-├── direct_connect_enabled
+├── direct_connect_inbound_enabled, direct_connect_outbound_enabled
+├── tenant_restrictions_enabled
+├── tenant_restrictions_json (JSON: app/user targeting config)
 ├── raw_policy_json (full Graph API response)
 ├── last_synced_at
 └── timestamps
