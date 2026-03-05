@@ -13,12 +13,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import {
-    Tabs,
-    TabsContent,
-    TabsList,
-    TabsTrigger,
-} from '@/components/ui/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { BreadcrumbItem } from '@/types';
 import type {
@@ -211,329 +206,354 @@ function formatDate(val: string | null): string {
                     <TabsTrigger value="partners">
                         Partner Compliance
                     </TabsTrigger>
-                    <TabsTrigger value="guests">
-                        Guest Health
-                    </TabsTrigger>
+                    <TabsTrigger value="guests"> Guest Health </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="partners">
-            <!-- Partner Policy Compliance -->
-            <Card>
-                <CardHeader>
-                    <CardTitle>Partner Policy Compliance</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <Tabs v-model="partnerTab" class="mb-4">
-                        <TabsList>
-                            <TabsTrigger value="all">
-                                All Issues ({{
-                                    partnerCompliance.partners.length
-                                }})
-                            </TabsTrigger>
-                            <TabsTrigger value="no_mfa">
-                                No MFA ({{ partnerCompliance.no_mfa_count }})
-                            </TabsTrigger>
-                            <TabsTrigger value="permissive">
-                                Overly Permissive ({{
-                                    partnerCompliance.overly_permissive_count
-                                }})
-                            </TabsTrigger>
-                            <TabsTrigger value="no_ca">
-                                No CA Policies ({{
-                                    partnerCompliance.no_ca_policies_count
-                                }})
-                            </TabsTrigger>
-                        </TabsList>
-                    </Tabs>
+                    <!-- Partner Policy Compliance -->
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Partner Policy Compliance</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <Tabs v-model="partnerTab" class="mb-4">
+                                <TabsList>
+                                    <TabsTrigger value="all">
+                                        All Issues ({{
+                                            partnerCompliance.partners.length
+                                        }})
+                                    </TabsTrigger>
+                                    <TabsTrigger value="no_mfa">
+                                        No MFA ({{
+                                            partnerCompliance.no_mfa_count
+                                        }})
+                                    </TabsTrigger>
+                                    <TabsTrigger value="permissive">
+                                        Overly Permissive ({{
+                                            partnerCompliance.overly_permissive_count
+                                        }})
+                                    </TabsTrigger>
+                                    <TabsTrigger value="no_ca">
+                                        No CA Policies ({{
+                                            partnerCompliance.no_ca_policies_count
+                                        }})
+                                    </TabsTrigger>
+                                </TabsList>
+                            </Tabs>
 
-                    <Table v-if="filteredPartners.length > 0">
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Partner</TableHead>
-                                <TableHead>MFA Trust</TableHead>
-                                <TableHead>Device Trust</TableHead>
-                                <TableHead>B2B Openness</TableHead>
-                                <TableHead>CA Policies</TableHead>
-                                <TableHead>Trust Score</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            <TableRow
-                                v-for="partner in filteredPartners"
-                                :key="partner.id"
+                            <Table v-if="filteredPartners.length > 0">
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Partner</TableHead>
+                                        <TableHead>MFA Trust</TableHead>
+                                        <TableHead>Device Trust</TableHead>
+                                        <TableHead>B2B Openness</TableHead>
+                                        <TableHead>CA Policies</TableHead>
+                                        <TableHead>Trust Score</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    <TableRow
+                                        v-for="partner in filteredPartners"
+                                        :key="partner.id"
+                                    >
+                                        <TableCell>
+                                            <Link
+                                                :href="`/partners/${partner.id}`"
+                                                class="font-medium hover:underline"
+                                            >
+                                                {{ partner.display_name }}
+                                            </Link>
+                                            <p
+                                                v-if="partner.domain"
+                                                class="text-xs text-muted-foreground"
+                                            >
+                                                {{ partner.domain }}
+                                            </p>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Badge
+                                                :variant="
+                                                    partner.mfa_trust_enabled
+                                                        ? 'default'
+                                                        : 'destructive'
+                                                "
+                                            >
+                                                {{
+                                                    partner.mfa_trust_enabled
+                                                        ? 'Enabled'
+                                                        : 'Disabled'
+                                                }}
+                                            </Badge>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Badge
+                                                :variant="
+                                                    partner.device_trust_enabled
+                                                        ? 'default'
+                                                        : 'outline'
+                                                "
+                                            >
+                                                {{
+                                                    partner.device_trust_enabled
+                                                        ? 'Enabled'
+                                                        : 'Disabled'
+                                                }}
+                                            </Badge>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Badge
+                                                :variant="
+                                                    partner.b2b_inbound_enabled &&
+                                                    partner.b2b_outbound_enabled
+                                                        ? 'destructive'
+                                                        : 'default'
+                                                "
+                                            >
+                                                {{
+                                                    partner.b2b_inbound_enabled &&
+                                                    partner.b2b_outbound_enabled
+                                                        ? 'Both Open'
+                                                        : partner.b2b_inbound_enabled
+                                                          ? 'Inbound Only'
+                                                          : partner.b2b_outbound_enabled
+                                                            ? 'Outbound Only'
+                                                            : 'Restricted'
+                                                }}
+                                            </Badge>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Badge
+                                                :variant="
+                                                    partner.conditional_access_policies_count >
+                                                    0
+                                                        ? 'default'
+                                                        : 'outline'
+                                                "
+                                            >
+                                                {{
+                                                    partner.conditional_access_policies_count
+                                                }}
+                                            </Badge>
+                                        </TableCell>
+                                        <TableCell>
+                                            <span
+                                                v-if="
+                                                    partner.trust_score !== null
+                                                "
+                                            >
+                                                {{ partner.trust_score }}
+                                            </span>
+                                            <span
+                                                v-else
+                                                class="text-muted-foreground"
+                                            >
+                                                --
+                                            </span>
+                                        </TableCell>
+                                    </TableRow>
+                                </TableBody>
+                            </Table>
+                            <p
+                                v-else
+                                class="py-8 text-center text-sm text-muted-foreground"
                             >
-                                <TableCell>
-                                    <Link
-                                        :href="`/partners/${partner.id}`"
-                                        class="font-medium hover:underline"
-                                    >
-                                        {{ partner.display_name }}
-                                    </Link>
-                                    <p
-                                        v-if="partner.domain"
-                                        class="text-xs text-muted-foreground"
-                                    >
-                                        {{ partner.domain }}
-                                    </p>
-                                </TableCell>
-                                <TableCell>
-                                    <Badge
-                                        :variant="
-                                            partner.mfa_trust_enabled
-                                                ? 'default'
-                                                : 'destructive'
-                                        "
-                                    >
-                                        {{
-                                            partner.mfa_trust_enabled
-                                                ? 'Enabled'
-                                                : 'Disabled'
-                                        }}
-                                    </Badge>
-                                </TableCell>
-                                <TableCell>
-                                    <Badge
-                                        :variant="
-                                            partner.device_trust_enabled
-                                                ? 'default'
-                                                : 'outline'
-                                        "
-                                    >
-                                        {{
-                                            partner.device_trust_enabled
-                                                ? 'Enabled'
-                                                : 'Disabled'
-                                        }}
-                                    </Badge>
-                                </TableCell>
-                                <TableCell>
-                                    <Badge
-                                        :variant="
-                                            partner.b2b_inbound_enabled &&
-                                            partner.b2b_outbound_enabled
-                                                ? 'destructive'
-                                                : 'default'
-                                        "
-                                    >
-                                        {{
-                                            partner.b2b_inbound_enabled &&
-                                            partner.b2b_outbound_enabled
-                                                ? 'Both Open'
-                                                : partner.b2b_inbound_enabled
-                                                  ? 'Inbound Only'
-                                                  : partner.b2b_outbound_enabled
-                                                    ? 'Outbound Only'
-                                                    : 'Restricted'
-                                        }}
-                                    </Badge>
-                                </TableCell>
-                                <TableCell>
-                                    <Badge
-                                        :variant="
-                                            partner.conditional_access_policies_count >
-                                            0
-                                                ? 'default'
-                                                : 'outline'
-                                        "
-                                    >
-                                        {{
-                                            partner.conditional_access_policies_count
-                                        }}
-                                    </Badge>
-                                </TableCell>
-                                <TableCell>
-                                    <span v-if="partner.trust_score !== null">
-                                        {{ partner.trust_score }}
-                                    </span>
-                                    <span v-else class="text-muted-foreground">
-                                        --
-                                    </span>
-                                </TableCell>
-                            </TableRow>
-                        </TableBody>
-                    </Table>
-                    <p
-                        v-else
-                        class="py-8 text-center text-sm text-muted-foreground"
-                    >
-                        No compliance issues found.
-                    </p>
-                </CardContent>
-            </Card>
-
+                                No compliance issues found.
+                            </p>
+                        </CardContent>
+                    </Card>
                 </TabsContent>
 
                 <TabsContent value="guests">
-            <!-- Guest Account Health -->
-            <Card>
-                <CardHeader>
-                    <CardTitle>Guest Account Health</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <!-- Stale breakdown -->
-                    <div class="mb-4 flex flex-wrap gap-4">
-                        <div
-                            class="rounded-lg border bg-muted/30 px-4 py-2 text-center"
-                        >
-                            <p class="text-2xl font-bold">
-                                {{ guestHealth.stale_30_plus }}
-                            </p>
-                            <p class="text-xs text-muted-foreground">
-                                30+ days
-                            </p>
-                        </div>
-                        <div
-                            class="rounded-lg border bg-muted/30 px-4 py-2 text-center"
-                        >
-                            <p class="text-2xl font-bold">
-                                {{ guestHealth.stale_60_plus }}
-                            </p>
-                            <p class="text-xs text-muted-foreground">
-                                60+ days
-                            </p>
-                        </div>
-                        <div
-                            class="rounded-lg border bg-muted/30 px-4 py-2 text-center"
-                        >
-                            <p class="text-2xl font-bold">
-                                {{ guestHealth.stale_90_plus }}
-                            </p>
-                            <p class="text-xs text-muted-foreground">
-                                90+ days
-                            </p>
-                        </div>
-                        <div
-                            class="rounded-lg border bg-muted/30 px-4 py-2 text-center"
-                        >
-                            <p class="text-2xl font-bold">
-                                {{ guestHealth.never_signed_in }}
-                            </p>
-                            <p class="text-xs text-muted-foreground">
-                                Never signed in
-                            </p>
-                        </div>
-                        <div
-                            class="rounded-lg border bg-muted/30 px-4 py-2 text-center"
-                        >
-                            <p class="text-2xl font-bold">
-                                {{ guestHealth.pending_invitations }}
-                            </p>
-                            <p class="text-xs text-muted-foreground">Pending</p>
-                        </div>
-                        <div
-                            class="rounded-lg border bg-muted/30 px-4 py-2 text-center"
-                        >
-                            <p class="text-2xl font-bold">
-                                {{ guestHealth.disabled_accounts }}
-                            </p>
-                            <p class="text-xs text-muted-foreground">
-                                Disabled
-                            </p>
-                        </div>
-                    </div>
-
-                    <Tabs v-model="guestTab" class="mb-4">
-                        <TabsList>
-                            <TabsTrigger value="all">
-                                All Stale ({{ guestHealth.guests.length }})
-                            </TabsTrigger>
-                            <TabsTrigger value="30"> 30-59 Days </TabsTrigger>
-                            <TabsTrigger value="60"> 60-89 Days </TabsTrigger>
-                            <TabsTrigger value="90"> 90+ Days </TabsTrigger>
-                            <TabsTrigger value="never">
-                                Never Signed In
-                            </TabsTrigger>
-                        </TabsList>
-                    </Tabs>
-
-                    <Table v-if="filteredGuests.length > 0">
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Guest</TableHead>
-                                <TableHead>Partner</TableHead>
-                                <TableHead>Last Sign-In</TableHead>
-                                <TableHead>Days Inactive</TableHead>
-                                <TableHead>Status</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            <TableRow
-                                v-for="guest in filteredGuests"
-                                :key="guest.id"
-                            >
-                                <TableCell>
-                                    <Link
-                                        :href="`/guests/${guest.id}`"
-                                        class="font-medium hover:underline"
-                                    >
-                                        {{ guest.email }}
-                                    </Link>
-                                    <p
-                                        v-if="guest.display_name"
-                                        class="text-xs text-muted-foreground"
-                                    >
-                                        {{ guest.display_name }}
+                    <!-- Guest Account Health -->
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Guest Account Health</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <!-- Stale breakdown -->
+                            <div class="mb-4 flex flex-wrap gap-4">
+                                <div
+                                    class="rounded-lg border bg-muted/30 px-4 py-2 text-center"
+                                >
+                                    <p class="text-2xl font-bold">
+                                        {{ guestHealth.stale_30_plus }}
                                     </p>
-                                </TableCell>
-                                <TableCell>
-                                    <Link
-                                        v-if="guest.partner_organization"
-                                        :href="`/partners/${guest.partner_organization.id}`"
-                                        class="text-sm hover:underline"
+                                    <p class="text-xs text-muted-foreground">
+                                        30+ days
+                                    </p>
+                                </div>
+                                <div
+                                    class="rounded-lg border bg-muted/30 px-4 py-2 text-center"
+                                >
+                                    <p class="text-2xl font-bold">
+                                        {{ guestHealth.stale_60_plus }}
+                                    </p>
+                                    <p class="text-xs text-muted-foreground">
+                                        60+ days
+                                    </p>
+                                </div>
+                                <div
+                                    class="rounded-lg border bg-muted/30 px-4 py-2 text-center"
+                                >
+                                    <p class="text-2xl font-bold">
+                                        {{ guestHealth.stale_90_plus }}
+                                    </p>
+                                    <p class="text-xs text-muted-foreground">
+                                        90+ days
+                                    </p>
+                                </div>
+                                <div
+                                    class="rounded-lg border bg-muted/30 px-4 py-2 text-center"
+                                >
+                                    <p class="text-2xl font-bold">
+                                        {{ guestHealth.never_signed_in }}
+                                    </p>
+                                    <p class="text-xs text-muted-foreground">
+                                        Never signed in
+                                    </p>
+                                </div>
+                                <div
+                                    class="rounded-lg border bg-muted/30 px-4 py-2 text-center"
+                                >
+                                    <p class="text-2xl font-bold">
+                                        {{ guestHealth.pending_invitations }}
+                                    </p>
+                                    <p class="text-xs text-muted-foreground">
+                                        Pending
+                                    </p>
+                                </div>
+                                <div
+                                    class="rounded-lg border bg-muted/30 px-4 py-2 text-center"
+                                >
+                                    <p class="text-2xl font-bold">
+                                        {{ guestHealth.disabled_accounts }}
+                                    </p>
+                                    <p class="text-xs text-muted-foreground">
+                                        Disabled
+                                    </p>
+                                </div>
+                            </div>
+
+                            <Tabs v-model="guestTab" class="mb-4">
+                                <TabsList>
+                                    <TabsTrigger value="all">
+                                        All Stale ({{
+                                            guestHealth.guests.length
+                                        }})
+                                    </TabsTrigger>
+                                    <TabsTrigger value="30">
+                                        30-59 Days
+                                    </TabsTrigger>
+                                    <TabsTrigger value="60">
+                                        60-89 Days
+                                    </TabsTrigger>
+                                    <TabsTrigger value="90">
+                                        90+ Days
+                                    </TabsTrigger>
+                                    <TabsTrigger value="never">
+                                        Never Signed In
+                                    </TabsTrigger>
+                                </TabsList>
+                            </Tabs>
+
+                            <Table v-if="filteredGuests.length > 0">
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Guest</TableHead>
+                                        <TableHead>Partner</TableHead>
+                                        <TableHead>Last Sign-In</TableHead>
+                                        <TableHead>Days Inactive</TableHead>
+                                        <TableHead>Status</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    <TableRow
+                                        v-for="guest in filteredGuests"
+                                        :key="guest.id"
                                     >
-                                        {{
-                                            guest.partner_organization
-                                                .display_name
-                                        }}
-                                    </Link>
-                                    <span v-else class="text-muted-foreground">
-                                        --
-                                    </span>
-                                </TableCell>
-                                <TableCell>
-                                    {{ formatDate(guest.last_sign_in_at) }}
-                                </TableCell>
-                                <TableCell>
-                                    <Badge
-                                        :variant="
-                                            inactiveBadgeVariant(
-                                                guest.last_sign_in_at,
-                                            )
-                                        "
-                                    >
-                                        {{
-                                            daysInactiveLabel(
-                                                guest.last_sign_in_at,
-                                            )
-                                        }}
-                                    </Badge>
-                                </TableCell>
-                                <TableCell>
-                                    <Badge
-                                        :variant="
-                                            guest.account_enabled
-                                                ? 'default'
-                                                : 'outline'
-                                        "
-                                    >
-                                        {{
-                                            guest.account_enabled
-                                                ? 'Enabled'
-                                                : 'Disabled'
-                                        }}
-                                    </Badge>
-                                </TableCell>
-                            </TableRow>
-                        </TableBody>
-                    </Table>
-                    <p
-                        v-else
-                        class="py-8 text-center text-sm text-muted-foreground"
-                    >
-                        No stale guests found.
-                    </p>
-                </CardContent>
-            </Card>
+                                        <TableCell>
+                                            <Link
+                                                :href="`/guests/${guest.id}`"
+                                                class="font-medium hover:underline"
+                                            >
+                                                {{ guest.email }}
+                                            </Link>
+                                            <p
+                                                v-if="guest.display_name"
+                                                class="text-xs text-muted-foreground"
+                                            >
+                                                {{ guest.display_name }}
+                                            </p>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Link
+                                                v-if="
+                                                    guest.partner_organization
+                                                "
+                                                :href="`/partners/${guest.partner_organization.id}`"
+                                                class="text-sm hover:underline"
+                                            >
+                                                {{
+                                                    guest.partner_organization
+                                                        .display_name
+                                                }}
+                                            </Link>
+                                            <span
+                                                v-else
+                                                class="text-muted-foreground"
+                                            >
+                                                --
+                                            </span>
+                                        </TableCell>
+                                        <TableCell>
+                                            {{
+                                                formatDate(
+                                                    guest.last_sign_in_at,
+                                                )
+                                            }}
+                                        </TableCell>
+                                        <TableCell>
+                                            <Badge
+                                                :variant="
+                                                    inactiveBadgeVariant(
+                                                        guest.last_sign_in_at,
+                                                    )
+                                                "
+                                            >
+                                                {{
+                                                    daysInactiveLabel(
+                                                        guest.last_sign_in_at,
+                                                    )
+                                                }}
+                                            </Badge>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Badge
+                                                :variant="
+                                                    guest.account_enabled
+                                                        ? 'default'
+                                                        : 'outline'
+                                                "
+                                            >
+                                                {{
+                                                    guest.account_enabled
+                                                        ? 'Enabled'
+                                                        : 'Disabled'
+                                                }}
+                                            </Badge>
+                                        </TableCell>
+                                    </TableRow>
+                                </TableBody>
+                            </Table>
+                            <p
+                                v-else
+                                class="py-8 text-center text-sm text-muted-foreground"
+                            >
+                                No stale guests found.
+                            </p>
+                        </CardContent>
+                    </Card>
                 </TabsContent>
             </Tabs>
         </div>

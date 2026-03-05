@@ -15,7 +15,7 @@ test('it formats an activity log as CEF', function () {
     ]);
     $log->load('user');
 
-    $formatter = new CefFormatter();
+    $formatter = new CefFormatter;
     $cef = $formatter->format($log);
 
     expect($cef)->toStartWith('CEF:0|Partner365|Partner365|1.0|partner_created|');
@@ -24,7 +24,7 @@ test('it formats an activity log as CEF', function () {
 });
 
 test('it assigns correct severity levels', function () {
-    $formatter = new CefFormatter();
+    $formatter = new CefFormatter;
 
     expect($formatter->severity(ActivityAction::SyncCompleted))->toBe(3);
     expect($formatter->severity(ActivityAction::PartnerCreated))->toBe(5);
@@ -42,7 +42,7 @@ test('it escapes pipes and backslashes in CEF fields', function () {
     ]);
     $log->load('user');
 
-    $formatter = new CefFormatter();
+    $formatter = new CefFormatter;
     $cef = $formatter->format($log);
 
     expect($cef)->toContain('suser=John\\|Doe\\\\Jr');
@@ -56,7 +56,7 @@ test('it handles system events with no user', function () {
         'created_at' => now(),
     ]);
 
-    $formatter = new CefFormatter();
+    $formatter = new CefFormatter;
     $cef = $formatter->format($log);
 
     expect($cef)->toContain('suser=System');

@@ -38,7 +38,7 @@ class ForwardToSyslog implements ShouldQueue
 
         $this->activityLog->loadMissing('user');
 
-        $formatter = new CefFormatter();
+        $formatter = new CefFormatter;
         $cefMessage = $formatter->format($this->activityLog);
         $severity = $formatter->severity($this->activityLog->action);
 

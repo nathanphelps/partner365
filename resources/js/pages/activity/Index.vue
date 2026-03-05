@@ -121,8 +121,7 @@ function applyFilters() {
     if (userId.value) params.user_id = userId.value;
     if (dateFrom.value) params.date_from = dateFrom.value;
     if (dateTo.value) params.date_to = dateTo.value;
-    if (selectedAction.value)
-        params['actions[]'] = [selectedAction.value];
+    if (selectedAction.value) params['actions[]'] = [selectedAction.value];
 
     router.get(activityIndex.url(), params, { preserveState: true });
 }
@@ -235,11 +234,7 @@ function formatDate(val: string): string {
 
                     <div class="grid gap-1.5">
                         <Label for="date_from" class="text-xs">From</Label>
-                        <Input
-                            id="date_from"
-                            v-model="dateFrom"
-                            type="date"
-                        />
+                        <Input id="date_from" v-model="dateFrom" type="date" />
                     </div>
 
                     <div class="grid gap-1.5">
