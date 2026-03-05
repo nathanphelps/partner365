@@ -3,6 +3,7 @@ import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import { AlertTriangle, CircleHelp, Shield, Tag } from 'lucide-vue-next';
 import { ref, reactive, computed } from 'vue';
 import GuestUserTable from '@/components/GuestUserTable.vue';
+import PartnerAvatar from '@/components/PartnerAvatar.vue';
 import TrustScoreBadge from '@/components/TrustScoreBadge.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -301,6 +302,11 @@ const directConnectStatus = computed(() => {
             <div class="flex items-start justify-between">
                 <div>
                     <div class="flex flex-wrap items-center gap-3">
+                        <PartnerAvatar
+                            :name="partner.display_name"
+                            :favicon-path="partner.favicon_path"
+                            size="lg"
+                        />
                         <h1 class="text-2xl font-semibold">
                             {{ partner.display_name }}
                         </h1>

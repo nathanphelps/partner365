@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref, watch } from 'vue';
+import PartnerAvatar from '@/components/PartnerAvatar.vue';
 import TrustScoreBadge from '@/components/TrustScoreBadge.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -167,8 +168,13 @@ function formatDate(val: string | null): string {
                             <td class="px-4 py-3">
                                 <Link
                                     :href="partnerRoutes.show.url(partner.id)"
-                                    class="font-medium text-foreground hover:underline"
+                                    class="inline-flex items-center gap-2 font-medium text-foreground hover:underline"
                                 >
+                                    <PartnerAvatar
+                                        :name="partner.display_name"
+                                        :favicon-path="partner.favicon_path"
+                                        size="sm"
+                                    />
                                     {{ partner.display_name }}
                                 </Link>
                             </td>

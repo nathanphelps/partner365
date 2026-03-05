@@ -25,3 +25,4 @@ Schedule::command('score:partners')->daily();
 Schedule::command('sync:entitlements')->cron("*/{$entitlementsInterval} * * * *");
 Schedule::command('sync:conditional-access-policies')->cron("*/{$partnersInterval} * * * *");
 Schedule::command('sync:sensitivity-labels')->cron("*/{$partnersInterval} * * * *");
+Schedule::command('sync:favicons')->daily();

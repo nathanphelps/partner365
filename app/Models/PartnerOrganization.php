@@ -14,7 +14,7 @@ class PartnerOrganization extends Model
     use HasFactory;
 
     protected $fillable = [
-        'tenant_id', 'display_name', 'domain', 'category', 'owner_user_id', 'notes',
+        'tenant_id', 'display_name', 'domain', 'favicon_path', 'category', 'owner_user_id', 'notes',
         'b2b_inbound_enabled', 'b2b_outbound_enabled', 'mfa_trust_enabled',
         'device_trust_enabled', 'direct_connect_inbound_enabled', 'direct_connect_outbound_enabled',
         'tenant_restrictions_enabled', 'tenant_restrictions_json',

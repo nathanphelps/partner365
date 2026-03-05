@@ -3,6 +3,7 @@ export type PartnerOrganization = {
     tenant_id: string;
     display_name: string;
     domain: string | null;
+    favicon_path: string | null;
     category:
         | 'vendor'
         | 'contractor'
