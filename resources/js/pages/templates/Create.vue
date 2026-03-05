@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, useForm } from '@inertiajs/vue3';
+import { CircleHelp } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -7,7 +8,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from '@/components/ui/tooltip';
 import AppLayout from '@/layouts/AppLayout.vue';
+import { policyDefinitions } from '@/lib/policy-config';
 import { dashboard } from '@/routes';
 import templates from '@/routes/templates';
 import type { BreadcrumbItem } from '@/types';
@@ -16,34 +24,6 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: dashboard.url() },
     { title: 'Templates', href: templates.index.url() },
     { title: 'Create Template', href: templates.create.url() },
-];
-
-const policyKeys = [
-    {
-        key: 'mfa_trust_enabled',
-        label: 'MFA Trust',
-        description: 'Trust MFA claims from partner tenants.',
-    },
-    {
-        key: 'device_trust_enabled',
-        label: 'Device Trust',
-        description: 'Trust device compliance from partner tenants.',
-    },
-    {
-        key: 'direct_connect_enabled',
-        label: 'Direct Connect',
-        description: 'Allow Teams direct connect.',
-    },
-    {
-        key: 'b2b_inbound_enabled',
-        label: 'B2B Inbound',
-        description: 'Allow inbound B2B collaboration.',
-    },
-    {
-        key: 'b2b_outbound_enabled',
-        label: 'B2B Outbound',
-        description: 'Allow outbound B2B collaboration.',
-    },
 ];
 
 const form = useForm({
@@ -129,44 +109,66 @@ function submit() {
                             <p class="text-sm font-medium">
                                 Policy Configuration
                             </p>
-                            <div
-                                v-for="policy in policyKeys"
-                                :key="policy.key"
-                                class="flex items-center justify-between py-1.5"
-                            >
-                                <div>
-                                    <p class="text-sm font-medium">
-                                        {{ policy.label }}
-                                    </p>
-                                    <p class="text-xs text-muted-foreground">
-                                        {{ policy.description }}
-                                    </p>
+                            <TooltipProvider>
+                                <div
+                                    v-for="policy in policyDefinitions"
+                                    :key="policy.key"
+                                    class="flex items-center justify-between py-1.5"
+                                >
+                                    <div>
+                                        <div
+                                            class="flex items-center gap-1.5"
+                                        >
+                                            <p class="text-sm font-medium">
+                                                {{ policy.label }}
+                                            </p>
+                                            <Tooltip>
+                                                <TooltipTrigger as-child>
+                                                    <CircleHelp
+                                                        class="size-3.5 text-muted-foreground"
+                                                    />
+                                                </TooltipTrigger>
+                                                <TooltipContent
+                                                    class="max-w-xs"
+                                                    side="right"
+                                                >
+                                                    {{ policy.tooltip }}
+                                                </TooltipContent>
+                                            </Tooltip>
+                                        </div>
+                                        <p
+                                            class="text-xs text-muted-foreground"
+                                        >
+                                            {{ policy.description }}
+                                        </p>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <Checkbox
+                                            :id="`policy-${policy.key}`"
+                                            :checked="
+                                                form.policy_config[policy.key]
+                                            "
+                                            @update:checked="
+                                                (v: boolean) => {
+                                                    form.policy_config[
+                                                        policy.key
+                                                    ] = v;
+                                                }
+                                            "
+                                        />
+                                        <Label
+                                            :for="`policy-${policy.key}`"
+                                            class="w-8 cursor-pointer text-sm"
+                                        >
+                                            {{
+                                                form.policy_config[policy.key]
+                                                    ? 'On'
+                                                    : 'Off'
+                                            }}
+                                        </Label>
+                                    </div>
                                 </div>
-                                <div class="flex items-center gap-2">
-                                    <Checkbox
-                                        :id="`policy-${policy.key}`"
-                                        :checked="
-                                            form.policy_config[policy.key]
-                                        "
-                                        @update:checked="
-                                            (v: boolean) => {
-                                                form.policy_config[policy.key] =
-                                                    v;
-                                            }
-                                        "
-                                    />
-                                    <Label
-                                        :for="`policy-${policy.key}`"
-                                        class="w-8 cursor-pointer text-sm"
-                                    >
-                                        {{
-                                            form.policy_config[policy.key]
-                                                ? 'On'
-                                                : 'Off'
-                                        }}
-                                    </Label>
-                                </div>
-                            </div>
+                            </TooltipProvider>
                         </div>
 
                         <!-- Actions -->
