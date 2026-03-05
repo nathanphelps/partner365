@@ -152,6 +152,20 @@ Live-fetched from Microsoft Graph API. Responses are cached server-side for 5 mi
 | GET | `/reports` | `ComplianceReportController@index` | `reports.index` | Any |
 | GET | `/reports/export` | `ComplianceReportController@export` | `reports.export` | Any |
 
+### Admin — SSO Settings
+
+| Method | URI | Controller@Method | Name | Role |
+|--------|-----|------------------|------|------|
+| GET | `/admin/sso` | `AdminSsoController@edit` | `admin.sso.edit` | Admin |
+| PUT | `/admin/sso` | `AdminSsoController@update` | `admin.sso.update` | Admin |
+
+### SSO Authentication (Unauthenticated)
+
+| Method | URI | Controller@Method | Name | Auth |
+|--------|-----|------------------|------|------|
+| GET | `/auth/sso` | `Auth\SsoController@redirect` | `sso.redirect` | No |
+| GET | `/auth/sso/callback` | `Auth\SsoController@callback` | `sso.callback` | No |
+
 ### Admin — SIEM / Syslog Settings
 
 | Method | URI | Controller@Method | Name | Role |
@@ -408,6 +422,22 @@ The `PartnerOrganization` type includes trust score fields, conditional access p
     "recurrence_interval_days": "required_if:recurrence_type,recurring|integer|min:1|max:365",
     "remediation_action": "required|in:flag_only,disable,remove",
     "reviewer_user_id": "required|exists:users,id"
+}
+```
+
+### UpdateSsoSettingsRequest
+
+```json
+{
+    "enabled": "required|boolean",
+    "auto_approve": "required|boolean",
+    "default_role": "required|in:admin,operator,viewer",
+    "group_mapping_enabled": "required|boolean",
+    "group_mappings": "present|array",
+    "group_mappings.*.entra_group_id": "required_if:group_mapping_enabled,true|nullable|string|max:255",
+    "group_mappings.*.entra_group_name": "nullable|string|max:255",
+    "group_mappings.*.role": "required_if:group_mapping_enabled,true|nullable|in:admin,operator,viewer",
+    "restrict_provisioning_to_mapped_groups": "required|boolean"
 }
 ```
 

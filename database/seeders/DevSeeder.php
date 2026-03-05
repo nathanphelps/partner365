@@ -1083,5 +1083,13 @@ class DevSeeder extends Seeder
         Setting::set('syslog', 'port', '514');
         Setting::set('syslog', 'transport', 'udp');
         Setting::set('syslog', 'facility', '16');
+
+        // SSO settings (disabled by default in dev)
+        Setting::set('sso', 'enabled', 'false');
+        Setting::set('sso', 'auto_approve', 'true');
+        Setting::set('sso', 'default_role', 'viewer');
+        Setting::set('sso', 'group_mapping_enabled', 'false');
+        Setting::set('sso', 'group_mappings', '[]');
+        Setting::set('sso', 'restrict_provisioning_to_mapped_groups', 'false');
     }
 }

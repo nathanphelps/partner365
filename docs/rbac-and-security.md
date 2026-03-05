@@ -33,6 +33,7 @@ Partner365 uses a 3-tier role system stored in the `users.role` column as a stri
 | Apply remediations | Yes | No | No |
 | View activity log | Yes | Yes | Yes |
 | Configure SIEM/syslog | Yes | No | No |
+| Configure SSO | Yes | No | No |
 
 ### UserRole Enum
 
@@ -117,13 +118,19 @@ Vue components conditionally render UI elements:
 
 ## Authentication
 
-### Development
+### Password Authentication
 
-Laravel Fortify provides local email/password authentication with optional 2FA. This is the default configuration in the starter kit.
+Laravel Fortify provides email/password authentication with optional 2FA. Always available.
 
-### Production
+### Entra ID SSO (Optional)
 
-For production, configure Entra ID SSO via Laravel Socialite with the Microsoft provider. The Graph API itself uses a separate app-only client credentials flow (no user tokens are involved in API calls).
+Entra ID SSO can be enabled alongside password auth via **Admin → SSO**. It uses Laravel Socialite with the `socialiteproviders/microsoft` package for OpenID Connect. Both login methods are always available (dual mode).
+
+SSO uses the same Entra app registration as the Graph API (shared tenant ID, client ID, client secret). The cloud environment toggle (Commercial / GCC High) automatically sets the correct OIDC authority URL.
+
+**User provisioning:** New SSO users can be auto-approved or placed in the admin approval queue. A default role is assigned, optionally overridden by Entra group-to-role mapping. Group mapping is evaluated at first login only — admins can change roles afterward.
+
+The Graph API itself uses a separate app-only client credentials flow (no user tokens are involved in API calls).
 
 ## Security Model
 
@@ -217,7 +224,7 @@ Activity logs can be forwarded to an external SIEM (e.g., LogRhythm) via syslog 
 
 ## Default User Role
 
-New users are created with the `viewer` role by default. An admin must promote users to `operator` or `admin` via the database or a future admin interface.
+New users are created with the `viewer` role by default. An admin can promote users to `operator` or `admin` via **Admin → User Management**. SSO users can have their default role set via the SSO settings page, and optionally mapped from Entra security groups.
 
 ```php
 // database/factories/UserFactory.php

@@ -292,6 +292,8 @@ Ensure `mod_rewrite` is enabled. The `.htaccess` in the `public/` directory hand
 | `MICROSOFT_GRAPH_BASE_URL` | No | Auto from cloud env | Graph API base URL (overrides cloud env default) |
 | `MICROSOFT_GRAPH_SYNC_INTERVAL` | No | `15` | Sync interval in minutes |
 
+> **SSO Note:** SSO is configured through the admin UI (Admin → SSO), not environment variables. It reuses the Graph API credentials above. See [Azure Setup](azure-setup.md#entra-id-sso) for app registration requirements.
+
 ## Initial Data
 
 After deployment, you'll need to:

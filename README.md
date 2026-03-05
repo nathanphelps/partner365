@@ -37,6 +37,7 @@ Partner365 solves this with a single interface for IT admins, business owners, a
 - **Activity Log** — Full audit trail of all actions with filtering by action type, user, date range, and keyword search
 - **SIEM Integration** — Syslog/CEF forwarding to LogRhythm (or any SIEM) with admin-configurable host, port, transport (UDP/TCP/TLS), and facility
 - **Comprehensive Audit Coverage** — Auth events (login, logout, lockout, 2FA), profile/password changes, template CRUD, sync completions, admin actions, and consent grants
+- **Entra ID SSO** — Optional OpenID Connect sign-in via Microsoft Entra ID with configurable auto-approval, default role assignment, and group-to-role mapping (GCC High supported)
 - **3-Tier RBAC** — Admin, Operator, and Viewer roles with middleware-enforced access control
 
 ## Tech Stack
@@ -49,7 +50,7 @@ Partner365 solves this with a single interface for IT admins, business owners, a
 | API Integration | Microsoft Graph API v1.0 (direct HTTP, no SDK) |
 | Testing | Pest PHP |
 | Database | SQLite (dev/single-server) / PostgreSQL (prod) |
-| Auth | Laravel Fortify (dev) / Entra ID SSO (prod) |
+| Auth | Laravel Fortify + optional Entra ID SSO (Socialite) |
 | Deployment | Docker (FrankenPHP + Octane) or bare metal |
 
 ## Quick Start
@@ -132,10 +133,10 @@ app/
 │                           # AccessPackageResourceType, AssignmentStatus, SharePointSitesSynced
 ├── Exceptions/             # GraphApiException
 ├── Http/
-│   ├── Controllers/        # Partner, Guest, Template, Dashboard, ComplianceReport, ActivityLog, AccessReview, ConditionalAccessPolicy, SensitivityLabel, SharePointSite, Entitlement, Admin
+│   ├── Controllers/        # Partner, Guest, Template, Dashboard, ComplianceReport, ActivityLog, AccessReview, ConditionalAccessPolicy, SensitivityLabel, SharePointSite, Entitlement, Admin, Auth/Sso
 │   ├── Middleware/          # CheckRole (RBAC)
 │   └── Requests/           # StorePartner, UpdatePartner, InviteGuest, StoreTemplate, UpdateCollaboration,
-│                           # StoreAccessReview, StoreAccessPackage, UpdateAccessPackage, UpdateSyslogSettings
+│                           # StoreAccessReview, StoreAccessPackage, UpdateAccessPackage, UpdateSsoSettings, UpdateSyslogSettings
 ├── Jobs/                   # ForwardToSyslog (queued CEF forwarding)
 ├── Listeners/              # LogAuthEvent (Login, Logout, Failed, Lockout, 2FA)
 ├── Models/                 # PartnerOrganization, GuestUser, PartnerTemplate, ActivityLog, Setting,
@@ -164,7 +165,7 @@ resources/js/
 │   ├── sensitivity-labels/ # Index, Show (read-only sensitivity label visibility)
 │   ├── sharepoint-sites/   # Index, Show (read-only SharePoint site tracking)
 │   ├── entitlements/       # Index, Create (multi-step wizard), Show
-│   ├── admin/              # Graph settings, Collaboration, Users, Sync, Syslog
+│   ├── admin/              # Graph settings, Collaboration, Users, SSO, Sync, Syslog
 │   ├── activity/           # Index
 │   └── Dashboard.vue
 ├── types/                  # TypeScript types for Partner, Guest (+ access types), AccessReview, ConditionalAccessPolicy, SensitivityLabel, SharePoint, Entitlement, Compliance, Paginated
@@ -180,7 +181,7 @@ tests/Feature/
 ├── Observers/              # ActivityLogObserverTest
 ├── Services/               # All Graph API service classes + SensitivityLabelService + SharePointSiteService + Syslog/ (CefFormatter, SyslogTransport)
 ├── Settings/               # Profile, Password, 2FA, AuditLogging tests
-├── Admin/                  # AdminGraph, AdminSync, AdminUser, AdminSyslog controller tests
+├── Admin/                  # AdminGraph, AdminSync, AdminUser, AdminSyslog, Sso controller tests
 ├── PartnerOrganizationTest.php
 ├── GuestUserControllerTest.php
 ├── ComplianceReportTest.php

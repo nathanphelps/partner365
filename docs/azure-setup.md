@@ -8,7 +8,9 @@ This guide walks through creating the Azure AD app registration required for Par
 2. Click **New registration**
 3. Name: `Partner365` (or your preferred name)
 4. Supported account types: **Accounts in this organizational directory only**
-5. Redirect URI: **Web** → `https://your-app-url/admin/graph/consent/callback` (for admin consent flow)
+5. Redirect URIs: **Web** → add both:
+   - `https://your-app-url/admin/graph/consent/callback` (admin consent flow)
+   - `https://your-app-url/auth/sso/callback` (SSO sign-in)
 6. Click **Register**
 
 ## Step 2: Note the IDs
@@ -56,6 +58,19 @@ From the app registration overview page, copy:
 4. Verify all permissions show a green checkmark under "Status"
 
 > **Note:** These are **Application** permissions (not Delegated). Partner365 uses the client credentials OAuth2 flow, which requires application-level consent from a Global Administrator.
+
+### Delegated Permissions (for SSO)
+
+If you plan to enable Entra ID SSO, also add these **Delegated** permissions under **Microsoft Graph**:
+
+| Permission | Purpose |
+|-----------|---------|
+| `openid` | OpenID Connect sign-in |
+| `profile` | Read user's basic profile |
+| `email` | Read user's email address |
+| `User.Read` | Sign in and read user profile |
+
+These do not require admin consent — users consent on first SSO login.
 
 ## Step 5: Configure Environment
 
@@ -126,3 +141,25 @@ The scopes and base URL fields remain editable for manual overrides if needed.
 Partner365 includes an admin consent button on the Graph settings page. Instead of navigating to the Azure Portal, admins can click **Grant Admin Consent** to open a Microsoft popup directly from the app.
 
 The consent flow uses a redirect URI at `/admin/graph/consent/callback`. Make sure this URL is registered as a **Web** redirect URI in your app registration (see Step 1).
+
+## Entra ID SSO
+
+Partner365 supports optional Entra ID SSO alongside password authentication. SSO reuses the same app registration — no separate registration needed.
+
+### Setup
+
+1. Ensure the redirect URI `https://your-app-url/auth/sso/callback` is registered (see Step 1)
+2. Ensure delegated permissions (`openid`, `profile`, `email`, `User.Read`) are added (see Step 4)
+3. In Partner365, go to **Admin → SSO** and enable SSO
+
+### Configuration Options
+
+| Setting | Description |
+|---------|-------------|
+| **Enable SSO** | Master toggle for the "Sign in with Microsoft" button on the login page |
+| **Auto-approve** | When on, SSO users are immediately approved. When off, they enter the approval queue. |
+| **Default Role** | Role assigned to new SSO users (admin, operator, or viewer) |
+| **Group Mapping** | Map Entra security group IDs to roles. Highest-privilege match wins. |
+| **Restrict to Mapped Groups** | When on, only users in mapped groups can sign in via SSO. |
+
+Group mapping is evaluated at first login only. Admins can override roles manually afterward.

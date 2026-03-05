@@ -87,6 +87,8 @@ This avoids hitting Graph API rate limits on every page load while keeping data 
 users
 ├── id, name, email, password
 ├── role (enum: admin, operator, viewer)
+├── entra_id (nullable, unique — Entra object ID for SSO matching)
+├── approved_at, approved_by
 └── two_factor_* (Fortify 2FA columns)
 
 partner_organizations
@@ -279,8 +281,8 @@ activity_log
 └── created_at
 
 settings
-├── id, group (e.g. 'graph', 'sync', 'syslog')
-├── key (e.g. 'host', 'port', 'transport', 'facility', 'enabled')
+├── id, group (e.g. 'graph', 'sync', 'syslog', 'sso')
+├── key (e.g. 'host', 'port', 'transport', 'enabled', 'group_mappings')
 ├── value (string), encrypted (boolean)
 └── timestamps
 (Unique constraint on group + key)
