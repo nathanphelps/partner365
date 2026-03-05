@@ -10,6 +10,7 @@ use App\Models\PartnerOrganization;
 use App\Models\PartnerTemplate;
 use App\Services\ActivityLogService;
 use App\Services\CrossTenantPolicyService;
+use App\Services\SharePointSiteService;
 use App\Services\TenantResolverService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -134,6 +135,8 @@ class PartnerOrganizationController extends Controller
             ->withPivot('matched_via', 'policy_name', 'site_name')
             ->get();
 
+        $sharePointSites = app(SharePointSiteService::class)->getPartnerExposure($partner);
+
         return Inertia::render('partners/Show', [
             'partner' => $partner,
             'guests' => $guests,
@@ -141,6 +144,7 @@ class PartnerOrganizationController extends Controller
             'canManage' => $request->user()->role->canManage(),
             'conditionalAccessPolicies' => $conditionalAccessPolicies,
             'sensitivityLabels' => $sensitivityLabels,
+            'sharePointSites' => $sharePointSites,
         ]);
     }
 

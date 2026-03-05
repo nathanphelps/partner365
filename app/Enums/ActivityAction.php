@@ -33,6 +33,7 @@ enum ActivityAction: string
     case AssignmentRevoked = 'assignment_revoked';
     case ConditionalAccessPoliciesSynced = 'conditional_access_policies_synced';
     case SensitivityLabelsSynced = 'sensitivity_labels_synced';
+    case SharePointSitesSynced = 'sharepoint_sites_synced';
     case TemplateUpdated = 'template_updated';
     case TemplateDeleted = 'template_deleted';
     case UserLoggedIn = 'user_logged_in';

@@ -6,6 +6,7 @@ use App\Enums\InvitationStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class GuestUser extends Model
 {
@@ -36,5 +37,10 @@ class GuestUser extends Model
     public function invitedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'invited_by_user_id');
+    }
+
+    public function sharePointSitePermissions(): HasMany
+    {
+        return $this->hasMany(SharePointSitePermission::class, 'guest_user_id');
     }
 }

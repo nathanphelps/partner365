@@ -7,6 +7,7 @@ import {
     Building2,
     ClipboardCheck,
     FileStack,
+    HardDrive,
     LayoutGrid,
     Package,
     Settings,
@@ -53,6 +54,11 @@ const mainNavItems = computed<NavItem[]>(() => {
             title: 'Sensitivity Labels',
             href: '/sensitivity-labels',
             icon: Tag,
+        },
+        {
+            title: 'SharePoint Sites',
+            href: '/sharepoint-sites',
+            icon: HardDrive,
         },
         {
             title: 'Entitlements',

@@ -11,6 +11,7 @@ use App\Http\Controllers\GuestUserController;
 use App\Http\Controllers\PartnerOrganizationController;
 use App\Http\Controllers\PartnerTemplateController;
 use App\Http\Controllers\SensitivityLabelController;
+use App\Http\Controllers\SharePointSiteController;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
@@ -52,6 +53,9 @@ Route::middleware(['auth', 'verified', 'approved'])->group(function () {
 
     Route::get('sensitivity-labels', [SensitivityLabelController::class, 'index'])->name('sensitivity-labels.index');
     Route::get('sensitivity-labels/{sensitivityLabel}', [SensitivityLabelController::class, 'show'])->name('sensitivity-labels.show');
+
+    Route::get('sharepoint-sites', [SharePointSiteController::class, 'index'])->name('sharepoint-sites.index');
+    Route::get('sharepoint-sites/{sharePointSite}', [SharePointSiteController::class, 'show'])->name('sharepoint-sites.show');
 
     Route::resource('entitlements', EntitlementController::class)->except(['edit']);
     Route::post('entitlements/{entitlement}/assignments', [EntitlementController::class, 'createAssignment'])->name('entitlements.assignments.create');

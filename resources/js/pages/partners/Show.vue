@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
-import { AlertTriangle, CircleHelp, Shield, Tag } from 'lucide-vue-next';
+import { AlertTriangle, CircleHelp, HardDrive, Shield, Tag } from 'lucide-vue-next';
 import { ref, reactive, computed } from 'vue';
 import GuestUserTable from '@/components/GuestUserTable.vue';
 import PartnerAvatar from '@/components/PartnerAvatar.vue';
@@ -46,6 +46,7 @@ import type {
     Paginated,
 } from '@/types/partner';
 import type { SensitivityLabel } from '@/types/sensitivity-label';
+import type { SharePointSite, SharePointSitePermission } from '@/types/sharepoint';
 
 const props = defineProps<{
     partner: PartnerOrganization;
@@ -60,6 +61,9 @@ const props = defineProps<{
             policy_name: string | null;
             site_name: string | null;
         };
+    })[];
+    sharePointSites: (SharePointSite & {
+        permissions: SharePointSitePermission[];
     })[];
 }>();
 
@@ -825,6 +829,101 @@ const directConnectStatus = computed(() => {
                                                 : 'Site Assignment'
                                         }}
                                     </Badge>
+                                </TableCell>
+                            </TableRow>
+                        </TableBody>
+                    </Table>
+                </CardContent>
+            </Card>
+
+            <!-- SharePoint Sites -->
+            <Card>
+                <CardHeader>
+                    <CardTitle class="flex items-center gap-2">
+                        <HardDrive class="size-5" />
+                        SharePoint Sites ({{ sharePointSites.length }})
+                    </CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <div
+                        v-if="sharePointSites.length === 0"
+                        class="flex items-center gap-3 rounded-lg border border-yellow-300 bg-yellow-50 p-4 dark:border-yellow-700 dark:bg-yellow-950"
+                    >
+                        <AlertTriangle
+                            class="size-5 shrink-0 text-yellow-600 dark:text-yellow-400"
+                        />
+                        <p class="text-sm text-yellow-800 dark:text-yellow-200">
+                            No SharePoint sites are accessible by this
+                            partner's guests.
+                            <Link href="/sharepoint-sites" class="underline"
+                                >View all sites</Link
+                            >
+                        </p>
+                    </div>
+                    <Table v-else>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Site</TableHead>
+                                <TableHead>Sharing</TableHead>
+                                <TableHead>Sensitivity Label</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            <TableRow
+                                v-for="site in sharePointSites"
+                                :key="site.id"
+                            >
+                                <TableCell>
+                                    <Link
+                                        :href="`/sharepoint-sites/${site.id}`"
+                                        class="font-medium hover:underline"
+                                    >
+                                        {{ site.display_name }}
+                                    </Link>
+                                </TableCell>
+                                <TableCell>
+                                    <Badge variant="secondary">
+                                        {{
+                                            {
+                                                Disabled: 'Disabled',
+                                                ExistingExternalUserSharingOnly:
+                                                    'Existing external',
+                                                ExternalUserSharingOnly:
+                                                    'External only',
+                                                ExternalUserAndGuestSharing:
+                                                    'External & guests',
+                                            }[
+                                                site
+                                                    .external_sharing_capability
+                                            ] ??
+                                            site.external_sharing_capability
+                                        }}
+                                    </Badge>
+                                </TableCell>
+                                <TableCell>
+                                    <template
+                                        v-if="site.sensitivity_label"
+                                    >
+                                        <span
+                                            v-if="
+                                                site.sensitivity_label.color
+                                            "
+                                            class="mr-1.5 inline-block size-2.5 rounded-full"
+                                            :style="{
+                                                backgroundColor:
+                                                    site.sensitivity_label
+                                                        .color,
+                                            }"
+                                        />
+                                        {{
+                                            site.sensitivity_label.name
+                                        }}
+                                    </template>
+                                    <span
+                                        v-else
+                                        class="text-muted-foreground"
+                                        >&mdash;</span
+                                    >
                                 </TableCell>
                             </TableRow>
                         </TableBody>
