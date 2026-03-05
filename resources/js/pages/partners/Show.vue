@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import { ref, reactive, computed } from 'vue';
-import AppLayout from '@/layouts/AppLayout.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,9 +8,10 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
+import AppLayout from '@/layouts/AppLayout.vue';
 import { dashboard } from '@/routes';
-import partners from '@/routes/partners';
 import guestRoutes from '@/routes/guests';
+import partners from '@/routes/partners';
 import type { BreadcrumbItem } from '@/types';
 import type { PartnerOrganization, GuestUser } from '@/types/partner';
 

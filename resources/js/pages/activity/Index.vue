@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
-import AppLayout from '@/layouts/AppLayout.vue';
 import { Badge } from '@/components/ui/badge';
+import AppLayout from '@/layouts/AppLayout.vue';
 import { dashboard } from '@/routes';
 import { index as activityIndex } from '@/routes/activity';
 import type { BreadcrumbItem } from '@/types';

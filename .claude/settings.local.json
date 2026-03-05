@@ -2,7 +2,21 @@
   "permissions": {
     "allow": [
       "WebSearch",
-      "Bash(wc:*)"
+      "Bash(wc:*)",
+      "Bash(php:*)",
+      "Bash(host:*)",
+      "Bash(dig +short:*)",
+      "Bash(sudo:*)",
+      "Bash(curl:*)",
+      "Bash(mysql:*)",
+      "Bash(docker ps:*)",
+      "Bash(node:*)",
+      "Bash(PGPASSWORD=root psql:*)",
+      "Bash(docker exec:*)",
+      "Bash(composer install:*)",
+      "Bash(npm install:*)",
+      "Bash(mv:*)",
+      "Bash(npm run:*)"
     ]
   }
 }

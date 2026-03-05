@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
-import AppLayout from '@/layouts/AppLayout.vue';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import AppLayout from '@/layouts/AppLayout.vue';
 import { dashboard } from '@/routes';
-import partners from '@/routes/partners';
-import guests from '@/routes/guests';
 import { index as activityIndex } from '@/routes/activity';
+import guests from '@/routes/guests';
+import partners from '@/routes/partners';
 import type { BreadcrumbItem } from '@/types';
 
 const props = defineProps<{

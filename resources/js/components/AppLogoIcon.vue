@@ -15,15 +15,29 @@ defineProps<Props>();
 <template>
     <svg
         xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 40 42"
+        viewBox="0 0 48 48"
         :class="className"
         v-bind="$attrs"
     >
+        <!-- Shield shape -->
         <path
             fill="currentColor"
-            fill-rule="evenodd"
-            clip-rule="evenodd"
-            d="M17.2 5.633 8.6.855 0 5.633v26.51l16.2 9 16.2-9v-8.442l7.6-4.223V9.856l-8.6-4.777-8.6 4.777V18.3l-5.6 3.111V5.633ZM38 18.301l-5.6 3.11v-6.157l5.6-3.11V18.3Zm-1.06-7.856-5.54 3.078-5.54-3.079 5.54-3.078 5.54 3.079ZM24.8 18.3v-6.157l5.6 3.111v6.158L24.8 18.3Zm-1 1.732 5.54 3.078-13.14 7.302-5.54-3.078 13.14-7.3v-.002Zm-16.2 7.89 7.6 4.222V38.3L2 30.966V7.92l5.6 3.111v16.892ZM8.6 9.3 3.06 6.222 8.6 3.143l5.54 3.08L8.6 9.3Zm21.8 15.51-13.2 7.334V38.3l13.2-7.334v-6.156ZM9.6 11.034l5.6-3.11v14.6l-5.6 3.11v-14.6Z"
+            d="M24 2L6 10v12c0 11.1 7.7 21.5 18 24 10.3-2.5 18-12.9 18-24V10L24 2zm0 4.4L38 12v10c0 9.4-6.5 18.2-14 20.7V4.4zM10 12l14-5.6v38.3C16.5 42.2 10 33.4 10 22V12z"
+            opacity="0.15"
         />
+        <path
+            fill="currentColor"
+            d="M24 2L6 10v12c0 11.1 7.7 21.5 18 24 10.3-2.5 18-12.9 18-24V10L24 2zm14 20c0 9.4-6.5 18.2-14 20.7C16.5 40.2 10 31.4 10 22V12l14-5.6L38 12v10z"
+        />
+        <!-- "365" text -->
+        <text
+            x="24"
+            y="28"
+            text-anchor="middle"
+            fill="currentColor"
+            font-family="Inter, system-ui, sans-serif"
+            font-size="11"
+            font-weight="700"
+        >365</text>
     </svg>
 </template>
