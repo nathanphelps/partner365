@@ -14,3 +14,29 @@ export type GuestUser = {
     last_synced_at: string | null;
     created_at: string;
 };
+
+export type GuestGroup = {
+    id: string;
+    displayName: string;
+    groupType: 'security' | 'microsoft365' | 'distribution';
+    description: string | null;
+};
+
+export type GuestApp = {
+    id: string;
+    appDisplayName: string;
+    roleName: string | null;
+    assignedAt: string | null;
+};
+
+export type GuestTeam = {
+    id: string;
+    displayName: string;
+    description: string | null;
+};
+
+export type GuestSite = {
+    id: string;
+    displayName: string;
+    webUrl: string;
+};

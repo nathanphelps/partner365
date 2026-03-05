@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\ActivityAction;
+use App\Exceptions\GraphApiException;
 use App\Http\Requests\BulkGuestActionRequest;
 use App\Http\Requests\InviteGuestRequest;
 use App\Http\Requests\UpdateGuestRequest;
@@ -201,6 +202,42 @@ class GuestUserController extends Controller
         $guest->delete();
 
         return redirect()->route('guests.index')->with('success', 'Guest user removed.');
+    }
+
+    public function groups(GuestUser $guest): JsonResponse
+    {
+        try {
+            return response()->json($this->guestService->getUserGroups($guest->entra_user_id));
+        } catch (GraphApiException) {
+            return response()->json(['error' => 'Unable to load groups from Microsoft Graph API.'], 502);
+        }
+    }
+
+    public function apps(GuestUser $guest): JsonResponse
+    {
+        try {
+            return response()->json($this->guestService->getUserApps($guest->entra_user_id));
+        } catch (GraphApiException) {
+            return response()->json(['error' => 'Unable to load apps from Microsoft Graph API.'], 502);
+        }
+    }
+
+    public function teams(GuestUser $guest): JsonResponse
+    {
+        try {
+            return response()->json($this->guestService->getUserTeams($guest->entra_user_id));
+        } catch (GraphApiException) {
+            return response()->json(['error' => 'Unable to load teams from Microsoft Graph API.'], 502);
+        }
+    }
+
+    public function sites(GuestUser $guest): JsonResponse
+    {
+        try {
+            return response()->json($this->guestService->getUserSites($guest->entra_user_id));
+        } catch (GraphApiException) {
+            return response()->json(['error' => 'Unable to load sites from Microsoft Graph API.'], 502);
+        }
     }
 
     private function handleBulkEnable(User $user, GuestUser $guest): void

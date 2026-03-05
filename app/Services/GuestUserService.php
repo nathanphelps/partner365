@@ -2,6 +2,9 @@
 
 namespace App\Services;
 
+use App\Exceptions\GraphApiException;
+use Illuminate\Support\Facades\Cache;
+
 class GuestUserService
 {
     private const GUEST_SELECT_FIELDS = 'id,displayName,mail,userPrincipalName,userType,accountEnabled,createdDateTime,externalUserState,signInActivity';
@@ -74,5 +77,110 @@ class GuestUserService
             'inviteRedirectUrl' => $redirectUrl,
             'sendInvitationMessage' => true,
         ]);
+    }
+
+    public function getUserGroups(string $entraUserId): array
+    {
+        return Cache::remember("guest_access:{$entraUserId}:groups", 300, function () use ($entraUserId) {
+            $response = $this->graph->get("/users/{$entraUserId}/memberOf", [
+                '$select' => 'id,displayName,groupTypes,securityEnabled,mailEnabled,description',
+                '$top' => 999,
+            ]);
+
+            return collect($response['value'] ?? [])
+                ->filter(fn ($item) => ($item['@odata.type'] ?? '') === '#microsoft.graph.group')
+                ->map(fn ($group) => [
+                    'id' => $group['id'],
+                    'displayName' => $group['displayName'] ?? '',
+                    'groupType' => $this->resolveGroupType($group),
+                    'description' => $group['description'] ?? null,
+                ])
+                ->values()
+                ->all();
+        });
+    }
+
+    public function getUserApps(string $entraUserId): array
+    {
+        return Cache::remember("guest_access:{$entraUserId}:apps", 300, function () use ($entraUserId) {
+            $response = $this->graph->get("/users/{$entraUserId}/appRoleAssignments", [
+                '$top' => 999,
+            ]);
+
+            return collect($response['value'] ?? [])
+                ->map(fn ($assignment) => [
+                    'id' => $assignment['id'],
+                    'appDisplayName' => $assignment['resourceDisplayName'] ?? 'Unknown App',
+                    'roleName' => $assignment['appRoleId'] === '00000000-0000-0000-0000-000000000000'
+                        ? 'Default Access'
+                        : ($assignment['appRoleId'] ?? null),
+                    'assignedAt' => $assignment['createdDateTime'] ?? null,
+                ])
+                ->values()
+                ->all();
+        });
+    }
+
+    public function getUserTeams(string $entraUserId): array
+    {
+        return Cache::remember("guest_access:{$entraUserId}:teams", 300, function () use ($entraUserId) {
+            $response = $this->graph->get("/users/{$entraUserId}/joinedTeams", [
+                '$select' => 'id,displayName,description',
+                '$top' => 999,
+            ]);
+
+            return collect($response['value'] ?? [])
+                ->map(fn ($team) => [
+                    'id' => $team['id'],
+                    'displayName' => $team['displayName'] ?? '',
+                    'description' => $team['description'] ?? null,
+                ])
+                ->values()
+                ->all();
+        });
+    }
+
+    public function getUserSites(string $entraUserId): array
+    {
+        return Cache::remember("guest_access:{$entraUserId}:sites", 300, function () use ($entraUserId) {
+            $response = $this->graph->get("/users/{$entraUserId}/memberOf", [
+                '$select' => 'id,displayName,groupTypes,securityEnabled,mailEnabled,description',
+                '$top' => 999,
+            ]);
+
+            $m365Groups = collect($response['value'] ?? [])
+                ->filter(fn ($item) => ($item['@odata.type'] ?? '') === '#microsoft.graph.group')
+                ->filter(fn ($group) => in_array('Unified', $group['groupTypes'] ?? []));
+
+            $sites = [];
+            foreach ($m365Groups as $group) {
+                try {
+                    $site = $this->graph->get("/groups/{$group['id']}/sites/root", [
+                        '$select' => 'id,displayName,webUrl',
+                    ]);
+                    $sites[] = [
+                        'id' => $site['id'],
+                        'displayName' => $site['displayName'] ?? '',
+                        'webUrl' => $site['webUrl'] ?? '',
+                    ];
+                } catch (GraphApiException) {
+                    continue;
+                }
+            }
+
+            return $sites;
+        });
+    }
+
+    private function resolveGroupType(array $group): string
+    {
+        if (in_array('Unified', $group['groupTypes'] ?? [])) {
+            return 'microsoft365';
+        }
+        if ($group['securityEnabled'] ?? false) {
+            return 'security';
+        }
+
+        return 'distribution';
     }
 }

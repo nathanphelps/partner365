@@ -27,6 +27,10 @@ Route::middleware(['auth', 'verified', 'approved'])->group(function () {
     Route::post('guests/bulk', [GuestUserController::class, 'bulkAction'])->name('guests.bulk');
     Route::resource('guests', GuestUserController::class)->except(['edit']);
     Route::post('guests/{guest}/resend', [GuestUserController::class, 'resendInvitation'])->name('guests.resend');
+    Route::get('guests/{guest}/groups', [GuestUserController::class, 'groups'])->name('guests.groups');
+    Route::get('guests/{guest}/apps', [GuestUserController::class, 'apps'])->name('guests.apps');
+    Route::get('guests/{guest}/teams', [GuestUserController::class, 'teams'])->name('guests.teams');
+    Route::get('guests/{guest}/sites', [GuestUserController::class, 'sites'])->name('guests.sites');
 
     Route::resource('templates', PartnerTemplateController::class)->middleware('role:admin');
 
