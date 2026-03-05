@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Head, router, usePage } from '@inertiajs/vue3';
+import { CircleHelp } from 'lucide-vue-next';
 import { ref, reactive, computed } from 'vue';
 import GuestUserTable from '@/components/GuestUserTable.vue';
 import { Badge } from '@/components/ui/badge';
@@ -8,7 +9,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from '@/components/ui/tooltip';
 import AppLayout from '@/layouts/AppLayout.vue';
+import { policyDefinitions } from '@/lib/policy-config';
 import { dashboard } from '@/routes';
 import partners from '@/routes/partners';
 import type { BreadcrumbItem } from '@/types';
@@ -110,33 +118,6 @@ function formatDate(val: string | null): string {
     return new Date(val).toLocaleString();
 }
 
-const policies = [
-    {
-        key: 'mfa_trust_enabled',
-        label: 'MFA Trust',
-        description: 'Trust MFA claims from this partner tenant.',
-    },
-    {
-        key: 'device_trust_enabled',
-        label: 'Device Trust',
-        description: 'Trust device compliance from this partner.',
-    },
-    {
-        key: 'direct_connect_enabled',
-        label: 'Direct Connect',
-        description: 'Allow Teams direct connect with this partner.',
-    },
-    {
-        key: 'b2b_inbound_enabled',
-        label: 'B2B Inbound',
-        description: 'Allow inbound B2B collaboration from this partner.',
-    },
-    {
-        key: 'b2b_outbound_enabled',
-        label: 'B2B Outbound',
-        description: 'Allow outbound B2B collaboration to this partner.',
-    },
-] as const;
 
 const isAdmin = computed(() => {
     const auth = page.props.auth as { user?: { role?: string } };
@@ -148,7 +129,7 @@ const isAdmin = computed(() => {
     <Head :title="partner.display_name" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
-        <div class="flex max-w-4xl flex-col gap-6 p-6">
+        <div class="flex flex-col gap-6 p-6">
             <!-- Header -->
             <div class="flex items-start justify-between">
                 <div>
@@ -177,35 +158,53 @@ const isAdmin = computed(() => {
 
             <Separator />
 
-            <!-- Policy Toggles -->
+            <!-- Policy Toggles + Notes -->
+            <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
             <Card>
                 <CardHeader>
                     <CardTitle>Access Policies</CardTitle>
                 </CardHeader>
                 <CardContent class="flex flex-col gap-4">
-                    <div
-                        v-for="policy in policies"
-                        :key="policy.key"
-                        class="flex items-center justify-between py-2"
-                    >
-                        <div>
-                            <p class="text-sm font-medium">
-                                {{ policy.label }}
-                            </p>
-                            <p class="text-xs text-muted-foreground">
-                                {{ policy.description }}
-                            </p>
+                    <TooltipProvider>
+                        <div
+                            v-for="policy in policyDefinitions"
+                            :key="policy.key"
+                            class="flex items-center justify-between py-2"
+                        >
+                            <div>
+                                <div class="flex items-center gap-1.5">
+                                    <p class="text-sm font-medium">
+                                        {{ policy.label }}
+                                    </p>
+                                    <Tooltip>
+                                        <TooltipTrigger as-child>
+                                            <CircleHelp
+                                                class="size-3.5 text-muted-foreground"
+                                            />
+                                        </TooltipTrigger>
+                                        <TooltipContent
+                                            class="max-w-xs"
+                                            side="right"
+                                        >
+                                            {{ policy.tooltip }}
+                                        </TooltipContent>
+                                    </Tooltip>
+                                </div>
+                                <p class="text-xs text-muted-foreground">
+                                    {{ policy.description }}
+                                </p>
+                            </div>
+                            <Switch
+                                :id="`policy-${policy.key}`"
+                                :model-value="policyForm[policy.key]"
+                                @update:model-value="
+                                    (val: boolean) => {
+                                        (policyForm as any)[policy.key] = val;
+                                    }
+                                "
+                            />
                         </div>
-                        <Switch
-                            :id="`policy-${policy.key}`"
-                            :model-value="policyForm[policy.key]"
-                            @update:model-value="
-                                (val: boolean) => {
-                                    (policyForm as any)[policy.key] = val;
-                                }
-                            "
-                        />
-                    </div>
+                    </TooltipProvider>
 
                     <div class="flex items-center gap-3 pt-2">
                         <Button
@@ -223,7 +222,6 @@ const isAdmin = computed(() => {
                 </CardContent>
             </Card>
 
-            <!-- Notes -->
             <Card>
                 <CardHeader>
                     <CardTitle>Notes</CardTitle>
@@ -250,6 +248,7 @@ const isAdmin = computed(() => {
                     </div>
                 </CardContent>
             </Card>
+            </div>
 
             <!-- Guest Users -->
             <Card>
