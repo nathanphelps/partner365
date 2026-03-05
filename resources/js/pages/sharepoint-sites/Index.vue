@@ -84,8 +84,8 @@ function sharingLabel(capability: string): string {
 
             <Card v-if="sites.data.length === 0">
                 <CardContent class="py-12 text-center text-muted-foreground">
-                    No SharePoint sites found. Run the sync command or wait
-                    for the next scheduled sync.
+                    No SharePoint sites found. Run the sync command or wait for
+                    the next scheduled sync.
                 </CardContent>
             </Card>
 
@@ -145,9 +145,7 @@ function sharingLabel(capability: string): string {
                                 >&mdash;</span
                             >
                         </TableCell>
-                        <TableCell>{{
-                            site.permissions_count ?? 0
-                        }}</TableCell>
+                        <TableCell>{{ site.permissions_count ?? 0 }}</TableCell>
                     </TableRow>
                 </TableBody>
             </Table>

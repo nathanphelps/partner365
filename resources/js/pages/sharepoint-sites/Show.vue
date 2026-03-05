@@ -3,12 +3,7 @@ import { Head, Link } from '@inertiajs/vue3';
 import { ExternalLink } from 'lucide-vue-next';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-    Card,
-    CardContent,
-    CardHeader,
-    CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import {
     Table,
@@ -101,27 +96,17 @@ function grantedViaLabel(via: string): string {
                         </h1>
                         <Badge
                             :variant="
-                                sharingVariant(
-                                    site.external_sharing_capability,
-                                )
+                                sharingVariant(site.external_sharing_capability)
                             "
                         >
-                            {{
-                                sharingLabel(
-                                    site.external_sharing_capability,
-                                )
-                            }}
+                            {{ sharingLabel(site.external_sharing_capability) }}
                         </Badge>
                     </div>
                     <p class="mt-1 text-xs text-muted-foreground">
                         {{ site.url }}
                     </p>
                 </div>
-                <a
-                    :href="site.url"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                >
+                <a :href="site.url" target="_blank" rel="noopener noreferrer">
                     <Button variant="outline" size="sm">
                         <ExternalLink class="mr-2 size-4" />
                         Open in SharePoint
@@ -135,15 +120,11 @@ function grantedViaLabel(via: string): string {
                 <CardHeader>
                     <CardTitle>Site Details</CardTitle>
                 </CardHeader>
-                <CardContent
-                    class="grid grid-cols-2 gap-x-4 gap-y-2 text-sm"
-                >
+                <CardContent class="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
                     <span class="text-muted-foreground">Description</span>
                     <span>{{ site.description || '\u2014' }}</span>
 
-                    <span class="text-muted-foreground"
-                        >Sensitivity Label</span
-                    >
+                    <span class="text-muted-foreground">Sensitivity Label</span>
                     <span>
                         <template v-if="site.sensitivity_label">
                             <span
@@ -160,9 +141,7 @@ function grantedViaLabel(via: string): string {
                     </span>
 
                     <span class="text-muted-foreground">Owner</span>
-                    <span>{{
-                        site.owner_display_name || '\u2014'
-                    }}</span>
+                    <span>{{ site.owner_display_name || '\u2014' }}</span>
 
                     <span class="text-muted-foreground">Owner Email</span>
                     <span>{{ site.owner_email || '\u2014' }}</span>
@@ -213,9 +192,7 @@ function grantedViaLabel(via: string): string {
                                             perm.guest_user.email
                                         }}
                                     </Link>
-                                    <span
-                                        v-else
-                                        class="text-muted-foreground"
+                                    <span v-else class="text-muted-foreground"
                                         >&mdash;</span
                                     >
                                 </TableCell>
@@ -232,14 +209,11 @@ function grantedViaLabel(via: string): string {
                                         class="hover:underline"
                                     >
                                         {{
-                                            perm.guest_user
-                                                .partner_organization
+                                            perm.guest_user.partner_organization
                                                 .display_name
                                         }}
                                     </Link>
-                                    <span
-                                        v-else
-                                        class="text-muted-foreground"
+                                    <span v-else class="text-muted-foreground"
                                         >&mdash;</span
                                     >
                                 </TableCell>
@@ -250,9 +224,7 @@ function grantedViaLabel(via: string): string {
                                 </TableCell>
                                 <TableCell>
                                     <Badge variant="outline">
-                                        {{
-                                            grantedViaLabel(perm.granted_via)
-                                        }}
+                                        {{ grantedViaLabel(perm.granted_via) }}
                                     </Badge>
                                 </TableCell>
                             </TableRow>

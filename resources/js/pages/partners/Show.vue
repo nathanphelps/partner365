@@ -1,6 +1,12 @@
 <script setup lang="ts">
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
-import { AlertTriangle, CircleHelp, HardDrive, Shield, Tag } from 'lucide-vue-next';
+import {
+    AlertTriangle,
+    CircleHelp,
+    HardDrive,
+    Shield,
+    Tag,
+} from 'lucide-vue-next';
 import { ref, reactive, computed } from 'vue';
 import GuestUserTable from '@/components/GuestUserTable.vue';
 import PartnerAvatar from '@/components/PartnerAvatar.vue';
@@ -46,7 +52,10 @@ import type {
     Paginated,
 } from '@/types/partner';
 import type { SensitivityLabel } from '@/types/sensitivity-label';
-import type { SharePointSite, SharePointSitePermission } from '@/types/sharepoint';
+import type {
+    SharePointSite,
+    SharePointSitePermission,
+} from '@/types/sharepoint';
 
 const props = defineProps<{
     partner: PartnerOrganization;
@@ -853,8 +862,8 @@ const directConnectStatus = computed(() => {
                             class="size-5 shrink-0 text-yellow-600 dark:text-yellow-400"
                         />
                         <p class="text-sm text-yellow-800 dark:text-yellow-200">
-                            No SharePoint sites are accessible by this
-                            partner's guests.
+                            No SharePoint sites are accessible by this partner's
+                            guests.
                             <Link href="/sharepoint-sites" class="underline"
                                 >View all sites</Link
                             >
@@ -893,21 +902,16 @@ const directConnectStatus = computed(() => {
                                                 ExternalUserAndGuestSharing:
                                                     'External & guests',
                                             }[
-                                                site
-                                                    .external_sharing_capability
+                                                site.external_sharing_capability
                                             ] ??
                                             site.external_sharing_capability
                                         }}
                                     </Badge>
                                 </TableCell>
                                 <TableCell>
-                                    <template
-                                        v-if="site.sensitivity_label"
-                                    >
+                                    <template v-if="site.sensitivity_label">
                                         <span
-                                            v-if="
-                                                site.sensitivity_label.color
-                                            "
+                                            v-if="site.sensitivity_label.color"
                                             class="mr-1.5 inline-block size-2.5 rounded-full"
                                             :style="{
                                                 backgroundColor:
@@ -915,13 +919,9 @@ const directConnectStatus = computed(() => {
                                                         .color,
                                             }"
                                         />
-                                        {{
-                                            site.sensitivity_label.name
-                                        }}
+                                        {{ site.sensitivity_label.name }}
                                     </template>
-                                    <span
-                                        v-else
-                                        class="text-muted-foreground"
+                                    <span v-else class="text-muted-foreground"
                                         >&mdash;</span
                                     >
                                 </TableCell>
