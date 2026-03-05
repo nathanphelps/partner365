@@ -3,7 +3,7 @@ import { Head, Link } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { dashboard } from '@/routes';
-import templates from '@/routes/templates';
+import templateRoutes from '@/routes/templates';
 import type { BreadcrumbItem } from '@/types';
 
 type Template = {
@@ -29,7 +29,7 @@ defineProps<{
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: dashboard.url() },
-    { title: 'Templates', href: templates.index.url() },
+    { title: 'Templates', href: templateRoutes.index.url() },
 ];
 
 function formatDate(val: string): string {
@@ -54,7 +54,7 @@ function enabledPoliciesCount(config: Record<string, boolean>): number {
                         Reusable policy configurations for partner organizations.
                     </p>
                 </div>
-                <Link :href="templates.create.url()">
+                <Link :href="templateRoutes.create.url()">
                     <Button>Create Template</Button>
                 </Link>
             </div>
@@ -79,7 +79,7 @@ function enabledPoliciesCount(config: Record<string, boolean>): number {
                         >
                             <td class="px-4 py-3">
                                 <Link
-                                    :href="templates.edit.url(template.id)"
+                                    :href="templateRoutes.edit.url(template.id)"
                                     class="font-medium text-foreground hover:underline"
                                 >
                                     {{ template.name }}
@@ -95,7 +95,7 @@ function enabledPoliciesCount(config: Record<string, boolean>): number {
                                 {{ formatDate(template.created_at) }}
                             </td>
                             <td class="px-4 py-3">
-                                <Link :href="templates.edit.url(template.id)">
+                                <Link :href="templateRoutes.edit.url(template.id)">
                                     <Button variant="outline" size="sm">Edit</Button>
                                 </Link>
                             </td>

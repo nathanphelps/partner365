@@ -6,8 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { dashboard } from '@/routes';
-import guests from '@/routes/guests';
-import partners from '@/routes/partners';
+import guestRoutes from '@/routes/guests';
+import partnerRoutes from '@/routes/partners';
 import type { BreadcrumbItem } from '@/types';
 import type { GuestUser, Paginated } from '@/types/partner';
 
@@ -18,7 +18,7 @@ const props = defineProps<{
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: dashboard.url() },
-    { title: 'Guest Users', href: guests.index.url() },
+    { title: 'Guest Users', href: guestRoutes.index.url() },
 ];
 
 const search = ref(props.filters?.search ?? '');
@@ -29,12 +29,12 @@ let searchTimer: ReturnType<typeof setTimeout>;
 watch(search, (val) => {
     clearTimeout(searchTimer);
     searchTimer = setTimeout(() => {
-        router.get(guests.index.url(), { search: val, status: statusFilter.value }, { preserveState: true, replace: true });
+        router.get(guestRoutes.index.url(), { search: val, status: statusFilter.value }, { preserveState: true, replace: true });
     }, 400);
 });
 
 watch(statusFilter, (val) => {
-    router.get(guests.index.url(), { search: search.value, status: val }, { preserveState: true, replace: true });
+    router.get(guestRoutes.index.url(), { search: search.value, status: val }, { preserveState: true, replace: true });
 });
 
 const statusVariant = (status: string): 'default' | 'destructive' | 'outline' => {
@@ -66,7 +66,7 @@ function formatDate(val: string | null): string {
                         Manage external guest users in your M365 tenant.
                     </p>
                 </div>
-                <Link :href="guests.create.url()">
+                <Link :href="guestRoutes.create.url()">
                     <Button>Invite Guest</Button>
                 </Link>
             </div>
@@ -110,7 +110,7 @@ function formatDate(val: string | null): string {
                         >
                             <td class="px-4 py-3">
                                 <Link
-                                    :href="guests.show.url(guest.id)"
+                                    :href="guestRoutes.show.url(guest.id)"
                                     class="font-medium text-foreground hover:underline"
                                 >
                                     {{ guest.display_name }}
@@ -120,7 +120,7 @@ function formatDate(val: string | null): string {
                             <td class="px-4 py-3">
                                 <Link
                                     v-if="guest.partner_organization"
-                                    :href="partners.show.url(guest.partner_organization.id)"
+                                    :href="partnerRoutes.show.url(guest.partner_organization.id)"
                                     class="hover:underline text-sm"
                                 >
                                     {{ guest.partner_organization.display_name }}

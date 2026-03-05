@@ -17,6 +17,8 @@ export type PartnerOrganization = {
     guest_users_count?: number;
 };
 
+export type { GuestUser } from './guest';
+
 export type Paginated<T> = {
     data: T[];
     current_page: number;

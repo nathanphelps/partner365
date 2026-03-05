@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { dashboard } from '@/routes';
-import partners from '@/routes/partners';
+import partnerRoutes from '@/routes/partners';
 import type { BreadcrumbItem } from '@/types';
 import type { PartnerOrganization, Paginated } from '@/types/partner';
 
@@ -17,7 +17,7 @@ const props = defineProps<{
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: dashboard.url() },
-    { title: 'Partners', href: partners.index.url() },
+    { title: 'Partners', href: partnerRoutes.index.url() },
 ];
 
 const search = ref(props.filters.search ?? '');
@@ -28,12 +28,12 @@ let searchTimer: ReturnType<typeof setTimeout>;
 watch(search, (val) => {
     clearTimeout(searchTimer);
     searchTimer = setTimeout(() => {
-        router.get(partners.index.url(), { search: val, category: category.value }, { preserveState: true, replace: true });
+        router.get(partnerRoutes.index.url(), { search: val, category: category.value }, { preserveState: true, replace: true });
     }, 400);
 });
 
 watch(category, (val) => {
-    router.get(partners.index.url(), { search: search.value, category: val }, { preserveState: true, replace: true });
+    router.get(partnerRoutes.index.url(), { search: search.value, category: val }, { preserveState: true, replace: true });
 });
 
 const categoryLabel: Record<string, string> = {
@@ -74,7 +74,7 @@ function formatDate(val: string | null): string {
                         Manage your M365 partner tenants and their access policies.
                     </p>
                 </div>
-                <Link :href="partners.create.url()">
+                <Link :href="partnerRoutes.create.url()">
                     <Button>Add Partner</Button>
                 </Link>
             </div>
@@ -121,7 +121,7 @@ function formatDate(val: string | null): string {
                         >
                             <td class="px-4 py-3">
                                 <Link
-                                    :href="partners.show.url(partner.id)"
+                                    :href="partnerRoutes.show.url(partner.id)"
                                     class="font-medium text-foreground hover:underline"
                                 >
                                     {{ partner.display_name }}
