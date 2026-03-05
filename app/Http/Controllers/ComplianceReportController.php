@@ -32,6 +32,12 @@ class ComplianceReportController extends Controller
         $noCaPolicies = PartnerOrganization::whereNotIn('id', $partnersWithCaPolicies)
             ->get(['id', 'display_name', 'domain', 'tenant_id']);
 
+        $partnersWithSensitivityLabels = DB::table('sensitivity_label_partner')
+            ->distinct()
+            ->pluck('partner_organization_id');
+        $noSensitivityLabels = PartnerOrganization::whereNotIn('id', $partnersWithSensitivityLabels)
+            ->get(['id', 'display_name', 'domain', 'tenant_id']);
+
         // Compliance score: MFA enabled AND not overly permissive
         $compliantCount = PartnerOrganization::where('mfa_trust_enabled', true)
             ->where(function ($q) {
@@ -78,10 +84,11 @@ class ComplianceReportController extends Controller
             ->merge($noDeviceTrust->pluck('id'))
             ->merge($overlyPermissive->pluck('id'))
             ->merge($noCaPolicies->pluck('id'))
+            ->merge($noSensitivityLabels->pluck('id'))
             ->unique();
 
         $nonCompliantPartners = PartnerOrganization::whereIn('id', $nonCompliantIds)
-            ->withCount('conditionalAccessPolicies')
+            ->withCount(['conditionalAccessPolicies', 'sensitivityLabels'])
             ->get(['id', 'display_name', 'domain', 'mfa_trust_enabled', 'device_trust_enabled', 'b2b_inbound_enabled', 'b2b_outbound_enabled', 'trust_score']);
 
         return Inertia::render('reports/Index', [
@@ -98,6 +105,7 @@ class ComplianceReportController extends Controller
                 'no_device_trust_count' => $noDeviceTrust->count(),
                 'overly_permissive_count' => $overlyPermissive->count(),
                 'no_ca_policies_count' => $noCaPolicies->count(),
+                'no_sensitivity_labels_count' => $noSensitivityLabels->count(),
                 'partners' => $nonCompliantPartners,
             ],
             'guestHealth' => [
@@ -114,7 +122,7 @@ class ComplianceReportController extends Controller
 
     public function export(Request $request): StreamedResponse
     {
-        $partners = PartnerOrganization::withCount('conditionalAccessPolicies')
+        $partners = PartnerOrganization::withCount(['conditionalAccessPolicies', 'sensitivityLabels'])
             ->orderBy('display_name')
             ->get();
 
@@ -126,7 +134,7 @@ class ComplianceReportController extends Controller
             $handle = fopen('php://output', 'w');
 
             fputcsv($handle, ['--- Partner Policy Compliance ---']);
-            fputcsv($handle, ['Partner Name', 'Domain', 'MFA Trust', 'Device Trust', 'B2B Inbound', 'B2B Outbound', 'Trust Score', 'CA Policy Count']);
+            fputcsv($handle, ['Partner Name', 'Domain', 'MFA Trust', 'Device Trust', 'B2B Inbound', 'B2B Outbound', 'Trust Score', 'CA Policy Count', 'Sensitivity Label Count']);
 
             foreach ($partners as $partner) {
                 fputcsv($handle, [
@@ -138,6 +146,7 @@ class ComplianceReportController extends Controller
                     $partner->b2b_outbound_enabled ? 'Yes' : 'No',
                     $partner->trust_score,
                     $partner->conditional_access_policies_count,
+                    $partner->sensitivity_labels_count,
                 ]);
             }
 

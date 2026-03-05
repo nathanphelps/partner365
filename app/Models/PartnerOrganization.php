@@ -57,4 +57,11 @@ class PartnerOrganization extends Model
             ->withPivot('matched_user_type')
             ->withTimestamps();
     }
+
+    public function sensitivityLabels(): BelongsToMany
+    {
+        return $this->belongsToMany(SensitivityLabel::class, 'sensitivity_label_partner')
+            ->withPivot('matched_via', 'policy_name', 'site_name')
+            ->withTimestamps();
+    }
 }

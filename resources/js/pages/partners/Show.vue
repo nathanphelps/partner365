@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
-import { AlertTriangle, CircleHelp, Shield } from 'lucide-vue-next';
+import { AlertTriangle, CircleHelp, Shield, Tag } from 'lucide-vue-next';
 import { ref, reactive, computed } from 'vue';
 import GuestUserTable from '@/components/GuestUserTable.vue';
 import TrustScoreBadge from '@/components/TrustScoreBadge.vue';
@@ -44,6 +44,7 @@ import type {
     GuestUser,
     Paginated,
 } from '@/types/partner';
+import type { SensitivityLabel } from '@/types/sensitivity-label';
 
 const props = defineProps<{
     partner: PartnerOrganization;
@@ -51,6 +52,13 @@ const props = defineProps<{
     canManage: boolean;
     conditionalAccessPolicies: (ConditionalAccessPolicy & {
         pivot: { matched_user_type: string };
+    })[];
+    sensitivityLabels: (SensitivityLabel & {
+        pivot: {
+            matched_via: 'label_policy' | 'site_assignment';
+            policy_name: string | null;
+            site_name: string | null;
+        };
     })[];
 }>();
 
@@ -720,6 +728,96 @@ const directConnectStatus = computed(() => {
                                 <TableCell>
                                     <Badge variant="secondary">
                                         {{ policy.pivot.matched_user_type }}
+                                    </Badge>
+                                </TableCell>
+                            </TableRow>
+                        </TableBody>
+                    </Table>
+                </CardContent>
+            </Card>
+
+            <!-- Sensitivity Labels -->
+            <Card>
+                <CardHeader>
+                    <CardTitle class="flex items-center gap-2">
+                        <Tag class="size-5" />
+                        Sensitivity Labels ({{ sensitivityLabels.length }})
+                    </CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <div
+                        v-if="sensitivityLabels.length === 0"
+                        class="flex items-center gap-3 rounded-lg border border-yellow-300 bg-yellow-50 p-4 dark:border-yellow-700 dark:bg-yellow-950"
+                    >
+                        <AlertTriangle
+                            class="size-5 shrink-0 text-yellow-600 dark:text-yellow-400"
+                        />
+                        <p class="text-sm text-yellow-800 dark:text-yellow-200">
+                            No sensitivity labels cover this partner's guests.
+                            <Link href="/sensitivity-labels" class="underline"
+                                >View all labels</Link
+                            >
+                        </p>
+                    </div>
+                    <Table v-else>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Label</TableHead>
+                                <TableHead>Protection</TableHead>
+                                <TableHead>Matched Via</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            <TableRow
+                                v-for="label in sensitivityLabels"
+                                :key="label.id"
+                            >
+                                <TableCell>
+                                    <Link
+                                        :href="`/sensitivity-labels/${label.id}`"
+                                        class="font-medium hover:underline"
+                                    >
+                                        <span
+                                            v-if="label.color"
+                                            class="mr-2 inline-block size-3 rounded-full"
+                                            :style="{
+                                                backgroundColor: label.color,
+                                            }"
+                                        />
+                                        {{ label.name }}
+                                    </Link>
+                                </TableCell>
+                                <TableCell>
+                                    <Badge
+                                        :variant="
+                                            label.protection_type ===
+                                            'encryption'
+                                                ? 'default'
+                                                : label.protection_type ===
+                                                    'none'
+                                                  ? 'outline'
+                                                  : 'secondary'
+                                        "
+                                    >
+                                        {{
+                                            {
+                                                encryption: 'Encryption',
+                                                watermark: 'Watermark',
+                                                header_footer: 'Header/Footer',
+                                                none: 'No protection',
+                                            }[label.protection_type] ??
+                                            label.protection_type
+                                        }}
+                                    </Badge>
+                                </TableCell>
+                                <TableCell>
+                                    <Badge variant="secondary">
+                                        {{
+                                            label.pivot.matched_via ===
+                                            'label_policy'
+                                                ? 'Label Policy'
+                                                : 'Site Assignment'
+                                        }}
                                     </Badge>
                                 </TableCell>
                             </TableRow>

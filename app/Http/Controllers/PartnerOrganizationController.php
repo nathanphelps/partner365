@@ -113,12 +113,17 @@ class PartnerOrganizationController extends Controller
             ->withPivot('matched_user_type')
             ->get();
 
+        $sensitivityLabels = $partner->sensitivityLabels()
+            ->withPivot('matched_via', 'policy_name', 'site_name')
+            ->get();
+
         return Inertia::render('partners/Show', [
             'partner' => $partner,
             'guests' => $guests,
             'activity' => $this->activityLog->forSubject($partner),
             'canManage' => $request->user()->role->canManage(),
             'conditionalAccessPolicies' => $conditionalAccessPolicies,
+            'sensitivityLabels' => $sensitivityLabels,
         ]);
     }
 

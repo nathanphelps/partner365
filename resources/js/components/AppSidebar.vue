@@ -11,6 +11,7 @@ import {
     Package,
     Settings,
     Shield,
+    Tag,
     Users,
 } from 'lucide-vue-next';
 import { computed } from 'vue';
@@ -47,6 +48,11 @@ const mainNavItems = computed<NavItem[]>(() => {
             title: 'Conditional Access',
             href: '/conditional-access',
             icon: Shield,
+        },
+        {
+            title: 'Sensitivity Labels',
+            href: '/sensitivity-labels',
+            icon: Tag,
         },
         {
             title: 'Entitlements',
