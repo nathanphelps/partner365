@@ -35,14 +35,20 @@ From the app registration overview page, copy:
 
 | Permission | Purpose |
 |-----------|---------|
+| `User.Read.All` | List and read guest user profiles |
+| `User.ReadWrite.All` | Update and delete guest users |
+| `User.Invite.All` | Send B2B guest invitations |
 | `Policy.Read.All` | Read cross-tenant access policies and Conditional Access policies |
 | `Policy.ReadWrite.CrossTenantAccess` | Create/update/delete partner policies |
 | `Policy.ReadWrite.Authorization` | Manage external collaboration settings (invitation controls, domain lists) |
-| `User.Invite.All` | Send B2B guest invitations |
-| `User.Read.All` | List and read guest user profiles |
-| `User.ReadWrite.All` | Update and delete guest users |
-| `Directory.Read.All` | Resolve tenant information |
+| `CrossTenantInformation.ReadBasic.All` | Resolve tenant information during partner onboarding |
 | `AccessReview.ReadWrite.All` | Create and manage access review definitions |
+| `EntitlementManagement.ReadWrite.All` | Create/manage access packages, catalogs, assignments, and connected organizations |
+| `Group.Read.All` | List groups for entitlement management resource selection |
+| `GroupMember.Read.All` | Read guest user group memberships (access visibility) |
+| `AppRoleAssignment.ReadWrite.All` | Read guest user app role assignments (access visibility) |
+| `Team.ReadBasic.All` | Read guest user Teams memberships (access visibility) |
+| `Sites.Read.All` | Read SharePoint sites for guest access visibility and entitlement resources |
 
 3. Click **Grant admin consent for [your organization]**
 4. Verify all permissions show a green checkmark under "Status"

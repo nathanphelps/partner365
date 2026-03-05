@@ -39,16 +39,24 @@ GRAPH_API="00000003-0000-0000-c000-000000000000"
 
 # Required application permissions (appRoleIds from Microsoft Graph)
 declare -A PERMISSIONS=(
+    # User management & invitations
     ["User.Read.All"]="df021288-bdef-4463-88db-98f22de89214"
     ["User.ReadWrite.All"]="741f803b-c850-494e-b5df-cde7c675a1ca"
     ["User.Invite.All"]="09850681-111b-4a89-9bed-3f2cae46d706"
+    # Policies (cross-tenant, conditional access, collaboration)
     ["Policy.Read.All"]="246dd0d5-5bd0-4def-940b-0421030a5b68"
     ["Policy.ReadWrite.CrossTenantAccess"]="338163d7-f101-4c92-94ba-ca46fe52447c"
     ["Policy.ReadWrite.Authorization"]="edd3c878-b384-41fd-85c2-07c811cde6f8"
+    # Tenant resolution
     ["CrossTenantInformation.ReadBasic.All"]="cac88765-0581-4025-9725-5ebc13f729ee"
+    # Identity governance
     ["AccessReview.ReadWrite.All"]="ef5f7d5c-338f-44b0-86c3-351f46c8571f"
     ["EntitlementManagement.ReadWrite.All"]="9acd699f-1e81-4958-b717-01d71473d8de"
+    # Guest access visibility
     ["Group.Read.All"]="5b567255-7703-4780-807c-7be8301ae99b"
+    ["GroupMember.Read.All"]="98830695-27a2-44f7-8c18-0c3ebc9698f6"
+    ["AppRoleAssignment.ReadWrite.All"]="06b708a9-e830-4db3-a914-8e69da51d44f"
+    ["Team.ReadBasic.All"]="2280dda6-0bfd-44ee-a2f4-cb867cfc4c1e"
     ["Sites.Read.All"]="332a536c-c7ef-4017-ab91-336970924f0d"
 )
 

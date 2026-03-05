@@ -98,6 +98,56 @@ const testConnection = async () => {
     }
 };
 
+const requiredPermissions = [
+    { name: 'User.Read.All', purpose: 'List and read guest user profiles' },
+    { name: 'User.ReadWrite.All', purpose: 'Update and delete guest users' },
+    { name: 'User.Invite.All', purpose: 'Send B2B guest invitations' },
+    {
+        name: 'Policy.Read.All',
+        purpose: 'Read cross-tenant and Conditional Access policies',
+    },
+    {
+        name: 'Policy.ReadWrite.CrossTenantAccess',
+        purpose: 'Create/update/delete partner policies',
+    },
+    {
+        name: 'Policy.ReadWrite.Authorization',
+        purpose: 'Manage external collaboration settings',
+    },
+    {
+        name: 'CrossTenantInformation.ReadBasic.All',
+        purpose: 'Resolve tenant info during partner onboarding',
+    },
+    {
+        name: 'AccessReview.ReadWrite.All',
+        purpose: 'Create and manage access reviews',
+    },
+    {
+        name: 'EntitlementManagement.ReadWrite.All',
+        purpose: 'Manage access packages, catalogs, and assignments',
+    },
+    {
+        name: 'Group.Read.All',
+        purpose: 'List groups for entitlement resource selection',
+    },
+    {
+        name: 'GroupMember.Read.All',
+        purpose: 'Read guest user group memberships',
+    },
+    {
+        name: 'AppRoleAssignment.ReadWrite.All',
+        purpose: 'Read guest user app role assignments',
+    },
+    {
+        name: 'Team.ReadBasic.All',
+        purpose: 'Read guest user Teams memberships',
+    },
+    {
+        name: 'Sites.Read.All',
+        purpose: 'Read SharePoint sites for guest access and entitlements',
+    },
+];
+
 const consentResult = ref<{ success: boolean; error?: string } | null>(null);
 const consentLoading = ref(false);
 
@@ -329,6 +379,47 @@ const grantAdminConsent = async () => {
                         }}
                     </p>
                 </div>
+
+                <details class="mt-4">
+                    <summary
+                        class="cursor-pointer text-sm font-medium text-muted-foreground hover:text-foreground"
+                    >
+                        Required Application Permissions (14)
+                    </summary>
+                    <div class="mt-2 rounded-md border bg-muted/30 p-4">
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="border-b">
+                                    <th
+                                        class="pb-2 text-left font-medium text-muted-foreground"
+                                    >
+                                        Permission
+                                    </th>
+                                    <th
+                                        class="pb-2 text-left font-medium text-muted-foreground"
+                                    >
+                                        Purpose
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y">
+                                <tr
+                                    v-for="perm in requiredPermissions"
+                                    :key="perm.name"
+                                >
+                                    <td class="py-1.5 pr-4 font-mono text-xs">
+                                        {{ perm.name }}
+                                    </td>
+                                    <td
+                                        class="py-1.5 text-xs text-muted-foreground"
+                                    >
+                                        {{ perm.purpose }}
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </details>
             </div>
         </div>
     </AdminLayout>
