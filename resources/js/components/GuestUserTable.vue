@@ -33,6 +33,8 @@ const props = defineProps<{
         status?: string;
         account_enabled?: string;
         partner_id?: string;
+        sort?: string;
+        direction?: string;
     };
     partners?: { id: number; display_name: string }[];
 }>();
@@ -241,6 +243,27 @@ function formatDate(val: string | null): string {
     if (!val) return '—';
     return new Date(val).toLocaleDateString();
 }
+
+function daysInactiveLabel(lastSignIn: string | null): string {
+    if (!lastSignIn) return 'Never';
+    const days = Math.floor(
+        (Date.now() - new Date(lastSignIn).getTime()) / 86_400_000,
+    );
+    return `${days}d`;
+}
+
+function inactiveBadgeVariant(
+    lastSignIn: string | null,
+): 'default' | 'secondary' | 'destructive' | 'outline' {
+    if (!lastSignIn) return 'destructive';
+    const days = Math.floor(
+        (Date.now() - new Date(lastSignIn).getTime()) / 86_400_000,
+    );
+    if (days >= 90) return 'destructive';
+    if (days >= 60) return 'secondary';
+    if (days >= 30) return 'outline';
+    return 'default';
+}
 </script>
 
 <template>
@@ -393,7 +416,22 @@ function formatDate(val: string | null): string {
                     <th
                         class="px-4 py-3 text-left font-medium text-muted-foreground"
                     >
-                        Last Sign In
+                        <button
+                            class="flex items-center gap-1 hover:text-foreground"
+                            @click="
+                                applyFilters({
+                                    sort: 'last_sign_in_at',
+                                    direction:
+                                        filters?.sort === 'last_sign_in_at' &&
+                                        filters?.direction !== 'desc'
+                                            ? 'desc'
+                                            : 'asc',
+                                })
+                            "
+                        >
+                            Last Sign In
+                            <span class="text-xs">&#x21C5;</span>
+                        </button>
                     </th>
                     <th
                         v-if="canManage"
@@ -459,8 +497,19 @@ function formatDate(val: string | null): string {
                             {{ guest.account_enabled ? 'Yes' : 'No' }}
                         </Badge>
                     </td>
-                    <td class="px-4 py-3 text-muted-foreground">
-                        {{ formatDate(guest.last_sign_in_at) }}
+                    <td class="px-4 py-3">
+                        <div class="flex items-center gap-2">
+                            <span class="text-muted-foreground">{{
+                                formatDate(guest.last_sign_in_at)
+                            }}</span>
+                            <Badge
+                                :variant="
+                                    inactiveBadgeVariant(guest.last_sign_in_at)
+                                "
+                            >
+                                {{ daysInactiveLabel(guest.last_sign_in_at) }}
+                            </Badge>
+                        </div>
                     </td>
                     <td v-if="canManage" class="px-4 py-3 text-right">
                         <DropdownMenu>

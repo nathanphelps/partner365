@@ -2,6 +2,7 @@
 import { Link, usePage } from '@inertiajs/vue3';
 import {
     Activity,
+    BarChart3,
     Building2,
     ClipboardCheck,
     FileStack,
@@ -51,6 +52,7 @@ const mainNavItems = computed<NavItem[]>(() => {
             href: '/entitlements',
             icon: Package,
         },
+        { title: 'Reports', href: '/reports', icon: BarChart3 },
         { title: 'Activity', href: '/activity', icon: Activity },
     ];
 

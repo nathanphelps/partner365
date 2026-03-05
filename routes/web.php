@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AccessReviewController;
 use App\Http\Controllers\ActivityLogController;
+use App\Http\Controllers\ComplianceReportController;
 use App\Http\Controllers\ConditionalAccessPolicyController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EntitlementController;
@@ -33,6 +34,9 @@ Route::middleware(['auth', 'verified', 'approved'])->group(function () {
     Route::get('guests/{guest}/sites', [GuestUserController::class, 'sites'])->name('guests.sites');
 
     Route::resource('templates', PartnerTemplateController::class)->middleware('role:admin');
+
+    Route::get('reports', [ComplianceReportController::class, 'index'])->name('reports.index');
+    Route::get('reports/export', [ComplianceReportController::class, 'export'])->name('reports.export');
 
     Route::get('activity', [ActivityLogController::class, 'index'])->name('activity.index');
 

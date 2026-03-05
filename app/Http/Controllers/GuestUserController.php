@@ -48,11 +48,22 @@ class GuestUserController extends Controller
             $query->where('account_enabled', $request->boolean('account_enabled'));
         }
 
-        $guests = $query->orderByDesc('created_at')->paginate(25)->withQueryString();
+        $sortField = $request->input('sort', 'created_at');
+        $sortDirection = $request->input('direction', 'desc');
+        $allowedSorts = ['created_at', 'last_sign_in_at', 'display_name', 'email'];
+
+        if (! in_array($sortField, $allowedSorts)) {
+            $sortField = 'created_at';
+        }
+        if (! in_array($sortDirection, ['asc', 'desc'])) {
+            $sortDirection = 'desc';
+        }
+
+        $guests = $query->orderBy($sortField, $sortDirection)->paginate(25)->withQueryString();
 
         return Inertia::render('guests/Index', [
             'guests' => $guests,
-            'filters' => $request->only(['search', 'partner_id', 'status', 'account_enabled']),
+            'filters' => $request->only(['search', 'partner_id', 'status', 'account_enabled', 'sort', 'direction']),
             'partners' => PartnerOrganization::orderBy('display_name')->get(['id', 'display_name']),
             'canManage' => $request->user()->role->canManage(),
         ]);
