@@ -27,3 +27,7 @@ yarn-error.log
 /.vscode
 /.zed
 .claude/settings.local.json
+
+**/caddy
+frankenphp
+frankenphp-worker.php
