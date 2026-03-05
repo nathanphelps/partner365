@@ -26,6 +26,10 @@ Partner365 uses a 3-tier role system stored in the `users.role` column as a stri
 | Invite guest | Yes | Yes | No |
 | Delete guest | Yes | No | No |
 | Manage templates | Yes | No | No |
+| View access reviews | Yes | Yes | Yes |
+| Create/delete access reviews | Yes | No | No |
+| Submit review decisions | Yes | Yes | No |
+| Apply remediations | Yes | No | No |
 | View activity log | Yes | Yes | Yes |
 
 ### UserRole Enum
@@ -154,6 +158,10 @@ Every significant action is logged to the `activity_log` table:
 | `guest_removed` | Guest user deleted |
 | `policy_changed` | Cross-tenant policy modified |
 | `template_created` | New onboarding template created |
+| `access_review_created` | New access review configured |
+| `access_review_completed` | Review instance completed |
+| `access_review_decision_made` | Decision submitted on a review item |
+| `access_review_remediation_applied` | Remediation actions applied to denied items |
 | `sync_completed` | Background sync finished |
 
 Each log entry records: user, action, subject (polymorphic), description, details JSON, and timestamp.

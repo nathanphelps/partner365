@@ -42,6 +42,7 @@ From the app registration overview page, copy:
 | `User.Read.All` | List and read guest user profiles |
 | `User.ReadWrite.All` | Update and delete guest users |
 | `Directory.Read.All` | Resolve tenant information |
+| `AccessReview.ReadWrite.All` | Create and manage access review definitions |
 
 3. Click **Grant admin consent for [your organization]**
 4. Verify all permissions show a green checkmark under "Status"

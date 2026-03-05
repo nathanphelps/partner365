@@ -21,6 +21,7 @@ Partner365 solves this with a single interface for IT admins, business owners, a
 - **Guest User Lifecycle** — Invite B2B guests, track invitation status, monitor sign-in activity, identify inactive accounts
 - **GCC High Support** — Cloud environment selector for Commercial and GCC High tenants with auto-derived endpoints
 - **Admin Consent** — One-click admin consent popup for granting Graph API permissions
+- **Trust Score** — Composite 0-100 domain reputation score per partner based on DNS hygiene (DMARC, SPF, DKIM, DNSSEC, domain age) and Entra ID metadata, recalculated daily
 - **Dashboard** — At-a-glance stats for partners, guests, MFA trust coverage, and pending invitations
 - **Onboarding Wizard** — 3-step partner creation with tenant resolution, optional templates, and policy configuration
 - **Partner Templates** — Reusable policy configurations for consistent onboarding
@@ -116,7 +117,7 @@ Dockerfile                     # Multi-stage build (Node + FrankenPHP)
 docker-compose.yml             # Local container deployment
 
 app/
-├── Console/Commands/       # sync:partners, sync:guests, sync:access-reviews
+├── Console/Commands/       # sync:partners, sync:guests, sync:access-reviews, score:partners
 ├── Enums/                  # UserRole, PartnerCategory, InvitationStatus, ActivityAction, CloudEnvironment,
 │                           # ReviewType, RecurrenceType, RemediationAction, ReviewInstanceStatus, ReviewDecision
 ├── Exceptions/             # GraphApiException
@@ -144,13 +145,15 @@ resources/js/
 └── components/             # shadcn-vue UI components
 
 tests/Feature/
-├── Commands/               # SyncPartners, SyncGuests
+├── Commands/               # SyncPartners, SyncGuests, SyncAccessReviews
 ├── Middleware/              # CheckRole
 ├── Models/                 # PartnerOrganization
 ├── Services/               # All 5 service classes
 ├── PartnerOrganizationTest.php
 ├── GuestUserControllerTest.php
-└── CollaborationSettingsTest.php
+├── CollaborationSettingsTest.php
+├── AccessReviewServiceTest.php
+└── AccessReviewControllerTest.php
 ```
 
 ## License

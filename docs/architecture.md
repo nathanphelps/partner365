@@ -27,13 +27,15 @@ Partner365 is a monolithic Laravel 12 + Vue 3 application using Inertia.js for s
 │  │  GuestUserService (invitations + users)         ││
 │  │  TenantResolverService (tenant lookup)          ││
 │  │  ActivityLogService (audit trail)               ││
+│  │  AccessReviewService (access review lifecycle) ││
 │  └──────┬──────────────────────────────────────────┘│
 │         │                                            │
-│  ┌──────▼──────┐  ┌──────────────────────────────┐ │
-│  │  Eloquent   │  │  Scheduled Commands           │ │
-│  │  Models     │  │  sync:partners (every 15 min) │ │
-│  │             │  │  sync:guests   (every 15 min) │ │
-│  └──────┬──────┘  └──────────────────────────────┘ │
+│  ┌──────▼──────┐  ┌───────────────────────────────────────┐ │
+│  │  Eloquent   │  │  Scheduled Commands                    │ │
+│  │  Models     │  │  sync:partners        (every 15 min)  │ │
+│  │             │  │  sync:guests          (every 15 min)  │ │
+│  │             │  │  sync:access-reviews  (every 15 min)  │ │
+│  └──────┬──────┘  └───────────────────────────────────────┘ │
 └─────────┼───────────────────────────────────────────┘
           │                        │
 ┌─────────▼─────────┐  ┌──────────▼──────────────────┐
@@ -92,9 +94,39 @@ partner_templates
 ├── created_by_user_id (FK → users)
 └── timestamps
 
+access_reviews
+├── id, title, description
+├── review_type (enum: guest_users, partner_organizations)
+├── scope_partner_id (FK → partner_organizations, nullable)
+├── recurrence_type (enum: one_time, recurring)
+├── recurrence_interval_days (nullable)
+├── remediation_action (enum: flag_only, disable, remove)
+├── reviewer_user_id (FK → users)
+├── created_by_user_id (FK → users)
+├── graph_definition_id (nullable)
+├── next_review_at (nullable)
+└── timestamps
+
+access_review_instances
+├── id, access_review_id (FK → access_reviews)
+├── status (enum: pending, in_progress, completed, expired)
+├── started_at, due_at, completed_at
+└── timestamps
+
+access_review_decisions
+├── id, access_review_instance_id (FK → access_review_instances)
+├── subject_type (guest_user, partner_organization)
+├── subject_id
+├── decision (enum: pending, approve, deny)
+├── justification (nullable)
+├── decided_by_user_id (FK → users, nullable)
+├── decided_at (nullable)
+├── remediation_applied (boolean)
+└── timestamps
+
 activity_log
 ├── id, user_id (FK → users)
-├── action (enum: partner_created, guest_invited, etc.)
+├── action (enum: partner_created, guest_invited, access_review_created, etc.)
 ├── subject_type, subject_id (polymorphic)
 ├── description, details (JSON)
 └── created_at
@@ -105,6 +137,9 @@ activity_log
 - `PartnerOrganization` → belongs to `User` (owner), has many `GuestUser`
 - `GuestUser` → belongs to `PartnerOrganization` (nullable), belongs to `User` (invited_by)
 - `PartnerTemplate` → belongs to `User` (created_by)
+- `AccessReview` → belongs to `User` (reviewer, created_by), belongs to `PartnerOrganization` (scope), has many `AccessReviewInstance`
+- `AccessReviewInstance` → belongs to `AccessReview`, has many `AccessReviewDecision`
+- `AccessReviewDecision` → belongs to `AccessReviewInstance`, belongs to `User` (decided_by)
 - `ActivityLog` → belongs to `User`, morphs to subject
 
 ### Auto Partner Linking

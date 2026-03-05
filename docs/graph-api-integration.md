@@ -11,7 +11,8 @@ MicrosoftGraphService               ← Core HTTP client + token management
 ├── CrossTenantPolicyService        ← Partner policy CRUD + tenant restrictions
 ├── CollaborationSettingsService    ← Authorization policy (invites + domains)
 ├── GuestUserService                ← Guest invitations + user management
-└── TenantResolverService           ← Tenant info lookup
+├── TenantResolverService           ← Tenant info lookup
+└── AccessReviewService             ← Access review definitions + remediation
 ```
 
 ## MicrosoftGraphService
@@ -223,6 +224,35 @@ GET /tenantRelationships/findTenantInformationByTenantId(tenantId='{uuid}')
 
 The service validates UUID format before making the API call using a regex pattern. Invalid UUIDs throw an `InvalidArgumentException` without hitting the API.
 
+## AccessReviewService
+
+Manages access review definitions via Graph API and handles remediation actions locally.
+
+### Endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `createDefinition(config)` | POST `/identityGovernance/accessReviews/definitions` | Create review definition in Graph |
+| `deleteDefinition(review)` | DELETE `/identityGovernance/accessReviews/definitions/{id}` | Delete review definition from Graph |
+
+### Local Operations
+
+The service also handles operations that don't involve Graph API:
+
+- `submitDecision(decision, verdict, justification, user)` — Records approve/deny decision locally
+- `applyRemediations(instance)` — Processes denied decisions: disables or removes guest users via `GuestUserService`, flags partner reviews
+- `createInstanceWithDecisions(review)` — Creates a new review instance and populates decisions for all in-scope subjects
+
+### Remediation Actions
+
+| Action | Guest Users | Partner Organizations |
+|--------|-------------|----------------------|
+| `flag_only` | Mark as denied | Mark as denied |
+| `disable` | Disable via Graph API (`accountEnabled: false`) | N/A (forced to flag_only) |
+| `remove` | Delete via Graph API | N/A (forced to flag_only) |
+
+> **Required Permission:** `AccessReview.ReadWrite.All` (application permission)
+
 ## Background Sync
 
 Two Artisan commands sync data from Graph API to the local database every 15 minutes:
@@ -243,12 +273,20 @@ Two Artisan commands sync data from Graph API to the local database every 15 min
 4. Upserts `guest_users` table keyed by `entra_user_id`
 5. Sets `invitation_status` to `accepted` (any user returned by Graph exists in Entra)
 
+### sync:access-reviews
+
+1. Checks all active review instances for overdue status (past `due_at`) and marks them as `expired`
+2. For recurring reviews past `next_review_at`, creates a new instance with decisions for all in-scope subjects
+3. Updates `next_review_at` based on `recurrence_interval_days`
+4. Logs sync results to `SyncLog`
+
 ### Schedule Registration
 
 ```php
 // routes/console.php
 Schedule::command('sync:partners')->everyFifteenMinutes();
 Schedule::command('sync:guests')->everyFifteenMinutes();
+Schedule::command('sync:access-reviews')->everyFifteenMinutes();
 ```
 
 ### Running the Scheduler

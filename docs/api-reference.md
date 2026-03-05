@@ -63,6 +63,19 @@ All routes require authentication (`auth` + `verified` middleware) unless noted 
 
 \* The consent callback is unauthenticated because Microsoft redirects to it in the popup context.
 
+### Access Reviews
+
+| Method | URI | Controller@Method | Name | Role |
+|--------|-----|------------------|------|------|
+| GET | `/access-reviews` | `AccessReviewController@index` | `access-reviews.index` | Any |
+| GET | `/access-reviews/create` | `AccessReviewController@create` | `access-reviews.create` | Admin |
+| POST | `/access-reviews` | `AccessReviewController@store` | `access-reviews.store` | Admin |
+| GET | `/access-reviews/{access_review}` | `AccessReviewController@show` | `access-reviews.show` | Any |
+| DELETE | `/access-reviews/{access_review}` | `AccessReviewController@destroy` | `access-reviews.destroy` | Admin |
+| GET | `/access-reviews/{access_review}/instances/{instance}` | `AccessReviewController@showInstance` | `access-reviews.instances.show` | Any |
+| POST | `/access-reviews/decisions/{decision}` | `AccessReviewController@submitDecision` | `access-reviews.decisions.submit` | Operator+ |
+| POST | `/access-reviews/instances/{instance}/apply` | `AccessReviewController@applyRemediations` | `access-reviews.instances.apply` | Admin |
+
 ### Activity Log
 
 | Method | URI | Controller@Method | Name | Role |
@@ -152,6 +165,8 @@ All routes require authentication (`auth` + `verified` middleware) unless noted 
         total_guests: number;
         pending_invitations: number;
         inactive_guests: number;
+        active_reviews: number;
+        overdue_reviews: number;
         partners_by_category: Record<string, number>;
     };
     recentActivity: ActivityLog[];
@@ -183,6 +198,21 @@ All routes require authentication (`auth` + `verified` middleware) unless noted 
     guests: Paginated<GuestUser>;
     filters: { search?: string; partner_id?: number; status?: string };
     partners: { id: number; display_name: string }[];
+}
+```
+
+### StoreAccessReviewRequest
+
+```json
+{
+    "title": "required|string|max:255",
+    "description": "nullable|string",
+    "review_type": "required|in:guest_users,partner_organizations",
+    "scope_partner_id": "nullable|exists:partner_organizations,id",
+    "recurrence_type": "required|in:one_time,recurring",
+    "recurrence_interval_days": "required_if:recurrence_type,recurring|integer|min:1|max:365",
+    "remediation_action": "required|in:flag_only,disable,remove",
+    "reviewer_user_id": "required|exists:users,id"
 }
 ```
 

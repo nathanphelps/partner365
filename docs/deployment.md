@@ -200,6 +200,7 @@ Add this cron entry to run the Laravel scheduler:
 This runs the background sync commands:
 - `sync:partners` — every 15 minutes
 - `sync:guests` — every 15 minutes
+- `sync:access-reviews` — every 15 minutes
 
 ### 6. Set Up Queue Worker (Optional)
 
