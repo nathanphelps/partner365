@@ -6,6 +6,15 @@ import GuestUserTable from '@/components/GuestUserTable.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
@@ -124,6 +133,100 @@ const isAdmin = computed(() => {
     const auth = page.props.auth as { user?: { role?: string } };
     return auth?.user?.role === 'admin';
 });
+
+// Tenant Restrictions form state
+const restrictionsForm = reactive({
+    tenant_restrictions_enabled: props.partner.tenant_restrictions_enabled,
+});
+
+const savingRestrictions = ref(false);
+const restrictionsSaved = ref(false);
+
+function getInitialAppMode(): 'all' | 'allowList' | 'blockList' {
+    const apps = props.partner.tenant_restrictions_json?.applications as
+        | { accessType?: string; targets?: { target: string }[] }
+        | undefined;
+    if (!apps || apps.targets?.[0]?.target === 'AllApplications') return 'all';
+    return apps.accessType === 'allowed' ? 'allowList' : 'blockList';
+}
+
+function getInitialAppTargets(): { target: string; name: string }[] {
+    const apps = props.partner.tenant_restrictions_json?.applications as
+        | { targets?: { target: string }[] }
+        | undefined;
+    if (!apps || apps.targets?.[0]?.target === 'AllApplications') return [];
+    return (
+        apps.targets?.map((t) => ({ target: t.target, name: t.target })) ?? []
+    );
+}
+
+const appMode = ref<'all' | 'allowList' | 'blockList'>(getInitialAppMode());
+const appTargets = ref(getInitialAppTargets());
+const newAppId = ref('');
+const newAppName = ref('');
+
+function addApp() {
+    const id = newAppId.value.trim();
+    const name = newAppName.value.trim() || id;
+    if (id && !appTargets.value.find((a) => a.target === id)) {
+        appTargets.value.push({ target: id, name });
+    }
+    newAppId.value = '';
+    newAppName.value = '';
+}
+
+function removeApp(index: number) {
+    appTargets.value.splice(index, 1);
+}
+
+function saveRestrictions() {
+    savingRestrictions.value = true;
+
+     
+    const json: Record<string, any> = {};
+
+    if (appMode.value === 'all') {
+        json.applications = {
+            accessType: 'allowed',
+            targets: [{ target: 'AllApplications', targetType: 'application' }],
+        };
+    } else {
+        json.applications = {
+            accessType: appMode.value === 'allowList' ? 'allowed' : 'blocked',
+            targets: appTargets.value.map((a) => ({
+                target: a.target,
+                targetType: 'application',
+            })),
+        };
+    }
+
+    json.usersAndGroups = {
+        accessType: 'allowed',
+        targets: [{ target: 'AllUsers', targetType: 'user' }],
+    };
+
+    router.patch(
+        partners.update.url(props.partner.id),
+        {
+            tenant_restrictions_enabled:
+                restrictionsForm.tenant_restrictions_enabled,
+            tenant_restrictions_json:
+                restrictionsForm.tenant_restrictions_enabled ? json : null,
+        },
+        {
+            preserveScroll: true,
+            onSuccess: () => {
+                restrictionsSaved.value = true;
+                setTimeout(() => {
+                    restrictionsSaved.value = false;
+                }, 3000);
+            },
+            onFinish: () => {
+                savingRestrictions.value = false;
+            },
+        },
+    );
+}
 
 const directConnectStatus = computed(() => {
     const inbound = props.partner.direct_connect_inbound_enabled;
@@ -246,6 +349,101 @@ const directConnectStatus = computed(() => {
                             class="text-sm text-green-600 dark:text-green-400"
                             >Saved.</span
                         >
+                    </div>
+                </CardContent>
+            </Card>
+
+            <!-- Direct Connect Status -->
+            <Card>
+                <CardHeader>
+                    <CardTitle class="flex items-center gap-2">
+                        Direct Connect
+                        <Badge :variant="directConnectStatus.variant">
+                            {{ directConnectStatus.label }}
+                        </Badge>
+                    </CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <p class="text-sm text-muted-foreground">
+                        {{ directConnectStatus.description }}
+                    </p>
+                </CardContent>
+            </Card>
+
+            <!-- Tenant Restrictions -->
+            <Card v-if="canManage">
+                <CardHeader>
+                    <CardTitle class="flex items-center gap-2">
+                        Tenant Restrictions
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger as-child>
+                                    <CircleHelp class="size-3.5 text-muted-foreground" />
+                                </TooltipTrigger>
+                                <TooltipContent class="max-w-xs" side="right">
+                                    Tenant Restrictions control what your users can access when signing into this partner's tenant. Requires Global Secure Access or a corporate proxy to enforce.
+                                </TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+                    </CardTitle>
+                </CardHeader>
+                <CardContent class="flex flex-col gap-4">
+                    <div class="flex items-center justify-between py-2">
+                        <div>
+                            <p class="text-sm font-medium">Enable Tenant Restrictions</p>
+                            <p class="text-xs text-muted-foreground">
+                                Control which apps your users can access in this partner's tenant.
+                            </p>
+                        </div>
+                        <Switch
+                            :model-value="restrictionsForm.tenant_restrictions_enabled"
+                            @update:model-value="(val: boolean) => { restrictionsForm.tenant_restrictions_enabled = val; }"
+                        />
+                    </div>
+
+                    <template v-if="restrictionsForm.tenant_restrictions_enabled">
+                        <Separator />
+
+                        <div class="grid gap-2">
+                            <Label>Application access</Label>
+                            <Select v-model="appMode">
+                                <SelectTrigger>
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">Allow all applications</SelectItem>
+                                    <SelectItem value="allowList">Allow only specific applications</SelectItem>
+                                    <SelectItem value="blockList">Block specific applications</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        <div v-if="appMode !== 'all'" class="grid gap-2">
+                            <Label>{{ appMode === 'allowList' ? 'Allowed' : 'Blocked' }} applications</Label>
+                            <div class="flex gap-2">
+                                <Input v-model="newAppId" placeholder="Application ID" class="flex-1" />
+                                <Input v-model="newAppName" placeholder="Display name (optional)" class="flex-1" />
+                                <Button type="button" variant="secondary" @click="addApp">Add</Button>
+                            </div>
+                            <div class="flex flex-wrap gap-1">
+                                <Badge
+                                    v-for="(app, i) in appTargets"
+                                    :key="app.target"
+                                    variant="secondary"
+                                    class="cursor-pointer"
+                                    @click="removeApp(i)"
+                                >
+                                    {{ app.name }} &times;
+                                </Badge>
+                            </div>
+                        </div>
+                    </template>
+
+                    <div class="flex items-center gap-3 pt-2">
+                        <Button @click="saveRestrictions" :disabled="savingRestrictions">
+                            {{ savingRestrictions ? 'Saving…' : 'Save Restrictions' }}
+                        </Button>
+                        <span v-if="restrictionsSaved" class="text-sm text-green-600 dark:text-green-400">Saved.</span>
                     </div>
                 </CardContent>
             </Card>

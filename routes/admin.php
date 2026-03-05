@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminCollaborationController;
 use App\Http\Controllers\Admin\AdminGraphController;
 use App\Http\Controllers\Admin\AdminSyncController;
 use App\Http\Controllers\Admin\AdminUserController;
@@ -11,6 +12,9 @@ Route::middleware(['auth', 'verified', 'approved', 'role:admin'])->prefix('admin
     Route::get('graph', [AdminGraphController::class, 'edit'])->name('admin.graph.edit');
     Route::put('graph', [AdminGraphController::class, 'update'])->name('admin.graph.update');
     Route::post('graph/test', [AdminGraphController::class, 'testConnection'])->name('admin.graph.test');
+
+    Route::get('collaboration', [AdminCollaborationController::class, 'edit'])->name('admin.collaboration.edit');
+    Route::put('collaboration', [AdminCollaborationController::class, 'update'])->name('admin.collaboration.update');
 
     Route::get('users', [AdminUserController::class, 'index'])->name('admin.users.index');
     Route::post('users/{user}/approve', [AdminUserController::class, 'approve'])->name('admin.users.approve');

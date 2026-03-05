@@ -45,4 +45,18 @@ class CrossTenantPolicyService
     {
         return $this->graph->patch('/policies/crossTenantAccessPolicy/default', $config);
     }
+
+    public function getTenantRestrictions(string $tenantId): ?array
+    {
+        $partner = $this->getPartner($tenantId);
+
+        return $partner['tenantRestrictions'] ?? null;
+    }
+
+    public function updateTenantRestrictions(string $tenantId, array $config): array
+    {
+        return $this->graph->patch("/policies/crossTenantAccessPolicy/partners/{$tenantId}", [
+            'tenantRestrictions' => $config,
+        ]);
+    }
 }

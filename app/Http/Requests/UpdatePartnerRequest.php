@@ -25,6 +25,18 @@ class UpdatePartnerRequest extends FormRequest
             'device_trust_enabled' => ['boolean'],
             'direct_connect_inbound_enabled' => ['boolean'],
             'direct_connect_outbound_enabled' => ['boolean'],
+            'tenant_restrictions_enabled' => ['boolean'],
+            'tenant_restrictions_json' => ['nullable', 'array'],
+            'tenant_restrictions_json.applications' => ['nullable', 'array'],
+            'tenant_restrictions_json.applications.accessType' => ['nullable', 'string', 'in:allowed,blocked'],
+            'tenant_restrictions_json.applications.targets' => ['nullable', 'array'],
+            'tenant_restrictions_json.applications.targets.*.target' => ['required_with:tenant_restrictions_json.applications.targets', 'string'],
+            'tenant_restrictions_json.applications.targets.*.targetType' => ['required_with:tenant_restrictions_json.applications.targets', 'string', 'in:application'],
+            'tenant_restrictions_json.usersAndGroups' => ['nullable', 'array'],
+            'tenant_restrictions_json.usersAndGroups.accessType' => ['nullable', 'string', 'in:allowed,blocked'],
+            'tenant_restrictions_json.usersAndGroups.targets' => ['nullable', 'array'],
+            'tenant_restrictions_json.usersAndGroups.targets.*.target' => ['required_with:tenant_restrictions_json.usersAndGroups.targets', 'string'],
+            'tenant_restrictions_json.usersAndGroups.targets.*.targetType' => ['required_with:tenant_restrictions_json.usersAndGroups.targets', 'string', 'in:user,group'],
         ];
     }
 }
