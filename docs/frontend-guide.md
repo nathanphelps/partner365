@@ -49,6 +49,7 @@ resources/js/
 ├── components/
 │   ├── AppSidebar.vue      # Main sidebar navigation
 │   ├── AppHeader.vue       # Mobile header navigation
+│   ├── TrustScoreBadge.vue # Color-coded trust score badge (green/amber/red)
 │   └── ui/                 # shadcn-vue components
 │       ├── badge/
 │       ├── button/

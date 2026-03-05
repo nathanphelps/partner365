@@ -12,7 +12,8 @@ MicrosoftGraphService               ← Core HTTP client + token management
 ├── CollaborationSettingsService    ← Authorization policy (invites + domains)
 ├── GuestUserService                ← Guest invitations + user management
 ├── TenantResolverService           ← Tenant info lookup
-└── AccessReviewService             ← Access review definitions + remediation
+├── AccessReviewService             ← Access review definitions + remediation
+└── TrustScoreService               ← Domain reputation scoring (uses DnsLookupService + RDAP)
 ```
 
 ## MicrosoftGraphService
@@ -255,7 +256,7 @@ The service also handles operations that don't involve Graph API:
 
 ## Background Sync
 
-Two Artisan commands sync data from Graph API to the local database every 15 minutes:
+Three Artisan commands sync data from Graph API to the local database, plus one daily scoring command:
 
 ### sync:partners
 
@@ -280,6 +281,18 @@ Two Artisan commands sync data from Graph API to the local database every 15 min
 3. Updates `next_review_at` based on `recurrence_interval_days`
 4. Logs sync results to `SyncLog`
 
+### score:partners
+
+Runs daily to calculate trust scores for all partners with a domain set:
+
+1. For each partner with a non-null `domain`, runs `TrustScoreService::calculateScore()`
+2. Performs DNS lookups (DMARC, SPF, DKIM, DNSSEC) via `DnsLookupService`
+3. Queries RDAP (`rdap.org`) for domain registration date
+4. Combines DNS hygiene signals (60 points) with Entra ID metadata (40 points) into a 0-100 score
+5. Stores `trust_score`, `trust_score_breakdown` (JSON), and `trust_score_calculated_at` on the partner record
+
+Partners without a domain are skipped. Failures for individual partners are logged and do not block scoring of other partners.
+
 ### Schedule Registration
 
 ```php
@@ -287,6 +300,7 @@ Two Artisan commands sync data from Graph API to the local database every 15 min
 Schedule::command('sync:partners')->everyFifteenMinutes();
 Schedule::command('sync:guests')->everyFifteenMinutes();
 Schedule::command('sync:access-reviews')->everyFifteenMinutes();
+Schedule::command('score:partners')->daily();
 ```
 
 ### Running the Scheduler

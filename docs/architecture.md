@@ -28,6 +28,8 @@ Partner365 is a monolithic Laravel 12 + Vue 3 application using Inertia.js for s
 │  │  TenantResolverService (tenant lookup)          ││
 │  │  ActivityLogService (audit trail)               ││
 │  │  AccessReviewService (access review lifecycle) ││
+│  │  TrustScoreService (domain reputation scoring) ││
+│  │  DnsLookupService (DNS record queries)         ││
 │  └──────┬──────────────────────────────────────────┘│
 │         │                                            │
 │  ┌──────▼──────┐  ┌───────────────────────────────────────┐ │
@@ -35,6 +37,7 @@ Partner365 is a monolithic Laravel 12 + Vue 3 application using Inertia.js for s
 │  │  Models     │  │  sync:partners        (every 15 min)  │ │
 │  │             │  │  sync:guests          (every 15 min)  │ │
 │  │             │  │  sync:access-reviews  (every 15 min)  │ │
+│  │             │  │  score:partners       (daily)         │ │
 │  └──────┬──────┘  └───────────────────────────────────────┘ │
 └─────────┼───────────────────────────────────────────┘
           │                        │
@@ -76,6 +79,9 @@ partner_organizations
 ├── tenant_restrictions_json (JSON: app/user targeting config)
 ├── raw_policy_json (full Graph API response)
 ├── last_synced_at
+├── trust_score (0-100, nullable)
+├── trust_score_breakdown (JSON: per-signal pass/fail and points)
+├── trust_score_calculated_at
 └── timestamps
 
 guest_users

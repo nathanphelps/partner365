@@ -184,6 +184,8 @@ All routes require authentication (`auth` + `verified` middleware) unless noted 
 
 ### Partners Show
 
+The `PartnerOrganization` type includes trust score fields: `trust_score` (0-100 or null), `trust_score_breakdown` (JSON with per-signal pass/fail and points), and `trust_score_calculated_at`.
+
 ```typescript
 {
     partner: PartnerOrganization & { owner: User; guest_users: GuestUser[] };

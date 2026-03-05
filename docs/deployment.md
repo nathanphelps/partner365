@@ -197,10 +197,11 @@ Add this cron entry to run the Laravel scheduler:
 * * * * * cd /path-to/partner365 && php artisan schedule:run >> /dev/null 2>&1
 ```
 
-This runs the background sync commands:
+This runs the background commands:
 - `sync:partners` — every 15 minutes
 - `sync:guests` — every 15 minutes
 - `sync:access-reviews` — every 15 minutes
+- `score:partners` — daily (calculates domain trust scores)
 
 ### 6. Set Up Queue Worker (Optional)
 

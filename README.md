@@ -130,7 +130,7 @@ app/
 └── Services/               # MicrosoftGraphService, CrossTenantPolicyService,
                             # GuestUserService, TenantResolverService,
                             # CollaborationSettingsService, ActivityLogService,
-                            # AccessReviewService
+                            # AccessReviewService, TrustScoreService, DnsLookupService
 
 resources/js/
 ├── pages/
@@ -142,18 +142,21 @@ resources/js/
 │   ├── activity/           # Index
 │   └── Dashboard.vue
 ├── types/                  # TypeScript types for Partner, Guest, AccessReview, Paginated
-└── components/             # shadcn-vue UI components
+└── components/             # shadcn-vue UI components + TrustScoreBadge
 
 tests/Feature/
 ├── Commands/               # SyncPartners, SyncGuests, SyncAccessReviews
 ├── Middleware/              # CheckRole
 ├── Models/                 # PartnerOrganization
-├── Services/               # All 5 service classes
+├── Services/               # All 5 Graph API service classes
 ├── PartnerOrganizationTest.php
 ├── GuestUserControllerTest.php
 ├── CollaborationSettingsTest.php
 ├── AccessReviewServiceTest.php
-└── AccessReviewControllerTest.php
+├── AccessReviewControllerTest.php
+├── TrustScoreServiceTest.php
+├── DnsLookupServiceTest.php
+└── ScorePartnersCommandTest.php
 ```
 
 ## License
