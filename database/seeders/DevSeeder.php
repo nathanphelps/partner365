@@ -471,7 +471,7 @@ class DevSeeder extends Seeder
                 'protection_type' => $sub['protection_type'],
                 'scope' => ['files_emails'],
                 'is_active' => true,
-                'parent_id' => $confidential->id,
+                'parent_label_id' => $confidential->id,
                 'synced_at' => fake()->dateTimeBetween('-1 day', 'now'),
             ]);
         }
