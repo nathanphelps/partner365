@@ -26,7 +26,8 @@
       "Bash(grep:*)",
       "Bash(chmod +x:*)",
       "Bash(az ad:*)",
-      "Bash(composer run:*)"
+      "Bash(composer run:*)",
+      "Bash(gh repo:*)"
     ]
   }
 }
