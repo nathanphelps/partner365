@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AccessReviewController;
 use App\Http\Controllers\ActivityLogController;
+use App\Http\Controllers\Auth\SsoController;
 use App\Http\Controllers\ComplianceReportController;
 use App\Http\Controllers\ConditionalAccessPolicyController;
 use App\Http\Controllers\DashboardController;
@@ -19,6 +20,9 @@ use Laravel\Fortify\Features;
 Route::inertia('/', 'Welcome', [
     'canRegister' => Features::enabled(Features::registration()),
 ])->name('home');
+
+Route::get('auth/sso', [SsoController::class, 'redirect'])->name('sso.redirect');
+Route::get('auth/sso/callback', [SsoController::class, 'callback'])->name('sso.callback');
 
 Route::middleware(['auth', 'verified', 'approved'])->group(function () {
     Route::get('dashboard', DashboardController::class)->name('dashboard');

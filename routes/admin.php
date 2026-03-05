@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\AdminCollaborationController;
 use App\Http\Controllers\Admin\AdminGraphController;
+use App\Http\Controllers\Admin\AdminSsoController;
 use App\Http\Controllers\Admin\AdminSyncController;
 use App\Http\Controllers\Admin\AdminSyslogController;
 use App\Http\Controllers\Admin\AdminUserController;
@@ -26,6 +27,9 @@ Route::middleware(['auth', 'verified', 'approved', 'role:admin'])->prefix('admin
     Route::get('sync', [AdminSyncController::class, 'edit'])->name('admin.sync.edit');
     Route::put('sync', [AdminSyncController::class, 'update'])->name('admin.sync.update');
     Route::post('sync/{type}/run', [AdminSyncController::class, 'run'])->name('admin.sync.run');
+
+    Route::get('sso', [AdminSsoController::class, 'edit'])->name('admin.sso.edit');
+    Route::put('sso', [AdminSsoController::class, 'update'])->name('admin.sso.update');
 
     Route::get('syslog', [AdminSyslogController::class, 'edit'])->name('admin.syslog.edit');
     Route::put('syslog', [AdminSyslogController::class, 'update'])->name('admin.syslog.update');

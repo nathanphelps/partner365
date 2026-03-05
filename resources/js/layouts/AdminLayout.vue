@@ -1,6 +1,13 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
-import { Cable, Globe, Settings2, Shield, Users } from 'lucide-vue-next';
+import {
+    Cable,
+    Globe,
+    KeyRound,
+    Settings2,
+    Shield,
+    Users,
+} from 'lucide-vue-next';
 import Heading from '@/components/Heading.vue';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -20,6 +27,7 @@ const adminNavItems: NavItem[] = [
     { title: 'Microsoft Graph', href: '/admin/graph', icon: Cable },
     { title: 'Collaboration', href: '/admin/collaboration', icon: Globe },
     { title: 'User Management', href: '/admin/users', icon: Users },
+    { title: 'SSO', href: '/admin/sso', icon: KeyRound },
     { title: 'Sync Settings', href: '/admin/sync', icon: Settings2 },
     { title: 'SIEM Integration', href: '/admin/syslog', icon: Shield },
 ];

@@ -70,17 +70,33 @@ for perm_name in "${!PERMISSIONS[@]}"; do
     RESOURCE_ACCESS_ITEMS+="{\"id\":\"$perm_id\",\"type\":\"Role\"}"
 done
 
-REQUIRED_ACCESS="[{\"resourceAppId\":\"$GRAPH_API\",\"resourceAccess\":[$RESOURCE_ACCESS_ITEMS]}]"
+# Delegated permissions for SSO (OpenID Connect)
+declare -A DELEGATED_PERMISSIONS=(
+    ["openid"]="37f7f235-527c-4136-accd-4a02d197296e"
+    ["profile"]="14dad69e-099b-42c9-810b-d002981feec1"
+    ["email"]="64a6cdd6-aab1-4aaf-94b8-3cc8405e90d0"
+    ["User.Read"]="e1fe6dd8-ba31-4d61-89e7-88639da4683d"
+)
 
-REDIRECT_URI="${APP_URL}/admin/graph/consent/callback"
+DELEGATED_ACCESS_ITEMS=""
+for perm_name in "${!DELEGATED_PERMISSIONS[@]}"; do
+    perm_id="${DELEGATED_PERMISSIONS[$perm_name]}"
+    [ -n "$DELEGATED_ACCESS_ITEMS" ] && DELEGATED_ACCESS_ITEMS+=","
+    DELEGATED_ACCESS_ITEMS+="{\"id\":\"$perm_id\",\"type\":\"Scope\"}"
+done
+
+REQUIRED_ACCESS="[{\"resourceAppId\":\"$GRAPH_API\",\"resourceAccess\":[$RESOURCE_ACCESS_ITEMS,$DELEGATED_ACCESS_ITEMS]}]"
+
+CONSENT_REDIRECT_URI="${APP_URL}/admin/graph/consent/callback"
+SSO_REDIRECT_URI="${APP_URL}/auth/sso/callback"
 
 echo "Creating app registration: $APP_NAME"
-echo "Redirect URI: $REDIRECT_URI"
+echo "Redirect URIs: $CONSENT_REDIRECT_URI, $SSO_REDIRECT_URI"
 APP_ID=$(az ad app create \
     --display-name "$APP_NAME" \
     --sign-in-audience "AzureADMyOrg" \
     --required-resource-accesses "$REQUIRED_ACCESS" \
-    --web-redirect-uris "$REDIRECT_URI" \
+    --web-redirect-uris "$CONSENT_REDIRECT_URI" "$SSO_REDIRECT_URI" \
     --query appId -o tsv)
 
 echo "App registered: $APP_ID"
@@ -139,3 +155,5 @@ echo "  Go to Admin → Microsoft Graph → Grant Admin Consent"
 echo ""
 echo "For GCC High tenants, set MICROSOFT_GRAPH_CLOUD_ENVIRONMENT=gcc_high in .env"
 echo "or select 'GCC High' from the Cloud Environment dropdown in Admin → Microsoft Graph."
+echo ""
+echo "SSO: To enable Entra ID sign-in, go to Admin → SSO in the Partner365 web interface."
