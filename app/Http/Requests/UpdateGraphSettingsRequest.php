@@ -22,6 +22,7 @@ class UpdateGraphSettingsRequest extends FormRequest
             'client_secret' => ['nullable', 'string'],
             'scopes' => ['required', 'string'],
             'base_url' => ['required', 'url'],
+            'sharepoint_tenant' => ['nullable', 'string', 'max:63', 'regex:/^[a-zA-Z0-9-]+$/'],
             'sync_interval_minutes' => ['required', 'integer', 'min:1', 'max:1440'],
         ];
     }

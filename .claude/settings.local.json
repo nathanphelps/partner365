@@ -76,7 +76,12 @@
       "Bash(az rest:*)",
       "Bash(python:*)",
       "Bash(PHP_INI='C:\\\\dev\\\\php\\\\php.ini')",
-      "Read(//c/GitHub/partner365/**)"
+      "Read(//c/GitHub/partner365/**)",
+      "Bash(composer.bat run:*)",
+      "Bash(where.exe composer:*)",
+      "Bash(tasklist:*)",
+      "WebFetch(domain:kksimplifies.com)",
+      "WebFetch(domain:docs.dndocs.com)"
     ]
   }
 }

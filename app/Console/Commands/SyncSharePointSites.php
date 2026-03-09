@@ -12,7 +12,7 @@ class SyncSharePointSites extends Command
 {
     protected $signature = 'sync:sharepoint-sites';
 
-    protected $description = 'Sync SharePoint sites and guest user permissions from Microsoft Graph API';
+    protected $description = 'Sync SharePoint sites and guest user permissions from Microsoft Graph and SharePoint Admin APIs';
 
     public function handle(SharePointSiteService $service): int
     {

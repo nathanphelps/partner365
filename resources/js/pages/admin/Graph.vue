@@ -24,6 +24,7 @@ type Props = {
         client_secret_masked: string | null;
         scopes: string | null;
         base_url: string | null;
+        sharepoint_tenant: string | null;
         sync_interval_minutes: string | number | null;
     };
 };
@@ -42,6 +43,7 @@ const form = useForm({
     client_secret: '',
     scopes: props.settings.scopes ?? '',
     base_url: props.settings.base_url ?? '',
+    sharepoint_tenant: props.settings.sharepoint_tenant ?? '',
     sync_interval_minutes: props.settings.sync_interval_minutes ?? 15,
 });
 
@@ -145,6 +147,10 @@ const requiredPermissions = [
     {
         name: 'Sites.Read.All',
         purpose: 'Read SharePoint sites for guest access and entitlements',
+    },
+    {
+        name: 'Sites.FullControl.All (SharePoint)',
+        purpose: 'Read site sharing capabilities via SharePoint Admin API',
     },
 ];
 
@@ -284,6 +290,23 @@ const grantAdminConsent = async () => {
                 </div>
 
                 <div class="grid gap-2">
+                    <Label for="sharepoint_tenant"
+                        >SharePoint Tenant Slug</Label
+                    >
+                    <Input
+                        id="sharepoint_tenant"
+                        v-model="form.sharepoint_tenant"
+                        placeholder="contoso"
+                    />
+                    <p class="text-xs text-muted-foreground">
+                        The tenant prefix used in your SharePoint URL (e.g.
+                        "contoso" for contoso.sharepoint.com). Required for
+                        fetching site sharing capabilities.
+                    </p>
+                    <InputError :message="form.errors.sharepoint_tenant" />
+                </div>
+
+                <div class="grid gap-2">
                     <Label for="sync_interval_minutes"
                         >Sync Interval (minutes)</Label
                     >
@@ -384,7 +407,7 @@ const grantAdminConsent = async () => {
                     <summary
                         class="cursor-pointer text-sm font-medium text-muted-foreground hover:text-foreground"
                     >
-                        Required Application Permissions (14)
+                        Required Application Permissions (15)
                     </summary>
                     <div class="mt-2 rounded-md border bg-muted/30 p-4">
                         <table class="w-full text-sm">

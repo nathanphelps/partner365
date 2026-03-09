@@ -15,6 +15,7 @@ class SensitivityLabelService
 {
     public function __construct(
         private MicrosoftGraphService $graph,
+        private SharePointAdminService $spoAdmin,
     ) {}
 
     public function syncLabels(): array
@@ -72,6 +73,7 @@ class SensitivityLabelService
     public function syncSiteLabels(): int
     {
         $sites = $this->fetchSitesFromGraph();
+        $sharingMap = $this->fetchSharingCapabilities();
         $syncedIds = [];
 
         foreach ($sites as $site) {
@@ -85,7 +87,8 @@ class SensitivityLabelService
                 continue;
             }
 
-            $sharingCapability = $site['sharingCapability'] ?? 'disabled';
+            $siteUrl = strtolower(rtrim($site['webUrl'] ?? '', '/'));
+            $sharingCapability = $sharingMap[$siteUrl] ?? 'Disabled';
             $externalSharing = in_array($sharingCapability, [
                 'ExternalUserSharingOnly', 'ExternalUserAndGuestSharing', 'ExistingExternalUserSharingOnly',
             ]);
@@ -195,7 +198,7 @@ class SensitivityLabelService
     {
         $response = $this->graph->get('/sites', [
             'search' => '*',
-            '$select' => 'id,displayName,name,webUrl,sharingCapability',
+            '$select' => 'id,displayName,name,webUrl',
             '$top' => 999,
         ]);
 
@@ -212,6 +215,23 @@ class SensitivityLabelService
         }
 
         return $response['value'];
+    }
+
+    private function fetchSharingCapabilities(): array
+    {
+        try {
+            if (! $this->spoAdmin->isConfigured()) {
+                Log::warning('SharePoint Admin API not configured — sharepoint_tenant is empty. Sharing capabilities will default to Disabled.');
+
+                return [];
+            }
+
+            return $this->spoAdmin->getSiteProperties();
+        } catch (\Throwable $e) {
+            Log::warning("Failed to fetch sharing capabilities from SharePoint Admin API: {$e->getMessage()}");
+
+            return [];
+        }
     }
 
     private function fetchSiteLabelFromGraph(string $siteId): ?string

@@ -15,16 +15,21 @@ class SharePointSiteService
 {
     public function __construct(
         private MicrosoftGraphService $graph,
+        private SharePointAdminService $spoAdmin,
     ) {}
 
     public function syncSites(): int
     {
         $graphSites = $this->fetchSitesFromGraph();
+        $sharingMap = $this->fetchSharingCapabilities();
         $syncedIds = [];
 
         foreach ($graphSites as $graphSite) {
             $labelId = $this->fetchSiteLabelFromGraph($graphSite['id']);
             $sensitivityLabel = $labelId ? SensitivityLabel::where('label_id', $labelId)->first() : null;
+
+            $siteUrl = strtolower(rtrim($graphSite['webUrl'] ?? '', '/'));
+            $sharingCapability = $sharingMap[$siteUrl] ?? 'Disabled';
 
             $site = SharePointSite::updateOrCreate(
                 ['site_id' => $graphSite['id']],
@@ -33,7 +38,7 @@ class SharePointSiteService
                     'url' => $graphSite['webUrl'] ?? '',
                     'description' => $graphSite['description'] ?? null,
                     'sensitivity_label_id' => $sensitivityLabel?->id,
-                    'external_sharing_capability' => $graphSite['sharingCapability'] ?? 'Disabled',
+                    'external_sharing_capability' => $sharingCapability,
                     'storage_used_bytes' => $graphSite['storageUsed'] ?? null,
                     'last_activity_at' => $graphSite['lastModifiedDateTime'] ?? null,
                     'owner_display_name' => $graphSite['createdBy']['user']['displayName'] ?? null,
@@ -120,7 +125,7 @@ class SharePointSiteService
     {
         $response = $this->graph->get('/sites', [
             'search' => '*',
-            '$select' => 'id,displayName,name,webUrl,description,sharingCapability,storageUsed,lastModifiedDateTime,createdBy',
+            '$select' => 'id,displayName,name,webUrl,description,lastModifiedDateTime,createdBy',
             '$top' => 999,
         ]);
 
@@ -164,6 +169,23 @@ class SharePointSiteService
         }
 
         return 'direct';
+    }
+
+    private function fetchSharingCapabilities(): array
+    {
+        try {
+            if (! $this->spoAdmin->isConfigured()) {
+                Log::warning('SharePoint Admin API not configured — sharepoint_tenant is empty. Sharing capabilities will default to Disabled.');
+
+                return [];
+            }
+
+            return $this->spoAdmin->getSiteProperties();
+        } catch (\Throwable $e) {
+            Log::warning("Failed to fetch sharing capabilities from SharePoint Admin API: {$e->getMessage()}");
+
+            return [];
+        }
     }
 
     private function requireValueKey(array $response, string $context): array

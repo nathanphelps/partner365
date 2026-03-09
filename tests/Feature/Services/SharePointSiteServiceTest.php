@@ -11,17 +11,20 @@ use Illuminate\Support\Facades\Http;
 
 beforeEach(function () {
     config([
+        'graph.cloud_environment' => 'commercial',
         'graph.tenant_id' => 'test-tenant-id',
         'graph.client_id' => 'test-client-id',
         'graph.client_secret' => 'test-client-secret',
         'graph.base_url' => 'https://graph.microsoft.com/v1.0',
         'graph.scopes' => 'https://graph.microsoft.com/.default',
+        'graph.sharepoint_tenant' => 'contoso',
     ]);
 
     Cache::forget('msgraph_access_token');
+    Cache::forget('spo_admin_access_token');
 });
 
-function fakeGraphForSharePoint(array $sites = [], array $permissionsBySiteId = [], array $labelsBySiteId = []): void
+function fakeGraphForSharePoint(array $sites = [], array $permissionsBySiteId = [], array $labelsBySiteId = [], array $spoSiteProperties = []): void
 {
     $responses = [
         'login.microsoftonline.com/*' => Http::response([
@@ -30,6 +33,10 @@ function fakeGraphForSharePoint(array $sites = [], array $permissionsBySiteId = 
         ]),
         'graph.microsoft.com/v1.0/sites?*' => Http::response([
             'value' => $sites,
+        ]),
+        '*-admin.sharepoint.com/_api/*' => Http::response([
+            '_Child_Items_' => $spoSiteProperties,
+            '_nextStartIndex' => -1,
         ]),
     ];
 
@@ -57,12 +64,24 @@ function makeGraphSite(array $overrides = []): array
         'name' => 'ProjectAlpha',
         'webUrl' => 'https://contoso.sharepoint.com/sites/alpha',
         'description' => 'Collaboration site',
-        'sharingCapability' => 'ExternalUserAndGuestSharing',
     ], $overrides);
 }
 
+function makeSpoSiteProperty(string $url, int $sharingCapability = 2): array
+{
+    return [
+        'Url' => $url,
+        'SharingCapability' => $sharingCapability,
+    ];
+}
+
 test('syncSites upserts sites from Graph API', function () {
-    fakeGraphForSharePoint([makeGraphSite()]);
+    fakeGraphForSharePoint(
+        [makeGraphSite()],
+        [],
+        [],
+        [makeSpoSiteProperty('https://contoso.sharepoint.com/sites/alpha', 2)]
+    );
 
     $service = app(SharePointSiteService::class);
     $result = $service->syncSites();
@@ -299,4 +318,16 @@ test('getPartnerExposure returns sites accessible by partner guests', function (
 
     $otherResult = $service->getPartnerExposure($otherPartner);
     expect($otherResult)->toHaveCount(0);
+});
+
+test('syncSites defaults to Disabled when SharePoint Admin API is unconfigured', function () {
+    config(['graph.sharepoint_tenant' => null]);
+
+    fakeGraphForSharePoint([makeGraphSite()]);
+
+    $service = app(SharePointSiteService::class);
+    $service->syncSites();
+
+    $site = SharePointSite::first();
+    expect($site->external_sharing_capability)->toBe('Disabled');
 });

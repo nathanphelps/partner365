@@ -31,6 +31,14 @@ enum CloudEnvironment: string
         };
     }
 
+    public function sharePointAdminUrl(string $tenantSlug): string
+    {
+        return match ($this) {
+            self::Commercial => "https://{$tenantSlug}-admin.sharepoint.com",
+            self::GccHigh => "https://{$tenantSlug}-admin.sharepoint.us",
+        };
+    }
+
     public function label(): string
     {
         return match ($this) {

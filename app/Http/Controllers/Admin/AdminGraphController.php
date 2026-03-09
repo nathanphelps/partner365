@@ -40,6 +40,7 @@ class AdminGraphController extends Controller
                 'client_secret_masked' => $masked,
                 'scopes' => $settings['scopes'] ?? config('graph.scopes'),
                 'base_url' => $settings['base_url'] ?? config('graph.base_url'),
+                'sharepoint_tenant' => $settings['sharepoint_tenant'] ?? config('graph.sharepoint_tenant'),
                 'sync_interval_minutes' => $settings['sync_interval_minutes'] ?? config('graph.sync_interval_minutes'),
             ],
         ]);
@@ -54,6 +55,7 @@ class AdminGraphController extends Controller
         Setting::set('graph', 'client_id', $validated['client_id']);
         Setting::set('graph', 'scopes', $validated['scopes']);
         Setting::set('graph', 'base_url', $validated['base_url']);
+        Setting::set('graph', 'sharepoint_tenant', $validated['sharepoint_tenant'] ?? null);
         Setting::set('graph', 'sync_interval_minutes', (string) $validated['sync_interval_minutes']);
 
         if (! empty($validated['client_secret'])) {
@@ -61,6 +63,7 @@ class AdminGraphController extends Controller
         }
 
         Cache::forget('msgraph_access_token');
+        Cache::forget('spo_admin_access_token');
 
         $this->activityLog->log($request->user(), ActivityAction::SettingsUpdated, null, [
             'group' => 'graph',

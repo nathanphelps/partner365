@@ -85,7 +85,11 @@ for perm_name in "${!DELEGATED_PERMISSIONS[@]}"; do
     DELEGATED_ACCESS_ITEMS+="{\"id\":\"$perm_id\",\"type\":\"Scope\"}"
 done
 
-REQUIRED_ACCESS="[{\"resourceAppId\":\"$GRAPH_API\",\"resourceAccess\":[$RESOURCE_ACCESS_ITEMS,$DELEGATED_ACCESS_ITEMS]}]"
+# SharePoint Online REST API — needed for SharePoint Admin API (sharing capabilities)
+SPO_API="00000003-0000-0ff1-ce00-000000000000"
+SPO_SITES_FULLCONTROL="678536fe-1083-478a-9c59-b99265e6b0d3"  # Sites.FullControl.All (SharePoint)
+
+REQUIRED_ACCESS="[{\"resourceAppId\":\"$GRAPH_API\",\"resourceAccess\":[$RESOURCE_ACCESS_ITEMS,$DELEGATED_ACCESS_ITEMS]},{\"resourceAppId\":\"$SPO_API\",\"resourceAccess\":[{\"id\":\"$SPO_SITES_FULLCONTROL\",\"type\":\"Role\"}]}]"
 
 CONSENT_REDIRECT_URI="${APP_URL}/admin/graph/consent/callback"
 SSO_REDIRECT_URI="${APP_URL}/auth/sso/callback"
