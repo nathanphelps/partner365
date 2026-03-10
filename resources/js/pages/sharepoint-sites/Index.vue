@@ -51,6 +51,31 @@ function sharingLabel(capability: string): string {
     };
     return map[capability] ?? capability;
 }
+
+function accessPolicyLabel(policy: string | null): string {
+    if (!policy) return 'None';
+    const map: Record<string, string> = {
+        FullAccess: 'Full Access',
+        LimitedAccess: 'Limited Access',
+        BlockAccess: 'Block Access',
+    };
+    return map[policy] ?? policy;
+}
+
+function accessPolicyVariant(
+    policy: string | null,
+): 'default' | 'secondary' | 'destructive' | 'outline' {
+    if (!policy) return 'outline';
+    const map: Record<
+        string,
+        'default' | 'secondary' | 'destructive' | 'outline'
+    > = {
+        FullAccess: 'default',
+        LimitedAccess: 'secondary',
+        BlockAccess: 'destructive',
+    };
+    return map[policy] ?? 'outline';
+}
 </script>
 
 <template>
@@ -95,6 +120,7 @@ function sharingLabel(capability: string): string {
                         <TableHead>Site Name</TableHead>
                         <TableHead>URL</TableHead>
                         <TableHead>Sharing</TableHead>
+                        <TableHead>Access Policy</TableHead>
                         <TableHead>Sensitivity Label</TableHead>
                         <TableHead>Guest Permissions</TableHead>
                     </TableRow>
@@ -125,6 +151,21 @@ function sharingLabel(capability: string): string {
                                 {{
                                     sharingLabel(
                                         site.external_sharing_capability,
+                                    )
+                                }}
+                            </Badge>
+                        </TableCell>
+                        <TableCell>
+                            <Badge
+                                :variant="
+                                    accessPolicyVariant(
+                                        site.conditional_access_policy,
+                                    )
+                                "
+                            >
+                                {{
+                                    accessPolicyLabel(
+                                        site.conditional_access_policy,
                                     )
                                 }}
                             </Badge>

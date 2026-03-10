@@ -73,11 +73,37 @@ function formatDate(val: string | null): string {
     return new Date(val).toLocaleString();
 }
 
+function accessPolicyLabel(policy: string | null): string {
+    if (!policy) return 'None';
+    const map: Record<string, string> = {
+        FullAccess: 'Full Access',
+        LimitedAccess: 'Limited Access',
+        BlockAccess: 'Block Access',
+    };
+    return map[policy] ?? policy;
+}
+
+function accessPolicyVariant(
+    policy: string | null,
+): 'default' | 'secondary' | 'destructive' | 'outline' {
+    if (!policy) return 'outline';
+    const map: Record<
+        string,
+        'default' | 'secondary' | 'destructive' | 'outline'
+    > = {
+        FullAccess: 'default',
+        LimitedAccess: 'secondary',
+        BlockAccess: 'destructive',
+    };
+    return map[policy] ?? 'outline';
+}
+
 function grantedViaLabel(via: string): string {
     const map: Record<string, string> = {
         direct: 'Direct',
         sharing_link: 'Sharing Link',
         group_membership: 'Group Membership',
+        site_access: 'Site Access',
     };
     return map[via] ?? via;
 }
@@ -154,6 +180,86 @@ function grantedViaLabel(via: string): string {
 
                     <span class="text-muted-foreground">Last Synced</span>
                     <span>{{ formatDate(site.synced_at) }}</span>
+                </CardContent>
+            </Card>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle>Access Controls</CardTitle>
+                </CardHeader>
+                <CardContent class="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                    <span class="text-muted-foreground">Conditional Access</span>
+                    <span>
+                        <Badge
+                            :variant="
+                                accessPolicyVariant(
+                                    site.conditional_access_policy,
+                                )
+                            "
+                        >
+                            {{
+                                accessPolicyLabel(
+                                    site.conditional_access_policy,
+                                )
+                            }}
+                        </Badge>
+                    </span>
+
+                    <span class="text-muted-foreground">Allow Editing</span>
+                    <span>{{ site.allow_editing ? 'Yes' : 'No' }}</span>
+
+                    <span class="text-muted-foreground"
+                        >Limited Access File Type</span
+                    >
+                    <span>{{
+                        site.limited_access_file_type ?? '\u2014'
+                    }}</span>
+
+                    <span class="text-muted-foreground">Allow Download</span>
+                    <span>{{
+                        site.allow_downloading_non_web_viewable ? 'Yes' : 'No'
+                    }}</span>
+
+                    <template
+                        v-if="
+                            site.sharing_domain_restriction_mode &&
+                            site.sharing_domain_restriction_mode !== 'None'
+                        "
+                    >
+                        <span class="text-muted-foreground"
+                            >Domain Restriction Mode</span
+                        >
+                        <span>{{
+                            site.sharing_domain_restriction_mode
+                        }}</span>
+
+                        <template v-if="site.sharing_allowed_domain_list">
+                            <span class="text-muted-foreground"
+                                >Allowed Domains</span
+                            >
+                            <span>{{
+                                site.sharing_allowed_domain_list
+                            }}</span>
+                        </template>
+
+                        <template v-if="site.sharing_blocked_domain_list">
+                            <span class="text-muted-foreground"
+                                >Blocked Domains</span
+                            >
+                            <span>{{
+                                site.sharing_blocked_domain_list
+                            }}</span>
+                        </template>
+                    </template>
+
+                    <template v-if="site.external_user_expiration_days !== null">
+                        <span class="text-muted-foreground"
+                            >External User Expiration</span
+                        >
+                        <span
+                            >{{ site.external_user_expiration_days }} days</span
+                        >
+                    </template>
                 </CardContent>
             </Card>
 

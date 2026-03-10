@@ -824,6 +824,7 @@ const directConnectStatus = computed(() => {
                                                 watermark: 'Watermark',
                                                 header_footer: 'Header/Footer',
                                                 none: 'No protection',
+                                                unknown: 'Unknown',
                                             }[label.protection_type] ??
                                             label.protection_type
                                         }}

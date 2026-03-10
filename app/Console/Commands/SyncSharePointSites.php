@@ -31,15 +31,19 @@ class SyncSharePointSites extends Command
             $permissionsSynced = $service->syncPermissions();
             $this->info("Synced {$permissionsSynced} site permissions.");
 
+            $externalUsersCount = $service->syncSiteExternalUsers();
+            $this->info("  External users mapped: {$externalUsersCount} (via User Information List)");
+
             $log->update([
                 'status' => 'completed',
-                'records_synced' => $sitesSynced + $permissionsSynced,
+                'records_synced' => $sitesSynced + $permissionsSynced + $externalUsersCount,
                 'completed_at' => now(),
             ]);
 
             app(ActivityLogService::class)->logSystem(ActivityAction::SharePointSitesSynced, details: [
                 'sites_synced' => $sitesSynced,
                 'permissions_synced' => $permissionsSynced,
+                'external_users_mapped' => $externalUsersCount,
             ]);
 
             return Command::SUCCESS;

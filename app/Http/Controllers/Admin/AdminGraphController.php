@@ -42,6 +42,8 @@ class AdminGraphController extends Controller
                 'base_url' => $settings['base_url'] ?? config('graph.base_url'),
                 'sharepoint_tenant' => $settings['sharepoint_tenant'] ?? config('graph.sharepoint_tenant'),
                 'sync_interval_minutes' => $settings['sync_interval_minutes'] ?? config('graph.sync_interval_minutes'),
+                'compliance_certificate_path' => Setting::get('graph', 'compliance_certificate_path', config('graph.compliance_certificate_path')),
+                'compliance_certificate_password' => Setting::get('graph', 'compliance_certificate_password') ? '********' : '',
             ],
         ]);
     }
@@ -60,6 +62,12 @@ class AdminGraphController extends Controller
 
         if (! empty($validated['client_secret'])) {
             Setting::set('graph', 'client_secret', $validated['client_secret'], encrypted: true);
+        }
+
+        Setting::set('graph', 'compliance_certificate_path', $validated['compliance_certificate_path'] ?? '');
+
+        if (! empty($validated['compliance_certificate_password']) && $validated['compliance_certificate_password'] !== '********') {
+            Setting::set('graph', 'compliance_certificate_password', $validated['compliance_certificate_password'], encrypted: true);
         }
 
         Cache::forget('msgraph_access_token');

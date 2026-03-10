@@ -26,6 +26,8 @@ type Props = {
         base_url: string | null;
         sharepoint_tenant: string | null;
         sync_interval_minutes: string | number | null;
+        compliance_certificate_path: string;
+        compliance_certificate_password: string;
     };
 };
 
@@ -45,6 +47,10 @@ const form = useForm({
     base_url: props.settings.base_url ?? '',
     sharepoint_tenant: props.settings.sharepoint_tenant ?? '',
     sync_interval_minutes: props.settings.sync_interval_minutes ?? 15,
+    compliance_certificate_path:
+        props.settings.compliance_certificate_path ?? '',
+    compliance_certificate_password:
+        props.settings.compliance_certificate_password ?? '',
 });
 
 const cloudDefaults: Record<string, { scopes: string; base_url: string }> = {
@@ -304,6 +310,49 @@ const grantAdminConsent = async () => {
                         fetching site sharing capabilities.
                     </p>
                     <InputError :message="form.errors.sharepoint_tenant" />
+                </div>
+
+                <div
+                    v-if="form.cloud_environment === 'gcc_high'"
+                    class="grid gap-2"
+                >
+                    <Label for="compliance_certificate_path"
+                        >Compliance Certificate Path (PFX)</Label
+                    >
+                    <Input
+                        id="compliance_certificate_path"
+                        v-model="form.compliance_certificate_path"
+                        placeholder="/path/to/certificate.pfx"
+                    />
+                    <p class="text-xs text-muted-foreground">
+                        Absolute path to the PFX certificate file used for
+                        certificate-based authentication in GCC High.
+                    </p>
+                    <InputError
+                        :message="form.errors.compliance_certificate_path"
+                    />
+                </div>
+
+                <div
+                    v-if="form.cloud_environment === 'gcc_high'"
+                    class="grid gap-2"
+                >
+                    <Label for="compliance_certificate_password"
+                        >Compliance Certificate Password</Label
+                    >
+                    <Input
+                        id="compliance_certificate_password"
+                        v-model="form.compliance_certificate_password"
+                        type="password"
+                        placeholder="Enter certificate password"
+                    />
+                    <p class="text-xs text-muted-foreground">
+                        Password for the PFX certificate. Leave blank to keep
+                        the current password.
+                    </p>
+                    <InputError
+                        :message="form.errors.compliance_certificate_password"
+                    />
                 </div>
 
                 <div class="grid gap-2">

@@ -17,6 +17,38 @@ class SharePointAdminService
         3 => 'ExistingExternalUserSharingOnly',
     ];
 
+    private const CONDITIONAL_ACCESS_MAP = [
+        0 => 'AllowFullAccess',
+        1 => 'AllowLimitedAccess',
+        2 => 'BlockAccess',
+        3 => 'AuthenticationContext',
+    ];
+
+    private const LIMITED_ACCESS_FILE_TYPE_MAP = [
+        0 => 'OfficeOnlineFilesOnly',
+        1 => 'WebPreviewableFiles',
+        2 => 'OtherFiles',
+    ];
+
+    private const SHARING_DOMAIN_RESTRICTION_MAP = [
+        0 => 'None',
+        1 => 'AllowList',
+        2 => 'BlockList',
+    ];
+
+    private const SHARING_LINK_TYPE_MAP = [
+        0 => 'None',
+        1 => 'Direct',
+        2 => 'Internal',
+        3 => 'AnonymousAccess',
+    ];
+
+    private const SHARING_PERMISSION_MAP = [
+        0 => 'None',
+        1 => 'View',
+        2 => 'Edit',
+    ];
+
     public function isConfigured(): bool
     {
         $tenant = Setting::get('graph', 'sharepoint_tenant', config('graph.sharepoint_tenant'));
@@ -106,8 +138,20 @@ class SharePointAdminService
             foreach ($items as $item) {
                 $url = rtrim($item['Url'] ?? '', '/');
                 $normalizedUrl = strtolower($url);
-                $sharingCapability = self::SHARING_MAP[$item['SharingCapability'] ?? 0] ?? 'Disabled';
-                $results[$normalizedUrl] = $sharingCapability;
+                $results[$normalizedUrl] = [
+                    'sharingCapability' => self::SHARING_MAP[$item['SharingCapability'] ?? 0] ?? 'Disabled',
+                    'sharingDomainRestrictionMode' => self::SHARING_DOMAIN_RESTRICTION_MAP[$item['SharingDomainRestrictionMode'] ?? 0] ?? 'None',
+                    'sharingAllowedDomainList' => $item['SharingAllowedDomainList'] ?? '',
+                    'sharingBlockedDomainList' => $item['SharingBlockedDomainList'] ?? '',
+                    'defaultSharingLinkType' => self::SHARING_LINK_TYPE_MAP[$item['DefaultSharingLinkType'] ?? 0] ?? 'None',
+                    'defaultLinkPermission' => self::SHARING_PERMISSION_MAP[$item['DefaultLinkPermission'] ?? 0] ?? 'None',
+                    'externalUserExpirationInDays' => $item['ExternalUserExpirationInDays'] ?? null,
+                    'overrideTenantExternalUserExpirationPolicy' => (bool) ($item['OverrideTenantExternalUserExpirationPolicy'] ?? false),
+                    'conditionalAccessPolicy' => self::CONDITIONAL_ACCESS_MAP[$item['ConditionalAccessPolicy'] ?? 0] ?? 'AllowFullAccess',
+                    'allowEditing' => (bool) ($item['AllowEditing'] ?? true),
+                    'limitedAccessFileType' => self::LIMITED_ACCESS_FILE_TYPE_MAP[$item['LimitedAccessFileType'] ?? 1] ?? 'WebPreviewableFiles',
+                    'allowDownloadingNonWebViewableFiles' => (bool) ($item['AllowDownloadingNonWebViewableFiles'] ?? true),
+                ];
             }
 
             $startIndex = $data['_nextStartIndex'] ?? -1;
