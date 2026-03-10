@@ -120,7 +120,7 @@ class SharePointAdminService
                     'filter' => [
                         'IncludePersonalSite' => 'false',
                         'StartIndex' => (string) $startIndex,
-                        'IncludeDetail' => 'false',
+                        'IncludeDetail' => 'true',
                     ],
                 ]);
 

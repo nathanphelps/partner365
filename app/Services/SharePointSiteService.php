@@ -189,42 +189,45 @@ class SharePointSiteService
             return 0;
         }
 
-        $sites = SharePointSite::all();
         $totalMapped = 0;
 
-        foreach ($sites as $site) {
-            try {
-                $externalUsers = $this->fetchExternalUsersFromInfoList($site->site_id);
+        SharePointSite::chunkById(100, function ($sites) use (&$totalMapped) {
+            foreach ($sites as $site) {
+                try {
+                    $externalUsers = $this->fetchExternalUsersFromInfoList($site->site_id);
 
-                foreach ($externalUsers as $externalUser) {
-                    if (empty($externalUser['email']) && empty($externalUser['userPrincipalName'])) {
-                        continue;
+                    foreach ($externalUsers as $externalUser) {
+                        if (empty($externalUser['email']) && empty($externalUser['userPrincipalName'])) {
+                            continue;
+                        }
+
+                        $guest = GuestUser::where(function ($q) use ($externalUser) {
+                            $q->where('email', $externalUser['email'])
+                                ->orWhere('user_principal_name', $externalUser['userPrincipalName']);
+                        })->first();
+
+                        if (! $guest) {
+                            continue;
+                        }
+
+                        $perm = SharePointSitePermission::firstOrCreate(
+                            [
+                                'sharepoint_site_id' => $site->id,
+                                'guest_user_id' => $guest->id,
+                                'role' => 'member',
+                                'granted_via' => 'site_access',
+                            ]
+                        );
+
+                        if ($perm->wasRecentlyCreated) {
+                            $totalMapped++;
+                        }
                     }
-
-                    $guest = GuestUser::where(function ($q) use ($externalUser) {
-                        $q->where('email', $externalUser['email'])
-                            ->orWhere('user_principal_name', $externalUser['userPrincipalName']);
-                    })->first();
-
-                    if (! $guest) {
-                        continue;
-                    }
-
-                    SharePointSitePermission::updateOrCreate(
-                        [
-                            'sharepoint_site_id' => $site->id,
-                            'guest_user_id' => $guest->id,
-                            'role' => 'member',
-                            'granted_via' => 'site_access',
-                        ]
-                    );
-
-                    $totalMapped++;
+                } catch (\Throwable $e) {
+                    Log::warning("Failed to fetch User Information List for site {$site->site_id}: {$e->getMessage()}");
                 }
-            } catch (\Throwable $e) {
-                Log::warning("Failed to fetch User Information List for site {$site->site_id}: {$e->getMessage()}");
             }
-        }
+        });
 
         return $totalMapped;
     }
@@ -266,7 +269,11 @@ class SharePointSiteService
             if ($nextLink) {
                 $parsed = parse_url($nextLink);
                 parse_str($parsed['query'] ?? '', $params);
-                $url = $parsed['path'] ?? $url;
+                $path = $parsed['path'] ?? $url;
+                if (str_starts_with($path, '/v1.0')) {
+                    $path = substr($path, 5);
+                }
+                $url = $path;
             }
         } while ($nextLink && count($externalUsers) < 5000);
 
