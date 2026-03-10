@@ -84,7 +84,12 @@
       "WebFetch(domain:docs.dndocs.com)",
       "Bash(composer show:*)",
       "Bash(composer outdated:*)",
-      "WebFetch(domain:blog.yannickreekmans.be)"
+      "WebFetch(domain:blog.yannickreekmans.be)",
+      "Bash(vendor/bin/pint:*)",
+      "mcp__laravel-boost__database-schema",
+      "mcp__laravel-boost__database-query",
+      "Bash(git stash:*)",
+      "mcp__laravel-boost__tinker"
     ]
   },
   "enableAllProjectMcpServers": true,
