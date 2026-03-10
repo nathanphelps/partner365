@@ -8,16 +8,19 @@ use Illuminate\Support\Facades\Log;
 
 class GuestUserService
 {
-    private const GUEST_SELECT_FIELDS = 'id,displayName,mail,userPrincipalName,userType,accountEnabled,createdDateTime,externalUserState,signInActivity';
+    private const GUEST_SELECT_FIELDS = 'id,displayName,mail,otherMails,userPrincipalName,userType,accountEnabled,createdDateTime,externalUserState,signInActivity';
 
     public function __construct(private MicrosoftGraphService $graph) {}
 
     public function listGuests(): array
     {
         $response = $this->graph->get('/users', [
-            '$filter' => "userType eq 'Guest'",
+            '$filter' => "userType eq 'Guest' or externalUserState eq 'Accepted'",
             '$select' => self::GUEST_SELECT_FIELDS,
             '$top' => 999,
+            '$count' => 'true',
+        ], [
+            'ConsistencyLevel' => 'eventual',
         ]);
 
         return $response['value'] ?? [];

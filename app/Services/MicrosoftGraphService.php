@@ -50,9 +50,9 @@ class MicrosoftGraphService
         });
     }
 
-    public function get(string $path, array $query = []): array
+    public function get(string $path, array $query = [], array $headers = []): array
     {
-        return $this->request('GET', $path, query: $query);
+        return $this->request('GET', $path, query: $query, headers: $headers);
     }
 
     public function post(string $path, array $data = []): array
@@ -70,13 +70,13 @@ class MicrosoftGraphService
         return $this->request('DELETE', $path);
     }
 
-    private function request(string $method, string $path, array $data = [], array $query = []): array
+    private function request(string $method, string $path, array $data = [], array $query = [], array $headers = []): array
     {
         $token = $this->getAccessToken();
         $baseUrl = Setting::get('graph', 'base_url', config('graph.base_url'));
         $url = $baseUrl.$path;
 
-        $request = Http::withToken($token)->acceptJson();
+        $request = Http::withToken($token)->acceptJson()->withHeaders($headers);
 
         $response = match ($method) {
             'GET' => $request->get($url, $query),
