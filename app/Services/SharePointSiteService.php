@@ -197,9 +197,14 @@ class SharePointSiteService
                 $externalUsers = $this->fetchExternalUsersFromInfoList($site->site_id);
 
                 foreach ($externalUsers as $externalUser) {
-                    $guest = GuestUser::where('email', $externalUser['email'])
-                        ->orWhere('user_principal_name', $externalUser['userPrincipalName'])
-                        ->first();
+                    if (empty($externalUser['email']) && empty($externalUser['userPrincipalName'])) {
+                        continue;
+                    }
+
+                    $guest = GuestUser::where(function ($q) use ($externalUser) {
+                        $q->where('email', $externalUser['email'])
+                            ->orWhere('user_principal_name', $externalUser['userPrincipalName']);
+                    })->first();
 
                     if (! $guest) {
                         continue;
@@ -293,8 +298,10 @@ class SharePointSiteService
             }
 
             return $this->spoAdmin->getSiteProperties();
-        } catch (\Throwable $e) {
-            Log::warning("Failed to fetch sharing capabilities from SharePoint Admin API: {$e->getMessage()}");
+        } catch (GraphApiException|\RuntimeException $e) {
+            Log::error("Failed to fetch sharing capabilities from SharePoint Admin API — site access controls may be inaccurate: {$e->getMessage()}", [
+                'exception_class' => get_class($e),
+            ]);
 
             return [];
         }

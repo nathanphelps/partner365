@@ -76,9 +76,10 @@ function formatDate(val: string | null): string {
 function accessPolicyLabel(policy: string | null): string {
     if (!policy) return 'None';
     const map: Record<string, string> = {
-        FullAccess: 'Full Access',
-        LimitedAccess: 'Limited Access',
+        AllowFullAccess: 'Full Access',
+        AllowLimitedAccess: 'Limited Access',
         BlockAccess: 'Block Access',
+        AuthenticationContext: 'Auth Context',
     };
     return map[policy] ?? policy;
 }
@@ -91,9 +92,10 @@ function accessPolicyVariant(
         string,
         'default' | 'secondary' | 'destructive' | 'outline'
     > = {
-        FullAccess: 'default',
-        LimitedAccess: 'secondary',
+        AllowFullAccess: 'default',
+        AllowLimitedAccess: 'secondary',
         BlockAccess: 'destructive',
+        AuthenticationContext: 'secondary',
     };
     return map[policy] ?? 'outline';
 }

@@ -239,8 +239,10 @@ class SensitivityLabelService
             $labels = $this->fetchLabelsFromGraph();
 
             return ['labels' => $labels, 'source' => 'graph'];
-        } catch (\Throwable $e) {
-            Log::warning("Graph API label fetch failed: {$e->getMessage()}");
+        } catch (GraphApiException|\RuntimeException $e) {
+            Log::warning("Graph API label fetch failed: {$e->getMessage()}", [
+                'exception_class' => get_class($e),
+            ]);
         }
 
         // Tier 2: PowerShell
@@ -250,8 +252,10 @@ class SensitivityLabelService
 
                 return ['labels' => $labels, 'source' => 'powershell'];
             }
-        } catch (\Throwable $e) {
-            Log::warning("PowerShell label fetch failed: {$e->getMessage()}");
+        } catch (\RuntimeException $e) {
+            Log::warning("PowerShell label fetch failed: {$e->getMessage()}", [
+                'exception_class' => get_class($e),
+            ]);
         }
 
         // Tier 3: Stubs will be created during syncSiteLabels()
@@ -267,8 +271,10 @@ class SensitivityLabelService
             $policies = $this->fetchLabelPoliciesFromGraph();
 
             return ['policies' => $policies, 'source' => 'graph'];
-        } catch (\Throwable $e) {
-            Log::warning("Graph API policy fetch failed: {$e->getMessage()}");
+        } catch (GraphApiException|\RuntimeException $e) {
+            Log::warning("Graph API policy fetch failed: {$e->getMessage()}", [
+                'exception_class' => get_class($e),
+            ]);
         }
 
         // Tier 2: PowerShell
@@ -278,8 +284,10 @@ class SensitivityLabelService
 
                 return ['policies' => $policies, 'source' => 'powershell'];
             }
-        } catch (\Throwable $e) {
-            Log::warning("PowerShell policy fetch failed: {$e->getMessage()}");
+        } catch (\RuntimeException $e) {
+            Log::warning("PowerShell policy fetch failed: {$e->getMessage()}", [
+                'exception_class' => get_class($e),
+            ]);
         }
 
         Log::warning('No policy source available — skipping policy sync');
@@ -343,6 +351,11 @@ class SensitivityLabelService
                 ->get("{$siteUrl}/_api/site/SensitivityLabelInfo");
 
             if ($response->failed()) {
+                Log::warning("SPO REST label fetch returned HTTP {$response->status()} for {$siteUrl}", [
+                    'status' => $response->status(),
+                    'body' => substr($response->body(), 0, 500),
+                ]);
+
                 return null;
             }
 
@@ -412,8 +425,10 @@ class SensitivityLabelService
             }
 
             return $this->spoAdmin->getSiteProperties();
-        } catch (\Throwable $e) {
-            Log::warning("Failed to fetch sharing capabilities from SharePoint Admin API: {$e->getMessage()}");
+        } catch (GraphApiException|\RuntimeException $e) {
+            Log::error("Failed to fetch sharing capabilities from SharePoint Admin API — site access controls may be inaccurate: {$e->getMessage()}", [
+                'exception_class' => get_class($e),
+            ]);
 
             return [];
         }

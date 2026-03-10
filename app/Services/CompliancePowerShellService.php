@@ -38,7 +38,22 @@ class CompliancePowerShellService
 
     public function parseLabelsOutput(string $json): array
     {
-        $data = json_decode($json, true);
+        $trimmed = trim($json);
+
+        if ($trimmed === '' || $trimmed === 'null') {
+            return [];
+        }
+
+        $data = json_decode($trimmed, true);
+
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            Log::error('Failed to parse PowerShell label output as JSON', [
+                'json_error' => json_last_error_msg(),
+                'output_preview' => substr($trimmed, 0, 500),
+            ]);
+
+            throw new \RuntimeException('PowerShell label output was not valid JSON: '.json_last_error_msg());
+        }
 
         if (! is_array($data)) {
             return [];
@@ -54,7 +69,22 @@ class CompliancePowerShellService
 
     public function parsePoliciesOutput(string $json): array
     {
-        $data = json_decode($json, true);
+        $trimmed = trim($json);
+
+        if ($trimmed === '' || $trimmed === 'null') {
+            return [];
+        }
+
+        $data = json_decode($trimmed, true);
+
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            Log::error('Failed to parse PowerShell policy output as JSON', [
+                'json_error' => json_last_error_msg(),
+                'output_preview' => substr($trimmed, 0, 500),
+            ]);
+
+            throw new \RuntimeException('PowerShell policy output was not valid JSON: '.json_last_error_msg());
+        }
 
         if (! is_array($data)) {
             return [];
