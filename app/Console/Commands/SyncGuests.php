@@ -31,15 +31,14 @@ class SyncGuests extends Command
             $guests = $guestService->listGuests();
             $synced = 0;
 
+            $partners = PartnerOrganization::all();
+
             foreach ($guests as $guest) {
                 $email = $guest['mail'] ?? $guest['otherMails'][0] ?? null;
-                $domain = $email ? substr($email, strpos($email, '@') + 1) : null;
+                $upn = $guest['userPrincipalName'] ?? '';
+                $homeDomain = $this->extractHomeDomain($upn);
 
-                $partnerId = null;
-                if ($domain) {
-                    $partner = PartnerOrganization::where('domain', $domain)->first();
-                    $partnerId = $partner?->id;
-                }
+                $partnerId = $this->matchPartner($partners, $homeDomain, $email);
 
                 GuestUser::updateOrCreate(
                     ['entra_user_id' => $guest['id']],
@@ -85,5 +84,40 @@ class SyncGuests extends Command
 
             return Command::FAILURE;
         }
+    }
+
+    /**
+     * Extract the home domain from a B2B guest UPN.
+     * e.g. "admin-bowie_gd-ots.com#EXT#@gdotsdevtest.onmicrosoft.us" → "gd-ots.com"
+     */
+    private function extractHomeDomain(string $upn): ?string
+    {
+        if (preg_match('/^.+_(.+)#EXT#@/i', $upn, $matches)) {
+            return strtolower($matches[1]);
+        }
+
+        return null;
+    }
+
+    /**
+     * @param  \Illuminate\Database\Eloquent\Collection<int, PartnerOrganization>  $partners
+     */
+    private function matchPartner($partners, ?string $homeDomain, ?string $email): ?int
+    {
+        $emailDomain = $email ? strtolower(substr($email, strpos($email, '@') + 1)) : null;
+
+        foreach ($partners as $partner) {
+            $partnerDomain = strtolower($partner->domain);
+
+            if ($homeDomain && $homeDomain === $partnerDomain) {
+                return $partner->id;
+            }
+
+            if ($emailDomain && $emailDomain === $partnerDomain) {
+                return $partner->id;
+            }
+        }
+
+        return null;
     }
 }

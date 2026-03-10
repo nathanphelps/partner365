@@ -11,17 +11,20 @@ use Illuminate\Support\Facades\Http;
 
 beforeEach(function () {
     config([
+        'graph.cloud_environment' => 'commercial',
         'graph.tenant_id' => 'test-tenant-id',
         'graph.client_id' => 'test-client-id',
         'graph.client_secret' => 'test-client-secret',
         'graph.base_url' => 'https://graph.microsoft.com/v1.0',
         'graph.scopes' => 'https://graph.microsoft.com/.default',
+        'graph.sharepoint_tenant' => 'contoso',
     ]);
 
     Cache::forget('msgraph_access_token');
+    Cache::forget('spo_admin_access_token');
 });
 
-function fakeGraphForSharePoint(array $sites = [], array $permissionsBySiteId = [], array $labelsBySiteId = []): void
+function fakeGraphForSharePoint(array $sites = [], array $permissionsBySiteId = [], array $labelsBySiteId = [], array $spoSiteProperties = []): void
 {
     $responses = [
         'login.microsoftonline.com/*' => Http::response([
@@ -30,6 +33,10 @@ function fakeGraphForSharePoint(array $sites = [], array $permissionsBySiteId = 
         ]),
         'graph.microsoft.com/v1.0/sites?*' => Http::response([
             'value' => $sites,
+        ]),
+        '*-admin.sharepoint.com/_api/*' => Http::response([
+            '_Child_Items_' => $spoSiteProperties,
+            '_nextStartIndex' => -1,
         ]),
     ];
 
@@ -57,12 +64,35 @@ function makeGraphSite(array $overrides = []): array
         'name' => 'ProjectAlpha',
         'webUrl' => 'https://contoso.sharepoint.com/sites/alpha',
         'description' => 'Collaboration site',
-        'sharingCapability' => 'ExternalUserAndGuestSharing',
+    ], $overrides);
+}
+
+function makeSpoSiteProperty(string $url, int $sharingCapability = 2, array $overrides = []): array
+{
+    return array_merge([
+        'Url' => $url,
+        'SharingCapability' => $sharingCapability,
+        'SharingDomainRestrictionMode' => 0,
+        'SharingAllowedDomainList' => '',
+        'SharingBlockedDomainList' => '',
+        'DefaultSharingLinkType' => 0,
+        'DefaultLinkPermission' => 0,
+        'ExternalUserExpirationInDays' => null,
+        'OverrideTenantExternalUserExpirationPolicy' => false,
+        'ConditionalAccessPolicy' => 0,
+        'AllowEditing' => true,
+        'LimitedAccessFileType' => 1,
+        'AllowDownloadingNonWebViewableFiles' => true,
     ], $overrides);
 }
 
 test('syncSites upserts sites from Graph API', function () {
-    fakeGraphForSharePoint([makeGraphSite()]);
+    fakeGraphForSharePoint(
+        [makeGraphSite()],
+        [],
+        [],
+        [makeSpoSiteProperty('https://contoso.sharepoint.com/sites/alpha', 2)]
+    );
 
     $service = app(SharePointSiteService::class);
     $result = $service->syncSites();
@@ -299,4 +329,129 @@ test('getPartnerExposure returns sites accessible by partner guests', function (
 
     $otherResult = $service->getPartnerExposure($otherPartner);
     expect($otherResult)->toHaveCount(0);
+});
+
+test('syncSites stores enriched access control data from SharePoint Admin API', function () {
+    fakeGraphForSharePoint(
+        [makeGraphSite()],
+        [],
+        [],
+        [makeSpoSiteProperty('https://contoso.sharepoint.com/sites/alpha', 1, [
+            'SharingDomainRestrictionMode' => 1,
+            'SharingAllowedDomainList' => 'partner.com contoso.com',
+            'SharingBlockedDomainList' => '',
+            'DefaultSharingLinkType' => 1,
+            'DefaultLinkPermission' => 1,
+            'ExternalUserExpirationInDays' => 30,
+            'OverrideTenantExternalUserExpirationPolicy' => true,
+            'ConditionalAccessPolicy' => 1,
+            'AllowEditing' => false,
+            'LimitedAccessFileType' => 0,
+            'AllowDownloadingNonWebViewableFiles' => false,
+        ])]
+    );
+
+    $service = app(SharePointSiteService::class);
+    $service->syncSites();
+
+    $site = SharePointSite::first();
+    expect($site->external_sharing_capability)->toBe('ExternalUserSharingOnly');
+    expect($site->sharing_domain_restriction_mode)->toBe('AllowList');
+    expect($site->sharing_allowed_domain_list)->toBe('partner.com contoso.com');
+    expect($site->sharing_blocked_domain_list)->toBe('');
+    expect($site->default_sharing_link_type)->toBe('Direct');
+    expect($site->default_link_permission)->toBe('View');
+    expect($site->external_user_expiration_days)->toBe(30);
+    expect($site->override_tenant_expiration_policy)->toBeTrue();
+    expect($site->conditional_access_policy)->toBe('AllowLimitedAccess');
+    expect($site->allow_editing)->toBeFalse();
+    expect($site->limited_access_file_type)->toBe('OfficeOnlineFilesOnly');
+    expect($site->allow_downloading_non_web_viewable)->toBeFalse();
+});
+
+test('syncSiteExternalUsers maps external users from User Information List', function () {
+    // Create a site and a guest user to match against
+    $site = SharePointSite::create([
+        'site_id' => 'site-1',
+        'display_name' => 'Project Alpha',
+        'url' => 'https://contoso.sharepoint.com/sites/alpha',
+        'external_sharing_capability' => 'ExternalUserAndGuestSharing',
+        'synced_at' => now(),
+    ]);
+
+    $guest = GuestUser::factory()->create([
+        'email' => 'john@fabrikam.com',
+        'user_principal_name' => 'john_fabrikam.com#EXT#@contoso.onmicrosoft.com',
+    ]);
+
+    Http::fake([
+        'login.microsoftonline.com/*' => Http::response([
+            'access_token' => 'fake-token',
+            'expires_in' => 3600,
+        ]),
+        // User Information List
+        'graph.microsoft.com/v1.0/sites/site-1/lists/User%20Information%20List/items*' => Http::response([
+            'value' => [
+                [
+                    'fields' => [
+                        'UserName' => 'i:0#.f|membership|john_fabrikam.com#EXT#@contoso.onmicrosoft.com',
+                        'Name' => 'i:0#.f|membership|john_fabrikam.com#EXT#@contoso.onmicrosoft.com',
+                        'EMail' => 'john@fabrikam.com',
+                        'Title' => 'John External',
+                    ],
+                ],
+                [
+                    'fields' => [
+                        'UserName' => 'i:0#.f|membership|internal@contoso.com',
+                        'Name' => 'i:0#.f|membership|internal@contoso.com',
+                        'EMail' => 'internal@contoso.com',
+                        'Title' => 'Internal User',
+                    ],
+                ],
+            ],
+        ]),
+    ]);
+
+    $service = app(SharePointSiteService::class);
+    $count = $service->syncSiteExternalUsers();
+
+    expect($count)->toBe(1);
+    expect(SharePointSitePermission::count())->toBe(1);
+
+    $perm = SharePointSitePermission::first();
+    expect($perm->sharepoint_site_id)->toBe($site->id);
+    expect($perm->guest_user_id)->toBe($guest->id);
+    expect($perm->granted_via)->toBe('site_access');
+});
+
+test('syncSiteExternalUsers skips when sync_site_users config is false', function () {
+    config(['graph.sync_site_users' => false]);
+
+    Http::fake();
+
+    SharePointSite::create([
+        'site_id' => 'site-1',
+        'display_name' => 'Test Site',
+        'url' => 'https://contoso.sharepoint.com/sites/test',
+        'external_sharing_capability' => 'ExternalUserAndGuestSharing',
+        'synced_at' => now(),
+    ]);
+
+    $service = app(SharePointSiteService::class);
+    $count = $service->syncSiteExternalUsers();
+
+    expect($count)->toBe(0);
+    Http::assertNothingSent();
+});
+
+test('syncSites defaults to Disabled when SharePoint Admin API is unconfigured', function () {
+    config(['graph.sharepoint_tenant' => null]);
+
+    fakeGraphForSharePoint([makeGraphSite()]);
+
+    $service = app(SharePointSiteService::class);
+    $service->syncSites();
+
+    $site = SharePointSite::first();
+    expect($site->external_sharing_capability)->toBe('Disabled');
 });

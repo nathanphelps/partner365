@@ -15,9 +15,13 @@ beforeEach(function () {
         'graph.client_secret' => 'test-client-secret',
         'graph.base_url' => 'https://graph.microsoft.com/v1.0',
         'graph.scopes' => 'https://graph.microsoft.com/.default',
+        'graph.cloud_environment' => 'commercial',
+        'graph.sharepoint_tenant' => 'contoso',
+        'graph.compliance_certificate_path' => null,
     ]);
 
     Cache::forget('msgraph_access_token');
+    Cache::forget('spo_admin_access_token');
 });
 
 function makeGraphLabel(array $overrides = []): array
@@ -205,4 +209,120 @@ test('getUncoveredPartners returns partners with no sensitivity labels', functio
 
     expect($result)->toHaveCount(1);
     expect($result->first()->id)->toBe($uncovered->id);
+});
+
+test('syncLabels gracefully handles Graph API failure without deleting existing labels', function () {
+    // Pre-existing label from a previous sync
+    SensitivityLabel::create([
+        'label_id' => 'existing-label',
+        'name' => 'Previously Synced',
+        'protection_type' => 'encryption',
+        'synced_at' => now()->subDay(),
+    ]);
+
+    Http::fake([
+        'login.microsoftonline.com/*' => Http::response([
+            'access_token' => 'fake-token',
+            'expires_in' => 3600,
+        ]),
+        'graph.microsoft.com/v1.0/security/informationProtection/sensitivityLabels' => Http::response(
+            ['error' => ['code' => 'ResourceNotFound', 'message' => 'Resource not found for the segment informationProtection']],
+            404
+        ),
+    ]);
+
+    $service = app(SensitivityLabelService::class);
+    $result = $service->syncLabels();
+
+    expect($result['labels_synced'])->toBe(0);
+    // Existing label should NOT be deleted
+    expect(SensitivityLabel::count())->toBe(1);
+    expect(SensitivityLabel::first()->label_id)->toBe('existing-label');
+});
+
+test('syncPolicies gracefully handles Graph API failure', function () {
+    SensitivityLabelPolicy::create([
+        'policy_id' => 'existing-policy',
+        'name' => 'Previously Synced Policy',
+        'target_type' => 'all_users',
+        'synced_at' => now()->subDay(),
+    ]);
+
+    Http::fake([
+        'login.microsoftonline.com/*' => Http::response([
+            'access_token' => 'fake-token',
+            'expires_in' => 3600,
+        ]),
+        'graph.microsoft.com/v1.0/security/informationProtection/sensitivityLabels/policies' => Http::response(
+            ['error' => ['code' => 'ResourceNotFound']],
+            404
+        ),
+    ]);
+
+    $service = app(SensitivityLabelService::class);
+    $result = $service->syncPolicies();
+
+    expect($result)->toBe(0);
+    // Existing policy should NOT be deleted
+    expect(SensitivityLabelPolicy::count())->toBe(1);
+});
+
+test('syncSiteLabels auto-creates label stubs from group data when label not in DB', function () {
+    Http::fake([
+        'login.microsoftonline.com/*' => Http::response([
+            'access_token' => 'fake-token',
+            'expires_in' => 3600,
+        ]),
+        // Group root site (must be before groups* wildcard)
+        'graph.microsoft.com/v1.0/groups/group-1/sites/root*' => Http::response([
+            'id' => 'site-1',
+            'webUrl' => 'https://contoso.sharepoint.com/sites/alpha',
+        ]),
+        // Groups endpoint — returns a group with an assigned label
+        'graph.microsoft.com/v1.0/groups*' => Http::response([
+            'value' => [
+                [
+                    'id' => 'group-1',
+                    'displayName' => 'Project Alpha',
+                    'assignedLabels' => [
+                        ['labelId' => 'new-label-guid', 'displayName' => 'Highly Confidential'],
+                    ],
+                ],
+            ],
+        ]),
+        // Per-site label (fallback, must be before sites* wildcard)
+        'graph.microsoft.com/v1.0/sites/site-1/sensitivityLabel' => Http::response(
+            ['error' => ['code' => 'ResourceNotFound']],
+            404
+        ),
+        // Sites endpoint
+        'graph.microsoft.com/v1.0/sites*' => Http::response([
+            'value' => [
+                [
+                    'id' => 'site-1',
+                    'displayName' => 'Project Alpha',
+                    'name' => 'alpha',
+                    'webUrl' => 'https://contoso.sharepoint.com/sites/alpha',
+                ],
+            ],
+        ]),
+    ]);
+
+    config(['graph.sharepoint_tenant' => null]); // SPO Admin not configured
+
+    $service = app(SensitivityLabelService::class);
+    $count = $service->syncSiteLabels();
+
+    expect($count)->toBe(1);
+
+    // Label stub should have been auto-created
+    $label = SensitivityLabel::where('label_id', 'new-label-guid')->first();
+    expect($label)->not->toBeNull();
+    expect($label->name)->toBe('Highly Confidential');
+    expect($label->protection_type)->toBe('unknown');
+
+    // Site label mapping should exist
+    $siteLabel = SiteSensitivityLabel::where('site_id', 'site-1')->first();
+    expect($siteLabel)->not->toBeNull();
+    expect($siteLabel->sensitivity_label_id)->toBe($label->id);
 });

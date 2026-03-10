@@ -24,7 +24,10 @@ type Props = {
         client_secret_masked: string | null;
         scopes: string | null;
         base_url: string | null;
+        sharepoint_tenant: string | null;
         sync_interval_minutes: string | number | null;
+        compliance_certificate_path: string;
+        compliance_certificate_password: string;
     };
 };
 
@@ -42,7 +45,12 @@ const form = useForm({
     client_secret: '',
     scopes: props.settings.scopes ?? '',
     base_url: props.settings.base_url ?? '',
+    sharepoint_tenant: props.settings.sharepoint_tenant ?? '',
     sync_interval_minutes: props.settings.sync_interval_minutes ?? 15,
+    compliance_certificate_path:
+        props.settings.compliance_certificate_path ?? '',
+    compliance_certificate_password:
+        props.settings.compliance_certificate_password ?? '',
 });
 
 const cloudDefaults: Record<string, { scopes: string; base_url: string }> = {
@@ -145,6 +153,10 @@ const requiredPermissions = [
     {
         name: 'Sites.Read.All',
         purpose: 'Read SharePoint sites for guest access and entitlements',
+    },
+    {
+        name: 'Sites.FullControl.All (SharePoint)',
+        purpose: 'Read site sharing capabilities via SharePoint Admin API',
     },
 ];
 
@@ -284,6 +296,66 @@ const grantAdminConsent = async () => {
                 </div>
 
                 <div class="grid gap-2">
+                    <Label for="sharepoint_tenant"
+                        >SharePoint Tenant Slug</Label
+                    >
+                    <Input
+                        id="sharepoint_tenant"
+                        v-model="form.sharepoint_tenant"
+                        placeholder="contoso"
+                    />
+                    <p class="text-xs text-muted-foreground">
+                        The tenant prefix used in your SharePoint URL (e.g.
+                        "contoso" for contoso.sharepoint.com). Required for
+                        fetching site sharing capabilities.
+                    </p>
+                    <InputError :message="form.errors.sharepoint_tenant" />
+                </div>
+
+                <div
+                    v-if="form.cloud_environment === 'gcc_high'"
+                    class="grid gap-2"
+                >
+                    <Label for="compliance_certificate_path"
+                        >Compliance Certificate Path (PFX)</Label
+                    >
+                    <Input
+                        id="compliance_certificate_path"
+                        v-model="form.compliance_certificate_path"
+                        placeholder="/path/to/certificate.pfx"
+                    />
+                    <p class="text-xs text-muted-foreground">
+                        Absolute path to the PFX certificate file used for
+                        certificate-based authentication in GCC High.
+                    </p>
+                    <InputError
+                        :message="form.errors.compliance_certificate_path"
+                    />
+                </div>
+
+                <div
+                    v-if="form.cloud_environment === 'gcc_high'"
+                    class="grid gap-2"
+                >
+                    <Label for="compliance_certificate_password"
+                        >Compliance Certificate Password</Label
+                    >
+                    <Input
+                        id="compliance_certificate_password"
+                        v-model="form.compliance_certificate_password"
+                        type="password"
+                        placeholder="Enter certificate password"
+                    />
+                    <p class="text-xs text-muted-foreground">
+                        Password for the PFX certificate. Leave blank to keep
+                        the current password.
+                    </p>
+                    <InputError
+                        :message="form.errors.compliance_certificate_password"
+                    />
+                </div>
+
+                <div class="grid gap-2">
                     <Label for="sync_interval_minutes"
                         >Sync Interval (minutes)</Label
                     >
@@ -384,7 +456,7 @@ const grantAdminConsent = async () => {
                     <summary
                         class="cursor-pointer text-sm font-medium text-muted-foreground hover:text-foreground"
                     >
-                        Required Application Permissions (14)
+                        Required Application Permissions (15)
                     </summary>
                     <div class="mt-2 rounded-md border bg-muted/30 p-4">
                         <table class="w-full text-sm">

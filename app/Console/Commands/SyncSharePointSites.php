@@ -12,7 +12,7 @@ class SyncSharePointSites extends Command
 {
     protected $signature = 'sync:sharepoint-sites';
 
-    protected $description = 'Sync SharePoint sites and guest user permissions from Microsoft Graph API';
+    protected $description = 'Sync SharePoint sites and guest user permissions from Microsoft Graph and SharePoint Admin APIs';
 
     public function handle(SharePointSiteService $service): int
     {
@@ -31,15 +31,19 @@ class SyncSharePointSites extends Command
             $permissionsSynced = $service->syncPermissions();
             $this->info("Synced {$permissionsSynced} site permissions.");
 
+            $externalUsersCount = $service->syncSiteExternalUsers();
+            $this->info("  External users mapped: {$externalUsersCount} (via User Information List)");
+
             $log->update([
                 'status' => 'completed',
-                'records_synced' => $sitesSynced + $permissionsSynced,
+                'records_synced' => $sitesSynced + $permissionsSynced + $externalUsersCount,
                 'completed_at' => now(),
             ]);
 
             app(ActivityLogService::class)->logSystem(ActivityAction::SharePointSitesSynced, details: [
                 'sites_synced' => $sitesSynced,
                 'permissions_synced' => $permissionsSynced,
+                'external_users_mapped' => $externalUsersCount,
             ]);
 
             return Command::SUCCESS;

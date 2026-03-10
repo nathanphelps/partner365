@@ -18,6 +18,8 @@ return Application::configure(basePath: dirname(__DIR__))
         },
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->trustProxies(at: env('TRUSTED_PROXIES', '*'));
+
         $middleware->alias([
             'role' => \App\Http\Middleware\CheckRole::class,
             'approved' => \App\Http\Middleware\EnsureApproved::class,

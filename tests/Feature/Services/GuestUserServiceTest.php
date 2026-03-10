@@ -11,17 +11,20 @@ beforeEach(function () {
         'graph.client_secret' => 'test-secret',
         'graph.base_url' => 'https://graph.microsoft.com/v1.0',
         'graph.scopes' => 'https://graph.microsoft.com/.default',
+        'graph.cloud_environment' => 'commercial',
     ]);
+    \App\Models\Setting::query()->delete();
     Cache::forget('msgraph_access_token');
 });
 
-test('it lists guest users', function () {
+test('it lists guest users including promoted B2B members', function () {
     Http::fake([
         'login.microsoftonline.com/*' => Http::response(['access_token' => 'fake', 'expires_in' => 3600]),
         'graph.microsoft.com/v1.0/users*' => Http::response([
             'value' => [
                 ['id' => 'u1', 'displayName' => 'Guest One', 'userType' => 'Guest'],
                 ['id' => 'u2', 'displayName' => 'Guest Two', 'userType' => 'Guest'],
+                ['id' => 'u3', 'displayName' => 'B2B Member', 'userType' => 'Member', 'externalUserState' => 'Accepted'],
             ],
         ]),
     ]);
@@ -29,7 +32,12 @@ test('it lists guest users', function () {
     $service = app(GuestUserService::class);
     $guests = $service->listGuests();
 
-    expect($guests)->toHaveCount(2);
+    expect($guests)->toHaveCount(3);
+
+    Http::assertSent(function ($request) {
+        return str_contains($request->url(), 'externalUserState')
+            && $request->hasHeader('ConsistencyLevel', 'eventual');
+    });
 });
 
 test('it creates an invitation', function () {

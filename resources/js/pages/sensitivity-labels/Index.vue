@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
 import { AlertTriangle } from 'lucide-vue-next';
+import { computed } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import {
@@ -17,10 +18,14 @@ import type { BreadcrumbItem } from '@/types';
 import type { Paginated } from '@/types/partner';
 import type { SensitivityLabel } from '@/types/sensitivity-label';
 
-defineProps<{
+const props = defineProps<{
     labels: Paginated<SensitivityLabel>;
     uncoveredPartnerCount: number;
 }>();
+
+const hasStubLabels = computed(() =>
+    props.labels.data.some((label) => label.protection_type === 'unknown'),
+);
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: dashboard.url() },
@@ -38,6 +43,7 @@ function protectionVariant(
         watermark: 'secondary',
         header_footer: 'secondary',
         none: 'outline',
+        unknown: 'outline',
     };
     return map[type] ?? 'outline';
 }
@@ -48,6 +54,7 @@ function protectionLabel(type: string): string {
         watermark: 'Watermark',
         header_footer: 'Header/Footer',
         none: 'No protection',
+        unknown: 'Unknown',
     };
     return map[type] ?? type;
 }
@@ -89,6 +96,16 @@ function formatScope(scope: string[] | null): string {
                     }}
                     no sensitivity label coverage.
                 </p>
+            </div>
+
+            <div
+                v-if="hasStubLabels"
+                class="mb-4 rounded-md border border-yellow-300 bg-yellow-50 p-4 text-sm text-yellow-800 dark:border-yellow-700 dark:bg-yellow-950 dark:text-yellow-200"
+            >
+                Some sensitivity labels have unknown protection types. This
+                typically occurs in GCC High environments where the Graph API
+                does not expose full label details. Protection details will be
+                populated when PowerShell sync is available.
             </div>
 
             <Card v-if="labels.data.length === 0">

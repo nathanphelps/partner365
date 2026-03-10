@@ -48,6 +48,16 @@ RUN install-php-extensions \
     pcntl \
     intl
 
+# Install PowerShell for compliance module (GCC High label sync)
+RUN apt-get update && apt-get install -y wget apt-transport-https software-properties-common \
+    && wget -q "https://packages.microsoft.com/config/debian/12/packages-microsoft-prod.deb" \
+    && dpkg -i packages-microsoft-prod.deb \
+    && rm packages-microsoft-prod.deb \
+    && apt-get update \
+    && apt-get install -y powershell \
+    && pwsh -Command "Install-Module ExchangeOnlineManagement -Force -Scope AllUsers -AcceptLicense" \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
 # Set working directory
 WORKDIR /app
 

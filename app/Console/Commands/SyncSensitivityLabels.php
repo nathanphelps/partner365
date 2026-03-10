@@ -12,7 +12,7 @@ class SyncSensitivityLabels extends Command
 {
     protected $signature = 'sync:sensitivity-labels';
 
-    protected $description = 'Sync sensitivity labels, policies, and site assignments from Microsoft Graph API';
+    protected $description = 'Sync sensitivity labels, policies, and site assignments from Graph API, PowerShell, or site discovery';
 
     public function handle(SensitivityLabelService $service): int
     {
@@ -23,9 +23,9 @@ class SyncSensitivityLabels extends Command
         ]);
 
         try {
-            $this->info('Fetching sensitivity labels from Graph API...');
+            $this->info('Syncing sensitivity labels...');
             $labelResult = $service->syncLabels();
-            $this->info("Synced {$labelResult['labels_synced']} sensitivity labels.");
+            $this->info("  Labels synced: {$labelResult['labels_synced']} (via {$labelResult['source']})");
 
             $this->info('Fetching label policies...');
             $policiesSynced = $service->syncPolicies();

@@ -76,7 +76,24 @@
       "Bash(az rest:*)",
       "Bash(python:*)",
       "Bash(PHP_INI='C:\\\\dev\\\\php\\\\php.ini')",
-      "Read(//c/GitHub/partner365/**)"
+      "Read(//c/GitHub/partner365/**)",
+      "Bash(composer.bat run:*)",
+      "Bash(where.exe composer:*)",
+      "Bash(tasklist:*)",
+      "WebFetch(domain:kksimplifies.com)",
+      "WebFetch(domain:docs.dndocs.com)",
+      "Bash(composer show:*)",
+      "Bash(composer outdated:*)",
+      "WebFetch(domain:blog.yannickreekmans.be)",
+      "Bash(vendor/bin/pint:*)",
+      "mcp__laravel-boost__database-schema",
+      "mcp__laravel-boost__database-query",
+      "Bash(git stash:*)",
+      "mcp__laravel-boost__tinker"
     ]
-  }
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "laravel-boost"
+  ]
 }
