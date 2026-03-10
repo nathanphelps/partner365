@@ -81,7 +81,14 @@
       "Bash(where.exe composer:*)",
       "Bash(tasklist:*)",
       "WebFetch(domain:kksimplifies.com)",
-      "WebFetch(domain:docs.dndocs.com)"
+      "WebFetch(domain:docs.dndocs.com)",
+      "Bash(composer show:*)",
+      "Bash(composer outdated:*)",
+      "WebFetch(domain:blog.yannickreekmans.be)"
     ]
-  }
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "laravel-boost"
+  ]
 }
