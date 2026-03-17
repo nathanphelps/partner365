@@ -211,6 +211,91 @@ test('getUncoveredPartners returns partners with no sensitivity labels', functio
     expect($result->first()->id)->toBe($uncovered->id);
 });
 
+test('syncLabels falls back to CSV when Graph API fails', function () {
+    // Create a CSV file with label data
+    $csvContent = implode("\n", [
+        '"Settings","LabelActions","DisplayName","ParentId","Tooltip","ContentType","Disabled","ImmutableId","Priority","Guid","Comment"',
+        '"[color, #FF0000]","","Confidential","","Sensitive data","File, Email, Site, UnifiedGroup","False","csv-label-1","2","csv-label-1","From CSV"',
+        '"[color, #0000FF]","","Internal Only","csv-label-1","Internal","File, Email","False","csv-label-2","3","csv-label-2",""',
+    ]);
+
+    $tmpFile = tempnam(sys_get_temp_dir(), 'labels_csv_test_');
+    file_put_contents($tmpFile, $csvContent);
+    config(['graph.labels_csv_path' => $tmpFile]);
+
+    // Graph API fails
+    Http::fake([
+        'login.microsoftonline.com/*' => Http::response([
+            'access_token' => 'fake-token',
+            'expires_in' => 3600,
+        ]),
+        'graph.microsoft.com/v1.0/security/informationProtection/sensitivityLabels' => Http::response(
+            ['error' => ['code' => 'Forbidden', 'message' => 'Insufficient privileges']],
+            403
+        ),
+    ]);
+
+    try {
+        $service = app(SensitivityLabelService::class);
+        $result = $service->syncLabels();
+
+        expect($result['labels_synced'])->toBe(2);
+        expect($result['source'])->toBe('csv');
+
+        $label = SensitivityLabel::where('label_id', 'csv-label-1')->first();
+        expect($label)->not->toBeNull();
+        expect($label->name)->toBe('Confidential');
+        expect($label->color)->toBe('#FF0000');
+        expect($label->description)->toBe('From CSV');
+
+        // Sub-label parent relationship
+        $child = SensitivityLabel::where('label_id', 'csv-label-2')->first();
+        expect($child)->not->toBeNull();
+        expect($child->parent_label_id)->toBe($label->id);
+    } finally {
+        @unlink($tmpFile);
+    }
+});
+
+test('syncLabels CSV source deletes stale labels', function () {
+    SensitivityLabel::create([
+        'label_id' => 'stale-label',
+        'name' => 'Old Label',
+        'protection_type' => 'none',
+        'synced_at' => now()->subDay(),
+    ]);
+
+    $csvContent = implode("\n", [
+        '"Settings","LabelActions","DisplayName","ParentId","Tooltip","ContentType","Disabled","ImmutableId","Priority","Guid","Comment"',
+        '"[color, #FF0000]","","New Label","","","File, Email","False","new-label-1","0","new-label-1",""',
+    ]);
+
+    $tmpFile = tempnam(sys_get_temp_dir(), 'labels_csv_test_');
+    file_put_contents($tmpFile, $csvContent);
+    config(['graph.labels_csv_path' => $tmpFile]);
+
+    Http::fake([
+        'login.microsoftonline.com/*' => Http::response([
+            'access_token' => 'fake-token',
+            'expires_in' => 3600,
+        ]),
+        'graph.microsoft.com/v1.0/security/informationProtection/sensitivityLabels' => Http::response(
+            ['error' => ['code' => 'Forbidden']],
+            403
+        ),
+    ]);
+
+    try {
+        $service = app(SensitivityLabelService::class);
+        $service->syncLabels();
+
+        expect(SensitivityLabel::count())->toBe(1);
+        expect(SensitivityLabel::first()->label_id)->toBe('new-label-1');
+    } finally {
+        @unlink($tmpFile);
+    }
+});
+
 test('syncLabels gracefully handles Graph API failure without deleting existing labels', function () {
     // Pre-existing label from a previous sync
     SensitivityLabel::create([

@@ -192,6 +192,38 @@ function accessPolicyVariant(
                     </TableRow>
                 </TableBody>
             </Table>
+
+            <!-- Pagination -->
+            <div
+                v-if="sites.last_page > 1"
+                class="flex items-center justify-between"
+            >
+                <p class="text-sm text-muted-foreground">
+                    Showing {{ sites.data.length }} of
+                    {{ sites.total }} sites
+                </p>
+                <div class="flex gap-1">
+                    <template v-for="link in sites.links" :key="link.label">
+                        <Link
+                            v-if="link.url"
+                            :href="link.url"
+                            :class="[
+                                'inline-flex items-center justify-center rounded-md px-3 py-1.5 text-sm transition-colors',
+                                link.active
+                                    ? 'bg-primary font-medium text-primary-foreground'
+                                    : 'border hover:bg-muted',
+                            ]"
+                            ><!-- eslint-disable-next-line vue/no-v-html --><span
+                                v-html="link.label"
+                        /></Link>
+                        <span
+                            v-else
+                            class="inline-flex items-center justify-center rounded-md px-3 py-1.5 text-sm text-muted-foreground opacity-50"
+                            v-html="link.label"
+                        />
+                    </template>
+                </div>
+            </div>
         </div>
     </AppLayout>
 </template>

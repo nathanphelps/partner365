@@ -12,6 +12,7 @@ class SensitivityLabelController extends Controller
     public function index(): Response
     {
         $labels = SensitivityLabel::withCount('partners')
+            ->with(['children' => fn ($q) => $q->withCount('partners')->orderBy('priority')])
             ->whereNull('parent_label_id')
             ->orderBy('priority')
             ->paginate(25);

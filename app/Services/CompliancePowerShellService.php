@@ -29,6 +29,78 @@ class CompliancePowerShellService
         return $this->parseLabelsOutput($output);
     }
 
+    public function getCsvLabelsPath(): ?string
+    {
+        $path = Setting::get('graph', 'labels_csv_path', config('graph.labels_csv_path'));
+
+        if (empty($path) || ! file_exists($path)) {
+            return null;
+        }
+
+        return $path;
+    }
+
+    public function parseCsvLabels(string $csvPath): array
+    {
+        $handle = fopen($csvPath, 'r');
+
+        if ($handle === false) {
+            throw new \RuntimeException("Cannot open CSV file: {$csvPath}");
+        }
+
+        try {
+            $headers = fgetcsv($handle, 0, ',', '"', '');
+
+            if ($headers === false || empty($headers)) {
+                throw new \RuntimeException("CSV file has no headers: {$csvPath}");
+            }
+
+            $labels = [];
+
+            while (($row = fgetcsv($handle, 0, ',', '"', '')) !== false) {
+                if (count($row) !== count($headers)) {
+                    continue;
+                }
+
+                $item = array_combine($headers, $row);
+                $labels[] = $this->mapCsvRow($item);
+            }
+
+            return $labels;
+        } finally {
+            fclose($handle);
+        }
+    }
+
+    private function mapCsvRow(array $item): array
+    {
+        $contentFormats = $this->parseContentType($item['ContentType'] ?? '');
+        $protectionSettings = $this->parseLabelActions($item['LabelActions'] ?? '');
+        $color = $this->extractSettingsValue($item['Settings'] ?? '', 'color');
+
+        return [
+            'id' => $item['ImmutableId'] ?? $item['Guid'] ?? '',
+            'name' => $item['DisplayName'] ?? '',
+            'description' => ! empty($item['Comment']) ? $item['Comment'] : null,
+            'color' => $color,
+            'tooltip' => ! empty($item['Tooltip']) ? $item['Tooltip'] : null,
+            'priority' => (int) ($item['Priority'] ?? 0),
+            'isActive' => strtolower($item['Disabled'] ?? 'False') !== 'true',
+            'parent' => ! empty($item['ParentId']) ? ['id' => $item['ParentId']] : null,
+            'contentFormats' => $contentFormats,
+            'protectionSettings' => $protectionSettings,
+        ];
+    }
+
+    private function extractSettingsValue(string $settings, string $key): ?string
+    {
+        if (preg_match('/\['.preg_quote($key, '/').',\s*([^\]]+)\]/', $settings, $matches)) {
+            return trim($matches[1]);
+        }
+
+        return null;
+    }
+
     public function getPolicies(): array
     {
         $output = $this->runPowerShell('Get-LabelPolicy | ConvertTo-Json -Depth 5 -Compress');
@@ -207,16 +279,21 @@ class CompliancePowerShellService
             CloudEnvironment::Commercial => 'https://login.microsoftonline.com/organizations',
         };
 
+        $tenantSlug = Setting::get('graph', 'sharepoint_tenant', config('graph.sharepoint_tenant'));
+        $orgDomain = match ($cloudEnv) {
+            CloudEnvironment::GccHigh => "{$tenantSlug}.onmicrosoft.us",
+            CloudEnvironment::Commercial => "{$tenantSlug}.onmicrosoft.com",
+        };
+
         $certPath = Setting::get('graph', 'compliance_certificate_path', config('graph.compliance_certificate_path'));
         $certPassword = Setting::get('graph', 'compliance_certificate_password', config('graph.compliance_certificate_password'));
         $clientId = Setting::get('graph', 'client_id', config('graph.client_id'));
-        $tenantId = Setting::get('graph', 'tenant_id', config('graph.tenant_id'));
 
         $script = <<<'PS'
 $ErrorActionPreference = 'Stop'
 Import-Module ExchangeOnlineManagement
 $certPassword = ConvertTo-SecureString -String $env:PS_CERT_PASSWORD -AsPlainText -Force
-Connect-IPPSSession -AppId $env:PS_CLIENT_ID -CertificateFilePath $env:PS_CERT_PATH -CertificatePassword $certPassword -Organization $env:PS_TENANT_ID -ConnectionUri $env:PS_CONNECTION_URI -AzureADAuthorizationEndpointUri $env:PS_AZURE_AD_URI
+Connect-IPPSSession -AppId $env:PS_CLIENT_ID -CertificateFilePath $env:PS_CERT_PATH -CertificatePassword $certPassword -Organization $env:PS_ORGANIZATION -ConnectionUri $env:PS_CONNECTION_URI -AzureADAuthorizationEndpointUri $env:PS_AZURE_AD_URI
 PS;
 
         // Append the actual command after the connection setup
@@ -226,7 +303,7 @@ PS;
             'PS_CERT_PASSWORD' => $certPassword,
             'PS_CLIENT_ID' => $clientId,
             'PS_CERT_PATH' => $certPath,
-            'PS_TENANT_ID' => $tenantId,
+            'PS_ORGANIZATION' => $orgDomain,
             'PS_CONNECTION_URI' => $connectionUri,
             'PS_AZURE_AD_URI' => $azureAdUri,
         ])->timeout(120)->run(['pwsh', '-NoProfile', '-NonInteractive', '-Command', $fullScript]);

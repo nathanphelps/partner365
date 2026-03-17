@@ -89,7 +89,17 @@
       "mcp__laravel-boost__database-schema",
       "mcp__laravel-boost__database-query",
       "Bash(git stash:*)",
-      "mcp__laravel-boost__tinker"
+      "mcp__laravel-boost__tinker",
+      "Bash(gh api:*)",
+      "Bash(gh pr:*)",
+      "Bash(az cloud:*)",
+      "Bash(which openssl:*)",
+      "Bash(pwsh -Command \"Write-Output 'pwsh OK'; $PSVersionTable.PSVersion\" 2>&1)",
+      "Bash(pwsh -Command '$PSVersionTable.PSVersion.ToString\\(\\)' 2>&1)",
+      "Bash(pwsh -Command 'Get-Module -ListAvailable ExchangeOnlineManagement | Select-Object -Property Name,Version | Format-Table -AutoSize' 2>&1)",
+      "Bash(__NEW_LINE_9a4849f6fad95865__ echo:*)",
+      "Bash(cygpath -w tmp/Labels.csv)",
+      "Bash(npx vue-tsc:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

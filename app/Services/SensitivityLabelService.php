@@ -54,8 +54,8 @@ class SensitivityLabelService
             }
         }
 
-        // Only delete stale labels when we got a definitive list (Tier 1 or 2)
-        if (in_array($source, ['graph', 'powershell'])) {
+        // Only delete stale labels when we got a definitive list
+        if (in_array($source, ['graph', 'csv', 'powershell'])) {
             SensitivityLabel::whereNotIn('id', $syncedLabelIds)->delete();
         }
 
@@ -245,7 +245,23 @@ class SensitivityLabelService
             ]);
         }
 
-        // Tier 2: PowerShell
+        // Tier 2: CSV file (useful for GCC High where Graph/PowerShell may be unavailable)
+        try {
+            $csvPath = $this->compliance->getCsvLabelsPath();
+
+            if ($csvPath) {
+                $labels = $this->compliance->parseCsvLabels($csvPath);
+                Log::info('Loaded '.count($labels)." labels from CSV: {$csvPath}");
+
+                return ['labels' => $labels, 'source' => 'csv'];
+            }
+        } catch (\RuntimeException $e) {
+            Log::warning("CSV label import failed: {$e->getMessage()}", [
+                'exception_class' => get_class($e),
+            ]);
+        }
+
+        // Tier 3: PowerShell
         try {
             if ($this->compliance->isAvailable()) {
                 $labels = $this->compliance->getLabels();
@@ -258,7 +274,7 @@ class SensitivityLabelService
             ]);
         }
 
-        // Tier 3: Stubs will be created during syncSiteLabels()
+        // Tier 4: Stubs will be created during syncSiteLabels()
         Log::warning('No label source available — labels will be created as stubs from site data');
 
         return null;

@@ -10,6 +10,7 @@ return [
     'sharepoint_tenant' => env('MICROSOFT_GRAPH_SHAREPOINT_TENANT'),
     'compliance_certificate_path' => env('COMPLIANCE_CERTIFICATE_PATH'),
     'compliance_certificate_password' => env('COMPLIANCE_CERTIFICATE_PASSWORD'),
+    'labels_csv_path' => env('COMPLIANCE_LABELS_CSV_PATH'),
     'sync_site_users' => env('MICROSOFT_GRAPH_SYNC_SITE_USERS', true),
     'sync_interval_minutes' => env('MICROSOFT_GRAPH_SYNC_INTERVAL', 15),
 ];

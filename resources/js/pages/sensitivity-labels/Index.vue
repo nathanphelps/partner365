@@ -127,42 +127,119 @@ function formatScope(scope: string[] | null): string {
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    <TableRow v-for="label in labels.data" :key="label.id">
-                        <TableCell>
-                            <Link
-                                :href="`/sensitivity-labels/${label.id}`"
-                                class="font-medium hover:underline"
-                            >
-                                <span
-                                    v-if="label.color"
-                                    class="mr-2 inline-block size-3 rounded-full"
-                                    :style="{ backgroundColor: label.color }"
-                                />
-                                {{ label.name }}
-                            </Link>
-                        </TableCell>
-                        <TableCell>
-                            <Badge
-                                :variant="
-                                    protectionVariant(label.protection_type)
-                                "
-                            >
-                                {{ protectionLabel(label.protection_type) }}
-                            </Badge>
-                        </TableCell>
-                        <TableCell>{{ formatScope(label.scope) }}</TableCell>
-                        <TableCell>{{ label.priority }}</TableCell>
-                        <TableCell>
-                            <Badge
-                                :variant="
-                                    label.is_active ? 'default' : 'outline'
-                                "
-                            >
-                                {{ label.is_active ? 'Active' : 'Inactive' }}
-                            </Badge>
-                        </TableCell>
-                        <TableCell>{{ label.partners_count ?? 0 }}</TableCell>
-                    </TableRow>
+                    <template
+                        v-for="label in labels.data"
+                        :key="label.id"
+                    >
+                        <TableRow>
+                            <TableCell>
+                                <Link
+                                    :href="`/sensitivity-labels/${label.id}`"
+                                    class="font-medium hover:underline"
+                                >
+                                    <span
+                                        v-if="label.color"
+                                        class="mr-2 inline-block size-3 rounded-full"
+                                        :style="{
+                                            backgroundColor: label.color,
+                                        }"
+                                    />
+                                    {{ label.name }}
+                                </Link>
+                            </TableCell>
+                            <TableCell>
+                                <Badge
+                                    :variant="
+                                        protectionVariant(
+                                            label.protection_type,
+                                        )
+                                    "
+                                >
+                                    {{
+                                        protectionLabel(label.protection_type)
+                                    }}
+                                </Badge>
+                            </TableCell>
+                            <TableCell>{{
+                                formatScope(label.scope)
+                            }}</TableCell>
+                            <TableCell>{{ label.priority }}</TableCell>
+                            <TableCell>
+                                <Badge
+                                    :variant="
+                                        label.is_active
+                                            ? 'default'
+                                            : 'outline'
+                                    "
+                                >
+                                    {{
+                                        label.is_active
+                                            ? 'Active'
+                                            : 'Inactive'
+                                    }}
+                                </Badge>
+                            </TableCell>
+                            <TableCell>{{
+                                label.partners_count ?? 0
+                            }}</TableCell>
+                        </TableRow>
+                        <TableRow
+                            v-for="child in label.children"
+                            :key="child.id"
+                            class="bg-muted/30"
+                        >
+                            <TableCell class="pl-10">
+                                <Link
+                                    :href="`/sensitivity-labels/${child.id}`"
+                                    class="font-medium hover:underline"
+                                >
+                                    <span
+                                        v-if="child.color"
+                                        class="mr-2 inline-block size-3 rounded-full"
+                                        :style="{
+                                            backgroundColor: child.color,
+                                        }"
+                                    />
+                                    {{ child.name }}
+                                </Link>
+                            </TableCell>
+                            <TableCell>
+                                <Badge
+                                    :variant="
+                                        protectionVariant(
+                                            child.protection_type,
+                                        )
+                                    "
+                                >
+                                    {{
+                                        protectionLabel(child.protection_type)
+                                    }}
+                                </Badge>
+                            </TableCell>
+                            <TableCell>{{
+                                formatScope(child.scope)
+                            }}</TableCell>
+                            <TableCell>{{ child.priority }}</TableCell>
+                            <TableCell>
+                                <Badge
+                                    :variant="
+                                        child.is_active
+                                            ? 'default'
+                                            : 'outline'
+                                    "
+                                >
+                                    {{
+                                        child.is_active
+                                            ? 'Active'
+                                            : 'Inactive'
+                                    }}
+                                </Badge>
+                            </TableCell>
+                            <TableCell>{{
+                                child.partners_count ?? 0
+                            }}</TableCell>
+                        </TableRow>
+                    </template>
                 </TableBody>
             </Table>
         </div>
