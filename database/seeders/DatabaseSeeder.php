@@ -11,5 +11,7 @@ class DatabaseSeeder extends Seeder
         if (app()->environment('local')) {
             $this->call(DevSeeder::class);
         }
+
+        $this->call(SensitivitySweepSeeder::class);
     }
 }
