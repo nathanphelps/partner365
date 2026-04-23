@@ -31,3 +31,8 @@ yarn-error.log
 **/caddy
 frankenphp
 frankenphp-worker.php
+
+# .NET build artifacts (bridge/)
+/bridge/**/bin/
+/bridge/**/obj/
+
