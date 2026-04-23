@@ -47,4 +47,9 @@ enum ActivityAction: string
     case AccountDeleted = 'account_deleted';
     case GraphConnectionTested = 'graph_connection_tested';
     case ConsentGranted = 'consent_granted';
+    case LabelApplied = 'label_applied';
+    case RuleChanged = 'rule_changed';
+    case ExclusionChanged = 'exclusion_changed';
+    case SweepRan = 'sweep_ran';
+    case SweepAborted = 'sweep_aborted';
 }
