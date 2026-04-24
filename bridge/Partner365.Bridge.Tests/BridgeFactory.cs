@@ -9,12 +9,16 @@ namespace Partner365.Bridge.Tests;
 /// <summary>
 /// WebApplicationFactory that sets required env vars before the host boots
 /// and replaces <see cref="ICsomOperations"/> with a Moq double.
+///
+/// Env vars are set in the constructor so they are visible by the time
+/// LegacyEnvVarMapper.Apply() runs at the top of Program.cs — before the
+/// ConfigurationBuilder reads them into the Bridge options section.
 /// </summary>
 public sealed class BridgeFactory : WebApplicationFactory<Program>
 {
     public Mock<ICsomOperations> Ops { get; } = new();
 
-    protected override void ConfigureWebHost(IWebHostBuilder builder)
+    public BridgeFactory()
     {
         Environment.SetEnvironmentVariable("BRIDGE_CLOUD_ENVIRONMENT", "commercial");
         Environment.SetEnvironmentVariable("BRIDGE_TENANT_ID", "11111111-1111-1111-1111-111111111111");
@@ -23,7 +27,10 @@ public sealed class BridgeFactory : WebApplicationFactory<Program>
         Environment.SetEnvironmentVariable("BRIDGE_CERT_PATH", "__TEST__");
         Environment.SetEnvironmentVariable("BRIDGE_CERT_PASSWORD", "");
         Environment.SetEnvironmentVariable("BRIDGE_SHARED_SECRET", "unit-test-secret");
+    }
 
+    protected override void ConfigureWebHost(IWebHostBuilder builder)
+    {
         builder.ConfigureServices(services =>
         {
             var descriptor = services.FirstOrDefault(d => d.ServiceType == typeof(ICsomOperations));
