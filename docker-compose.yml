@@ -9,7 +9,38 @@ services:
     environment:
       - APP_ENV=${APP_ENV:-production}
       - APP_DEBUG=${APP_DEBUG:-false}
+      - SENSITIVITY_SWEEP_BRIDGE_URL=http://bridge:8080
+    depends_on:
+      bridge:
+        condition: service_healthy
+    networks: [default]
     restart: unless-stopped
+
+  bridge:
+    build:
+      context: ./bridge
+      dockerfile: Dockerfile
+    image: partner365-bridge:latest
+    environment:
+      BRIDGE_CLOUD_ENVIRONMENT: ${MICROSOFT_GRAPH_CLOUD_ENVIRONMENT}
+      BRIDGE_TENANT_ID: ${MICROSOFT_GRAPH_TENANT_ID}
+      BRIDGE_CLIENT_ID: ${MICROSOFT_GRAPH_CLIENT_ID}
+      BRIDGE_ADMIN_SITE_URL: ${SHAREPOINT_ADMIN_SITE_URL}
+      BRIDGE_CERT_PATH: /run/secrets/bridge.pfx
+      BRIDGE_CERT_PASSWORD: ${BRIDGE_CERT_PASSWORD}
+      BRIDGE_SHARED_SECRET: ${BRIDGE_SHARED_SECRET}
+      ASPNETCORE_URLS: http://0.0.0.0:8080
+    volumes:
+      - ${BRIDGE_CERT_HOST_PATH}:/run/secrets/bridge.pfx:ro
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks: [default]
+    restart: unless-stopped
+    # Deliberately NO `ports:` — bridge is internal-only.
 
 volumes:
   db-data:
