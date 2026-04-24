@@ -184,11 +184,15 @@ app.MapPost("/v1/sites/label", async (
         log.LogInformation("{RequestId} set-label conflict site={Site}", requestId, req.SiteUrl);
         return Results.Json(new ErrorResponse(new ErrorBody("already_labeled", ex.Message, requestId)), statusCode: 409);
     }
+    catch (ArgumentException ex)
+    {
+        // ArgumentException from service-layer validation — caller bug, not an upstream failure.
+        log.LogInformation("{RequestId} set-label rejected: {Message}", requestId, ex.Message);
+        return BadRequest(requestId, ex.Message);
+    }
     catch (Exception ex)
     {
-        var code = ErrorClassifier.Classify(ex);
-        log.LogError(ex, "{RequestId} set-label failed site={Site} code={Code}", requestId, req.SiteUrl, code);
-        return Results.Json(new ErrorResponse(new ErrorBody(code, SanitizeMessage(ex), requestId)), statusCode: 502);
+        return ClassifyServerError(ex, log, requestId, "set-label", req.SiteUrl);
     }
 });
 
@@ -226,11 +230,14 @@ app.MapPost("/v1/sites/label:read", async (
     {
         throw;
     }
+    catch (ArgumentException ex)
+    {
+        log.LogInformation("{RequestId} read-label rejected: {Message}", requestId, ex.Message);
+        return BadRequest(requestId, ex.Message);
+    }
     catch (Exception ex)
     {
-        var code = ErrorClassifier.Classify(ex);
-        log.LogError(ex, "{RequestId} read-label failed site={Site} code={Code}", requestId, req.SiteUrl, code);
-        return Results.Json(new ErrorResponse(new ErrorBody(code, SanitizeMessage(ex), requestId)), statusCode: 502);
+        return ClassifyServerError(ex, log, requestId, "read-label", req.SiteUrl);
     }
 });
 
@@ -241,6 +248,25 @@ static IResult BadRequest(string requestId, string message) =>
 
 static string SanitizeMessage(Exception ex) =>
     $"Bridge operation failed ({ex.GetType().Name}). See bridge logs.";
+
+// Classify 5xx failures: known upstream-origin exceptions return 502 with a
+// category (auth/throttle/network/certificate). Anything unrecognized is a
+// bridge-side bug and returns 500 "internal_error" so the caller's retry policy
+// doesn't keep hammering a broken process.
+static IResult ClassifyServerError(Exception ex, ILogger log, string requestId, string op, string siteUrl)
+{
+    var code = ErrorClassifier.Classify(ex);
+    if (code == "unknown")
+    {
+        log.LogError(ex, "{RequestId} {Op} failed with unclassified exception site={Site}", requestId, op, siteUrl);
+        return Results.Json(
+            new ErrorResponse(new ErrorBody("internal_error", SanitizeMessage(ex), requestId)),
+            statusCode: 500);
+    }
+
+    log.LogError(ex, "{RequestId} {Op} failed site={Site} code={Code}", requestId, op, siteUrl, code);
+    return Results.Json(new ErrorResponse(new ErrorBody(code, SanitizeMessage(ex), requestId)), statusCode: 502);
+}
 
 public sealed record BridgeStartupInfo(string CloudEnvironmentName, string? CertThumbprint);
 
