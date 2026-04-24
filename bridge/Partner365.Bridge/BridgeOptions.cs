@@ -29,13 +29,14 @@ public sealed record BridgeOptions
     /// <summary>
     /// At least one of CertPath or CertThumbprint must be populated.
     /// Separate from DataAnnotations because it's a cross-field rule.
+    /// CertPassword is optional even when CertPath is set (PFXs with no password are valid).
     /// </summary>
     public IEnumerable<ValidationResult> ValidateCertSource()
     {
         if (string.IsNullOrWhiteSpace(CertThumbprint) && string.IsNullOrWhiteSpace(CertPath))
         {
             yield return new ValidationResult(
-                "Bridge:CertThumbprint (Windows cert store) or Bridge:CertPath + Bridge:CertPassword (PFX file) must be set.",
+                "Bridge:CertThumbprint (Windows cert store) or Bridge:CertPath (PFX file; CertPassword optional) must be set.",
                 new[] { nameof(CertThumbprint), nameof(CertPath) });
         }
     }
