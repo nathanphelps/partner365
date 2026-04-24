@@ -7,6 +7,7 @@ using Xunit;
 
 namespace Partner365.Bridge.Tests;
 
+[Collection("ProcessEnv")]
 public class BridgeStartupTests : IClassFixture<BridgeFactory>
 {
     private readonly BridgeFactory _factory;

@@ -3,6 +3,7 @@ using Xunit;
 
 namespace Partner365.Bridge.Tests;
 
+[Collection("ProcessEnv")]
 public class LegacyEnvVarMapperTests : IDisposable
 {
     private readonly List<string> _touchedKeys = new();
