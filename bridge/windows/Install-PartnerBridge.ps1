@@ -203,24 +203,35 @@ Write-Host "Wrote $configFile"
 # ---------------------------------------------------------------------------
 # 7) ACL the config file
 # ---------------------------------------------------------------------------
-# $ErrorActionPreference='Stop' does NOT trap native-exe nonzero exits, so check
-# $LASTEXITCODE explicitly. If inheritance removal fails silently (file locked,
-# policy, AV handle) the file retains Users:Read from its parent — exposing the
-# shared secret to any local user.
-& icacls $configFile /inheritance:r | Out-Null
-if ($LASTEXITCODE -ne 0) {
-    throw "icacls /inheritance:r failed with exit $LASTEXITCODE. Config file may still be world-readable at $configFile."
-}
-& icacls $configFile /grant:r "NT AUTHORITY\SYSTEM:(R)" "BUILTIN\Administrators:(F)" | Out-Null
-if ($LASTEXITCODE -ne 0) {
-    throw "icacls /grant failed with exit $LASTEXITCODE. Config file ACL is in an unknown state at $configFile."
+# Build a deterministic ACL via Set-Acl: owner=Administrators, no inheritance,
+# and only SYSTEM:R + Administrators:F allow entries. Using `icacls /inheritance:r`
+# alone is not sufficient on Windows 11 Enterprise — inherited Users /
+# Authenticated Users ACEs from C:\ can survive as explicit entries after the
+# inheritance bit is cleared, exposing the shared secret to local users.
+try {
+    $acl = New-Object System.Security.AccessControl.FileSecurity
+    # true = protect from inheritance; false = do NOT preserve inherited ACEs.
+    $acl.SetAccessRuleProtection($true, $false)
+
+    $systemSid = New-Object System.Security.Principal.SecurityIdentifier 'S-1-5-18'     # NT AUTHORITY\SYSTEM
+    $adminsSid = New-Object System.Security.Principal.SecurityIdentifier 'S-1-5-32-544' # BUILTIN\Administrators
+
+    $acl.AddAccessRule((New-Object System.Security.AccessControl.FileSystemAccessRule(
+        $systemSid, 'Read', 'None', 'None', 'Allow')))
+    $acl.AddAccessRule((New-Object System.Security.AccessControl.FileSystemAccessRule(
+        $adminsSid, 'FullControl', 'None', 'None', 'Allow')))
+    $acl.SetOwner($adminsSid)
+
+    Set-Acl -Path $configFile -AclObject $acl
+} catch {
+    throw "Failed to apply deterministic ACL to $configFile. Config file may be world-readable. Inner error: $($_.Exception.Message)"
 }
 
-# Defensive verification: confirm no Users / Everyone / Authenticated Users allow
-# ACE survived the inheritance removal. If one did, refuse to start the service —
-# leaving the secret readable to all local users is not an acceptable install.
-$acl = (Get-Acl $configFile).Access
-$leaks = $acl | Where-Object {
+# Defensive verification: confirm no Users / Everyone / Authenticated Users /
+# INTERACTIVE allow ACE survived. Word-boundary on 'Users' avoids matching the
+# 'Authenticated Users' string we also reject (identical regex line but makes
+# the intent explicit: we reject BOTH plain Users and Authenticated Users).
+$leaks = (Get-Acl $configFile).Access | Where-Object {
     $_.AccessControlType -eq 'Allow' -and
     $_.IdentityReference -match '(Users|Everyone|Authenticated Users|INTERACTIVE)'
 }
