@@ -15,6 +15,8 @@ import {
     Users,
 } from 'lucide-vue-next';
 import { computed } from 'vue';
+import * as SweepConfigController from '@/actions/App/Http/Controllers/SensitivityLabelSweepConfigController';
+import * as SweepHistoryController from '@/actions/App/Http/Controllers/SensitivityLabelSweepHistoryController';
 import AppLogo from '@/components/AppLogo.vue';
 import NavMain from '@/components/NavMain.vue';
 import NavUser from '@/components/NavUser.vue';
@@ -55,6 +57,11 @@ const mainNavItems = computed<NavItem[]>(() => {
             icon: Tag,
         },
         {
+            title: 'Sweep History',
+            href: SweepHistoryController.index.url(),
+            icon: Activity,
+        },
+        {
             title: 'SharePoint Sites',
             href: '/sharepoint-sites',
             icon: HardDrive,
@@ -69,6 +76,11 @@ const mainNavItems = computed<NavItem[]>(() => {
     ];
 
     if (isAdmin.value) {
+        items.push({
+            title: 'Sweep Config',
+            href: SweepConfigController.show.url(),
+            icon: Settings,
+        });
         items.push({ title: 'Admin', href: '/admin/graph', icon: Settings });
     }
 

@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, useForm } from '@inertiajs/vue3';
 import { ExternalLink } from 'lucide-vue-next';
+import { ref } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,9 +19,51 @@ import { dashboard } from '@/routes';
 import type { BreadcrumbItem } from '@/types';
 import type { SharePointSite } from '@/types/sharepoint';
 
+interface AvailableLabel {
+    id: number;
+    label_id: string;
+    name: string;
+}
+
 const props = defineProps<{
     site: SharePointSite;
+    availableLabels: AvailableLabel[];
+    isExcluded: boolean;
+    canManage: boolean;
 }>();
+
+const showApplyDialog = ref(false);
+const applyForm = useForm({
+    label_id:
+        props.site.sensitivity_label?.label_id ??
+        props.availableLabels[0]?.label_id ??
+        '',
+});
+const refreshForm = useForm({});
+
+function openApplyDialog() {
+    showApplyDialog.value = true;
+}
+
+function submitApply() {
+    applyForm.post(`/sharepoint-sites/${props.site.id}/apply-label`, {
+        preserveScroll: true,
+        onSuccess: () => {
+            showApplyDialog.value = false;
+        },
+        // On error, keep the dialog open so the user can retry or cancel.
+        // The global FlashMessages component surfaces the server-side error.
+        onError: () => {
+            showApplyDialog.value = true;
+        },
+    });
+}
+
+function refreshLabel() {
+    refreshForm.post(`/sharepoint-sites/${props.site.id}/refresh-label`, {
+        preserveScroll: true,
+    });
+}
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: dashboard.url() },
@@ -146,6 +189,96 @@ function grantedViaLabel(via: string): string {
 
             <Card>
                 <CardHeader>
+                    <CardTitle class="flex items-center justify-between">
+                        <span>Sensitivity Label</span>
+                        <Badge v-if="isExcluded" variant="secondary">
+                            Excluded from automated sweeps
+                        </Badge>
+                    </CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <div class="flex items-center gap-4">
+                        <div class="flex-1">
+                            <div class="text-xs text-muted-foreground">
+                                Current label
+                            </div>
+                            <div class="text-sm font-medium">
+                                <template v-if="site.sensitivity_label">
+                                    <span
+                                        v-if="site.sensitivity_label.color"
+                                        class="mr-1.5 inline-block size-2.5 rounded-full"
+                                        :style="{
+                                            backgroundColor:
+                                                site.sensitivity_label.color,
+                                        }"
+                                    />
+                                    {{ site.sensitivity_label.name }}
+                                </template>
+                                <template v-else>No label</template>
+                            </div>
+                        </div>
+
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            :disabled="refreshForm.processing"
+                            @click="refreshLabel"
+                        >
+                            Refresh from SharePoint
+                        </Button>
+
+                        <Button
+                            v-if="canManage"
+                            size="sm"
+                            @click="openApplyDialog"
+                        >
+                            Change label
+                        </Button>
+                    </div>
+
+                    <div
+                        v-if="showApplyDialog"
+                        class="mt-4 rounded border bg-muted/40 p-3"
+                    >
+                        <label class="mb-2 block text-sm font-medium">
+                            Select label
+                        </label>
+                        <select
+                            v-model="applyForm.label_id"
+                            class="w-full rounded border bg-background px-2 py-1 text-sm"
+                        >
+                            <option
+                                v-for="l in availableLabels"
+                                :key="l.id"
+                                :value="l.label_id"
+                            >
+                                {{ l.name }}
+                            </option>
+                        </select>
+                        <div class="mt-3 flex justify-end gap-2">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                @click="showApplyDialog = false"
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                size="sm"
+                                :disabled="
+                                    applyForm.processing || !applyForm.label_id
+                                "
+                                @click="submitApply"
+                            >
+                                Apply
+                            </Button>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+
+            <Card>
+                <CardHeader>
                     <CardTitle>Site Details</CardTitle>
                 </CardHeader>
                 <CardContent class="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
@@ -190,7 +323,9 @@ function grantedViaLabel(via: string): string {
                     <CardTitle>Access Controls</CardTitle>
                 </CardHeader>
                 <CardContent class="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-                    <span class="text-muted-foreground">Conditional Access</span>
+                    <span class="text-muted-foreground"
+                        >Conditional Access</span
+                    >
                     <span>
                         <Badge
                             :variant="
@@ -213,9 +348,7 @@ function grantedViaLabel(via: string): string {
                     <span class="text-muted-foreground"
                         >Limited Access File Type</span
                     >
-                    <span>{{
-                        site.limited_access_file_type ?? '\u2014'
-                    }}</span>
+                    <span>{{ site.limited_access_file_type ?? '\u2014' }}</span>
 
                     <span class="text-muted-foreground">Allow Download</span>
                     <span>{{
@@ -231,30 +364,26 @@ function grantedViaLabel(via: string): string {
                         <span class="text-muted-foreground"
                             >Domain Restriction Mode</span
                         >
-                        <span>{{
-                            site.sharing_domain_restriction_mode
-                        }}</span>
+                        <span>{{ site.sharing_domain_restriction_mode }}</span>
 
                         <template v-if="site.sharing_allowed_domain_list">
                             <span class="text-muted-foreground"
                                 >Allowed Domains</span
                             >
-                            <span>{{
-                                site.sharing_allowed_domain_list
-                            }}</span>
+                            <span>{{ site.sharing_allowed_domain_list }}</span>
                         </template>
 
                         <template v-if="site.sharing_blocked_domain_list">
                             <span class="text-muted-foreground"
                                 >Blocked Domains</span
                             >
-                            <span>{{
-                                site.sharing_blocked_domain_list
-                            }}</span>
+                            <span>{{ site.sharing_blocked_domain_list }}</span>
                         </template>
                     </template>
 
-                    <template v-if="site.external_user_expiration_days !== null">
+                    <template
+                        v-if="site.external_user_expiration_days !== null"
+                    >
                         <span class="text-muted-foreground"
                             >External User Expiration</span
                         >

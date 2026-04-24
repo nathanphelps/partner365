@@ -11,9 +11,15 @@ export type SensitivityLabel = {
     priority: number;
     is_active: boolean;
     parent_label_id: number | null;
-    protection_type: 'encryption' | 'watermark' | 'header_footer' | 'none' | 'unknown';
+    protection_type:
+        | 'encryption'
+        | 'watermark'
+        | 'header_footer'
+        | 'none'
+        | 'unknown';
     synced_at: string | null;
     partners_count?: number;
+    rule_count?: number;
     partners?: (PartnerOrganization & {
         pivot: {
             matched_via: 'label_policy' | 'site_assignment';

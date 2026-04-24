@@ -124,13 +124,11 @@ function formatScope(scope: string[] | null): string {
                         <TableHead>Priority</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead>Affected Partners</TableHead>
+                        <TableHead class="text-right">Rules Using</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    <template
-                        v-for="label in labels.data"
-                        :key="label.id"
-                    >
+                    <template v-for="label in labels.data" :key="label.id">
                         <TableRow>
                             <TableCell>
                                 <Link
@@ -150,14 +148,10 @@ function formatScope(scope: string[] | null): string {
                             <TableCell>
                                 <Badge
                                     :variant="
-                                        protectionVariant(
-                                            label.protection_type,
-                                        )
+                                        protectionVariant(label.protection_type)
                                     "
                                 >
-                                    {{
-                                        protectionLabel(label.protection_type)
-                                    }}
+                                    {{ protectionLabel(label.protection_type) }}
                                 </Badge>
                             </TableCell>
                             <TableCell>{{
@@ -167,20 +161,19 @@ function formatScope(scope: string[] | null): string {
                             <TableCell>
                                 <Badge
                                     :variant="
-                                        label.is_active
-                                            ? 'default'
-                                            : 'outline'
+                                        label.is_active ? 'default' : 'outline'
                                     "
                                 >
                                     {{
-                                        label.is_active
-                                            ? 'Active'
-                                            : 'Inactive'
+                                        label.is_active ? 'Active' : 'Inactive'
                                     }}
                                 </Badge>
                             </TableCell>
                             <TableCell>{{
                                 label.partners_count ?? 0
+                            }}</TableCell>
+                            <TableCell class="text-right tabular-nums">{{
+                                label.rule_count ?? 0
                             }}</TableCell>
                         </TableRow>
                         <TableRow
@@ -206,14 +199,10 @@ function formatScope(scope: string[] | null): string {
                             <TableCell>
                                 <Badge
                                     :variant="
-                                        protectionVariant(
-                                            child.protection_type,
-                                        )
+                                        protectionVariant(child.protection_type)
                                     "
                                 >
-                                    {{
-                                        protectionLabel(child.protection_type)
-                                    }}
+                                    {{ protectionLabel(child.protection_type) }}
                                 </Badge>
                             </TableCell>
                             <TableCell>{{
@@ -223,20 +212,19 @@ function formatScope(scope: string[] | null): string {
                             <TableCell>
                                 <Badge
                                     :variant="
-                                        child.is_active
-                                            ? 'default'
-                                            : 'outline'
+                                        child.is_active ? 'default' : 'outline'
                                     "
                                 >
                                     {{
-                                        child.is_active
-                                            ? 'Active'
-                                            : 'Inactive'
+                                        child.is_active ? 'Active' : 'Inactive'
                                     }}
                                 </Badge>
                             </TableCell>
                             <TableCell>{{
                                 child.partners_count ?? 0
+                            }}</TableCell>
+                            <TableCell class="text-right tabular-nums">{{
+                                child.rule_count ?? 0
                             }}</TableCell>
                         </TableRow>
                     </template>
