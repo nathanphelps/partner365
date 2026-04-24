@@ -27,3 +27,8 @@ Schedule::command('sync:conditional-access-policies')->cron("*/{$partnersInterva
 Schedule::command('sync:sensitivity-labels')->cron("*/{$partnersInterval} * * * *");
 Schedule::command('sync:sharepoint-sites')->cron("*/{$partnersInterval} * * * *");
 Schedule::command('sync:favicons')->daily();
+
+Schedule::command('sensitivity:sweep')
+    ->everyMinute()
+    ->withoutOverlapping()
+    ->onOneServer();
