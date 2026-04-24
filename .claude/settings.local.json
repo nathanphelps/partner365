@@ -99,7 +99,19 @@
       "Bash(pwsh -Command 'Get-Module -ListAvailable ExchangeOnlineManagement | Select-Object -Property Name,Version | Format-Table -AutoSize' 2>&1)",
       "Bash(__NEW_LINE_9a4849f6fad95865__ echo:*)",
       "Bash(cygpath -w tmp/Labels.csv)",
-      "Bash(npx vue-tsc:*)"
+      "Bash(npx vue-tsc:*)",
+      "Bash(git branch *)",
+      "PowerShell(Get-NetTCPConnection *)",
+      "Bash(docker --version)",
+      "Bash(dotnet test *)",
+      "PowerShell(ConvertTo-SecureString *)",
+      "Bash(dotnet restore *)",
+      "Bash(dotnet build *)",
+      "PowerShell(Resolve-Path *)",
+      "Bash(git fetch *)",
+      "Bash(git reset *)",
+      "PowerShell($identity = [Security.Principal.WindowsIdentity]::GetCurrent\\(\\); $principal = New-Object Security.Principal.WindowsPrincipal $identity; \"Elevated: $\\($principal.IsInRole\\([Security.Principal.WindowsBuiltInRole]::Administrator\\)\\)\"; \"dotnet: $\\(dotnet --version\\)\")",
+      "PowerShell($null = [System.Management.Automation.Language.Parser]::ParseFile\\('C:\\\\GitHub\\\\partner365\\\\bridge\\\\windows\\\\Install-PartnerBridge.ps1', [ref]$null, [ref]$null\\); \"OK\")"
     ]
   },
   "enableAllProjectMcpServers": true,
