@@ -26,18 +26,22 @@ public sealed record CloudEnvironmentConfig
         ArgumentException.ThrowIfNullOrWhiteSpace(cloudEnvironment);
         ArgumentException.ThrowIfNullOrWhiteSpace(adminSiteUrl);
 
-        var authority = cloudEnvironment.ToLowerInvariant() switch
+        // Accept both "gcc-high" and "gcc_high" — Partner365's CloudEnvironment enum
+        // uses underscore, this sidecar originally standardized on hyphen. Normalize.
+        var normalized = cloudEnvironment.ToLowerInvariant().Replace('_', '-');
+
+        var authority = normalized switch
         {
             "commercial" => AzureAuthorityHosts.AzurePublicCloud,
             "gcc-high" => AzureAuthorityHosts.AzureGovernment,
             _ => throw new ArgumentException(
-                $"Unknown cloud environment '{cloudEnvironment}'. Expected 'commercial' or 'gcc-high'.",
+                $"Unknown cloud environment '{cloudEnvironment}'. Expected 'commercial' or 'gcc-high' (or 'gcc_high').",
                 nameof(cloudEnvironment)),
         };
 
         var resource = DeriveResourceScope(adminSiteUrl);
 
-        return new CloudEnvironmentConfig(authority, resource, cloudEnvironment.ToLowerInvariant());
+        return new CloudEnvironmentConfig(authority, resource, normalized);
     }
 
     private static string DeriveResourceScope(string adminSiteUrl)
