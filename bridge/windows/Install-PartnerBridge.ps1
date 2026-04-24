@@ -120,13 +120,21 @@ if (Test-Path $configFile) {
 }
 
 # Build final config. Supplied parameters override existing, existing overrides defaults.
+# For parameters with script-level defaults (CloudEnvironment, ListenUrl), use
+# $PSBoundParameters.ContainsKey so the default doesn't silently overwrite an
+# existing setting on idempotent re-run (e.g. GCC High install flipping back
+# to "commercial", or custom port resetting to 5300).
 $final = [ordered]@{
-    CloudEnvironment = $CloudEnvironment
+    CloudEnvironment = if ($PSBoundParameters.ContainsKey('CloudEnvironment')) { $CloudEnvironment } `
+                       elseif ($existing.Bridge.CloudEnvironment) { $existing.Bridge.CloudEnvironment } `
+                       else { $CloudEnvironment }
     TenantId         = if ($TenantId)         { $TenantId }         elseif ($existing.Bridge.TenantId)         { $existing.Bridge.TenantId }         else { $null }
     ClientId         = if ($ClientId)         { $ClientId }         elseif ($existing.Bridge.ClientId)         { $existing.Bridge.ClientId }         else { $null }
     AdminSiteUrl     = if ($AdminSiteUrl)     { $AdminSiteUrl }     elseif ($existing.Bridge.AdminSiteUrl)     { $existing.Bridge.AdminSiteUrl }     else { $null }
     SharedSecret     = if ($SharedSecret)     { $SharedSecret }     elseif ($existing.Bridge.SharedSecret)     { $existing.Bridge.SharedSecret }     else { $null }
-    ListenUrl        = $ListenUrl
+    ListenUrl        = if ($PSBoundParameters.ContainsKey('ListenUrl')) { $ListenUrl } `
+                       elseif ($existing.Bridge.ListenUrl) { $existing.Bridge.ListenUrl } `
+                       else { $ListenUrl }
     CertPath         = if ($CertPath)         { $CertPath }         elseif ($existing.Bridge.CertPath)         { $existing.Bridge.CertPath }         else { $null }
     CertPassword     = if ($PSBoundParameters.ContainsKey('CertPassword')) { $CertPassword } elseif ($existing.Bridge.CertPassword) { $existing.Bridge.CertPassword } else { '' }
     CertThumbprint   = if ($CertThumbprint)   { $CertThumbprint }   elseif ($existing.Bridge.CertThumbprint)   { $existing.Bridge.CertThumbprint }   else { $null }
@@ -195,9 +203,32 @@ Write-Host "Wrote $configFile"
 # ---------------------------------------------------------------------------
 # 7) ACL the config file
 # ---------------------------------------------------------------------------
+# $ErrorActionPreference='Stop' does NOT trap native-exe nonzero exits, so check
+# $LASTEXITCODE explicitly. If inheritance removal fails silently (file locked,
+# policy, AV handle) the file retains Users:Read from its parent — exposing the
+# shared secret to any local user.
 & icacls $configFile /inheritance:r | Out-Null
+if ($LASTEXITCODE -ne 0) {
+    throw "icacls /inheritance:r failed with exit $LASTEXITCODE. Config file may still be world-readable at $configFile."
+}
 & icacls $configFile /grant:r "NT AUTHORITY\SYSTEM:(R)" "BUILTIN\Administrators:(F)" | Out-Null
-Write-Host "ACL'd $configFile (SYSTEM read, Administrators full, no inheritance)."
+if ($LASTEXITCODE -ne 0) {
+    throw "icacls /grant failed with exit $LASTEXITCODE. Config file ACL is in an unknown state at $configFile."
+}
+
+# Defensive verification: confirm no Users / Everyone / Authenticated Users allow
+# ACE survived the inheritance removal. If one did, refuse to start the service —
+# leaving the secret readable to all local users is not an acceptable install.
+$acl = (Get-Acl $configFile).Access
+$leaks = $acl | Where-Object {
+    $_.AccessControlType -eq 'Allow' -and
+    $_.IdentityReference -match '(Users|Everyone|Authenticated Users|INTERACTIVE)'
+}
+if ($leaks) {
+    $leakNames = ($leaks | ForEach-Object { $_.IdentityReference.Value }) -join ', '
+    throw "ACL verification failed: $configFile still grants read to: $leakNames. Install aborted to protect the shared secret."
+}
+Write-Host "ACL'd $configFile (SYSTEM read, Administrators full, no inheritance, verified clean)."
 
 # ---------------------------------------------------------------------------
 # 8) Create or reconfigure the service
