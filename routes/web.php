@@ -56,7 +56,25 @@ Route::middleware(['auth', 'verified', 'approved'])->group(function () {
     Route::get('conditional-access/{conditionalAccessPolicy}', [ConditionalAccessPolicyController::class, 'show'])->name('conditional-access.show');
 
     Route::get('sensitivity-labels', [SensitivityLabelController::class, 'index'])->name('sensitivity-labels.index');
+    Route::get('sensitivity-labels/sweep/history', [\App\Http\Controllers\SensitivityLabelSweepHistoryController::class, 'index'])
+        ->name('sensitivity-labels.sweep.history');
+    Route::get('sensitivity-labels/sweep/history/{run}', [\App\Http\Controllers\SensitivityLabelSweepHistoryController::class, 'show'])
+        ->name('sensitivity-labels.sweep.history.show');
     Route::get('sensitivity-labels/{sensitivityLabel}', [SensitivityLabelController::class, 'show'])->name('sensitivity-labels.show');
+
+    Route::middleware('role:admin')->group(function () {
+        Route::get('sensitivity-labels/sweep/config', [\App\Http\Controllers\SensitivityLabelSweepConfigController::class, 'show'])
+            ->name('sensitivity-labels.sweep.config');
+        Route::put('sensitivity-labels/sweep/config', [\App\Http\Controllers\SensitivityLabelSweepConfigController::class, 'update'])
+            ->name('sensitivity-labels.sweep.config.update');
+    });
+
+    Route::middleware('role:admin,operator')->group(function () {
+        Route::post('sharepoint-sites/{sharePointSite}/apply-label', [SharePointSiteController::class, 'applyLabel'])
+            ->name('sharepoint-sites.apply-label');
+        Route::post('sharepoint-sites/{sharePointSite}/refresh-label', [SharePointSiteController::class, 'refreshLabel'])
+            ->name('sharepoint-sites.refresh-label');
+    });
 
     Route::get('sharepoint-sites', [SharePointSiteController::class, 'index'])->name('sharepoint-sites.index');
     Route::get('sharepoint-sites/{sharePointSite}', [SharePointSiteController::class, 'show'])->name('sharepoint-sites.show');
