@@ -1,6 +1,18 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
 import * as SweepHistoryController from '@/actions/App/Http/Controllers/SensitivityLabelSweepHistoryController';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { dashboard } from '@/routes';
 import type { BreadcrumbItem } from '@/types';
@@ -47,11 +59,13 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-function actionClass(action: string): string {
-    if (action === 'applied') return 'bg-green-100 text-green-800';
-    if (action === 'failed') return 'bg-red-100 text-red-800';
-    if (action.startsWith('skipped')) return 'bg-yellow-100 text-yellow-800';
-    return 'bg-gray-100 text-gray-800';
+function actionVariant(
+    action: string,
+): 'default' | 'destructive' | 'outline' | 'secondary' {
+    if (action === 'applied') return 'default';
+    if (action === 'failed') return 'destructive';
+    if (action.startsWith('skipped')) return 'secondary';
+    return 'outline';
 }
 </script>
 
@@ -59,95 +73,95 @@ function actionClass(action: string): string {
     <Head :title="`Sweep Run #${run.id}`" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
-        <div class="mx-auto max-w-6xl space-y-4 p-6">
-            <header class="flex items-center justify-between">
+        <div class="flex flex-col gap-6 p-6">
+            <div class="flex items-start justify-between gap-4">
                 <h1 class="text-2xl font-semibold">Sweep run #{{ run.id }}</h1>
-                <Link
-                    :href="SweepHistoryController.index.url()"
-                    class="text-sm text-blue-600 hover:underline"
-                >
-                    Back to history
-                </Link>
-            </header>
+                <Button variant="outline" as-child>
+                    <Link :href="SweepHistoryController.index.url()">
+                        Back to history
+                    </Link>
+                </Button>
+            </div>
 
-            <section class="rounded-lg border bg-white p-4 text-sm shadow-sm">
-                <div class="grid grid-cols-3 gap-4">
-                    <div>
-                        <span class="font-medium">Started:</span>
-                        {{ new Date(run.started_at).toLocaleString() }}
+            <Card>
+                <CardHeader>
+                    <CardTitle>Run summary</CardTitle>
+                </CardHeader>
+                <CardContent class="flex flex-col gap-3 text-sm">
+                    <div class="grid gap-4 sm:grid-cols-3">
+                        <div>
+                            <span class="font-medium">Started:</span>
+                            {{ new Date(run.started_at).toLocaleString() }}
+                        </div>
+                        <div>
+                            <span class="font-medium">Status:</span>
+                            {{ run.status }}
+                        </div>
+                        <div>
+                            <span class="font-medium">Applied/Scanned:</span>
+                            {{ run.applied }}/{{ run.total_scanned }}
+                        </div>
                     </div>
-                    <div>
-                        <span class="font-medium">Status:</span>
-                        {{ run.status }}
-                    </div>
-                    <div>
-                        <span class="font-medium">Applied/Scanned:</span>
-                        {{ run.applied }}/{{ run.total_scanned }}
-                    </div>
-                </div>
-                <div v-if="run.error_message" class="mt-2 text-red-700">
-                    {{ run.error_message }}
-                </div>
-            </section>
+                    <Alert v-if="run.error_message" variant="destructive">
+                        <AlertDescription>
+                            {{ run.error_message }}
+                        </AlertDescription>
+                    </Alert>
+                </CardContent>
+            </Card>
 
-            <table class="w-full rounded-lg border bg-white text-sm shadow-sm">
-                <thead>
-                    <tr class="border-b text-left">
-                        <th class="px-3 py-2">Site</th>
-                        <th class="px-3 py-2">URL</th>
-                        <th class="px-3 py-2">Action</th>
-                        <th class="px-3 py-2">Label</th>
-                        <th class="px-3 py-2">Matched rule</th>
-                        <th class="px-3 py-2">Error</th>
-                        <th class="px-3 py-2">Time</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr
-                        v-for="entry in entries"
-                        :key="entry.id"
-                        class="border-b"
-                    >
-                        <td class="px-3 py-2">{{ entry.site_title }}</td>
-                        <td class="truncate px-3 py-2" :title="entry.site_url">
+            <Card v-if="entries.length === 0">
+                <CardContent class="py-12 text-center text-muted-foreground">
+                    No entries in this run.
+                </CardContent>
+            </Card>
+
+            <Table v-else>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead>Site</TableHead>
+                        <TableHead>URL</TableHead>
+                        <TableHead>Action</TableHead>
+                        <TableHead>Label</TableHead>
+                        <TableHead>Matched rule</TableHead>
+                        <TableHead>Error</TableHead>
+                        <TableHead>Time</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    <TableRow v-for="entry in entries" :key="entry.id">
+                        <TableCell>{{ entry.site_title }}</TableCell>
+                        <TableCell
+                            class="max-w-xs truncate"
+                            :title="entry.site_url"
+                        >
                             <a
                                 :href="entry.site_url"
                                 target="_blank"
                                 rel="noopener"
-                                class="text-blue-600 hover:underline"
+                                class="text-primary hover:underline"
                             >
                                 {{ entry.site_url }}
                             </a>
-                        </td>
-                        <td class="px-3 py-2">
-                            <span
-                                class="inline-flex items-center rounded px-2 py-0.5 text-xs font-medium"
-                                :class="actionClass(entry.action)"
-                            >
+                        </TableCell>
+                        <TableCell>
+                            <Badge :variant="actionVariant(entry.action)">
                                 {{ entry.action }}
-                            </span>
-                        </td>
-                        <td class="px-3 py-2">{{ entry.label_id ?? '—' }}</td>
-                        <td class="px-3 py-2">
+                            </Badge>
+                        </TableCell>
+                        <TableCell>{{ entry.label_id ?? '—' }}</TableCell>
+                        <TableCell>
                             {{ entry.matched_rule?.prefix ?? '—' }}
-                        </td>
-                        <td class="px-3 py-2 text-red-700">
+                        </TableCell>
+                        <TableCell class="text-destructive">
                             {{ entry.error_message ?? '' }}
-                        </td>
-                        <td class="px-3 py-2 text-gray-500">
+                        </TableCell>
+                        <TableCell class="text-muted-foreground">
                             {{ new Date(entry.processed_at).toLocaleString() }}
-                        </td>
-                    </tr>
-                    <tr v-if="entries.length === 0">
-                        <td
-                            colspan="7"
-                            class="px-3 py-6 text-center text-gray-500"
-                        >
-                            No entries in this run.
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+                        </TableCell>
+                    </TableRow>
+                </TableBody>
+            </Table>
         </div>
     </AppLayout>
 </template>
