@@ -55,6 +55,11 @@ const mainNavItems = computed<NavItem[]>(() => {
             icon: Tag,
         },
         {
+            title: 'Sweep History',
+            href: '/sensitivity-labels/sweep/history',
+            icon: Activity,
+        },
+        {
             title: 'SharePoint Sites',
             href: '/sharepoint-sites',
             icon: HardDrive,
@@ -69,6 +74,11 @@ const mainNavItems = computed<NavItem[]>(() => {
     ];
 
     if (isAdmin.value) {
+        items.push({
+            title: 'Sweep Config',
+            href: '/sensitivity-labels/sweep/config',
+            icon: Settings,
+        });
         items.push({ title: 'Admin', href: '/admin/graph', icon: Settings });
     }
 
