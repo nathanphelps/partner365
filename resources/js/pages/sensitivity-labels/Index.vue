@@ -124,6 +124,7 @@ function formatScope(scope: string[] | null): string {
                         <TableHead>Priority</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead>Affected Partners</TableHead>
+                        <TableHead class="text-right">Rules Using</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -170,6 +171,9 @@ function formatScope(scope: string[] | null): string {
                             </TableCell>
                             <TableCell>{{
                                 label.partners_count ?? 0
+                            }}</TableCell>
+                            <TableCell class="text-right tabular-nums">{{
+                                label.rule_count ?? 0
                             }}</TableCell>
                         </TableRow>
                         <TableRow
@@ -218,6 +222,9 @@ function formatScope(scope: string[] | null): string {
                             </TableCell>
                             <TableCell>{{
                                 child.partners_count ?? 0
+                            }}</TableCell>
+                            <TableCell class="text-right tabular-nums">{{
+                                child.rule_count ?? 0
                             }}</TableCell>
                         </TableRow>
                     </template>

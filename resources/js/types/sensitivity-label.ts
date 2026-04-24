@@ -19,6 +19,7 @@ export type SensitivityLabel = {
         | 'unknown';
     synced_at: string | null;
     partners_count?: number;
+    rule_count?: number;
     partners?: (PartnerOrganization & {
         pivot: {
             matched_via: 'label_policy' | 'site_assignment';
