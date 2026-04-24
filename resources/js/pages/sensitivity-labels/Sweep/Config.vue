@@ -1,13 +1,38 @@
 <script setup lang="ts">
 import { Head, Link, useForm } from '@inertiajs/vue3';
+import { Plus, Trash2 } from 'lucide-vue-next';
 import { computed } from 'vue';
 import * as SweepConfigController from '@/actions/App/Http/Controllers/SensitivityLabelSweepConfigController';
 import * as SweepHistoryController from '@/actions/App/Http/Controllers/SensitivityLabelSweepHistoryController';
+import AlertError from '@/components/AlertError.vue';
+import InputError from '@/components/InputError.vue';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { dashboard } from '@/routes';
 import type { BreadcrumbItem } from '@/types';
 
-interface Label {
+interface LabelOption {
     id: number;
     label_id: string;
     name: string;
@@ -43,7 +68,7 @@ const props = defineProps<{
     };
     rules: Rule[];
     exclusions: Exclusion[];
-    labels: Label[];
+    labels: LabelOption[];
     lastRun: LastRun | null;
     bridgeHealth: BridgeHealth | null;
     bridgeError: string | null;
@@ -72,11 +97,22 @@ const bridgeStatusLabel = computed(() => {
     return 'Unknown';
 });
 
-const bridgeStatusClass = computed(() => {
-    if (props.bridgeError) return 'bg-red-100 text-red-800';
-    if (props.bridgeHealth) return 'bg-green-100 text-green-800';
-    return 'bg-gray-100 text-gray-800';
+const bridgeStatusVariant = computed<
+    'default' | 'destructive' | 'outline' | 'secondary'
+>(() => {
+    if (props.bridgeError) return 'destructive';
+    if (props.bridgeHealth) return 'default';
+    return 'outline';
 });
+
+const formErrorMessages = computed(() =>
+    Object.values(form.errors).filter(
+        (v): v is string => typeof v === 'string' && v.length > 0,
+    ),
+);
+
+const errorClass = (hasError: boolean) =>
+    hasError ? 'border-destructive' : '';
 
 function addRule() {
     const maxPriority = form.rules.reduce((m, r) => Math.max(m, r.priority), 0);
@@ -114,237 +150,351 @@ const breadcrumbs: BreadcrumbItem[] = [
     <Head title="Sweep Configuration" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
-        <div class="mx-auto max-w-4xl space-y-6 p-6">
-            <header class="flex items-center justify-between">
-                <h1 class="text-2xl font-semibold">
-                    Sensitivity sweep configuration
-                </h1>
-                <Link
-                    :href="SweepHistoryController.index.url()"
-                    class="text-sm text-blue-600 hover:underline"
-                >
-                    View run history
-                </Link>
-            </header>
-
-            <section class="rounded-lg border bg-white p-6 shadow-sm">
-                <h2 class="mb-4 text-lg font-semibold">Sweep status</h2>
-                <div class="flex items-center gap-2">
-                    <span
-                        class="inline-flex items-center rounded px-2 py-0.5 text-xs font-medium"
-                        :class="bridgeStatusClass"
-                        :title="
-                            bridgeHealth?.certThumbprint ?? bridgeError ?? ''
-                        "
-                    >
-                        Bridge: {{ bridgeStatusLabel }}
-                    </span>
-                    <span v-if="lastRun" class="text-sm text-gray-500">
-                        Last run #{{ lastRun.id }} — {{ lastRun.status }},
-                        {{ lastRun.applied }}/{{ lastRun.total_scanned }}
-                        applied
-                    </span>
+        <div class="flex flex-col gap-6 p-6">
+            <div class="flex items-start justify-between gap-4">
+                <div>
+                    <h1 class="text-2xl font-semibold">
+                        Sensitivity sweep configuration
+                    </h1>
+                    <p class="mt-1 text-sm text-muted-foreground">
+                        Tune how Partner365 applies sensitivity labels to
+                        SharePoint sites and configure the on-prem bridge.
+                    </p>
                 </div>
+                <Button variant="outline" as-child>
+                    <Link :href="SweepHistoryController.index.url()">
+                        View run history
+                    </Link>
+                </Button>
+            </div>
 
-                <div
-                    v-if="bridgeError"
-                    class="mt-3 rounded border border-red-300 bg-red-50 p-3 text-sm text-red-800"
-                >
-                    {{ bridgeError }}
-                </div>
+            <AlertError
+                v-if="formErrorMessages.length > 0"
+                :errors="formErrorMessages"
+                title="Please fix the issues below before saving."
+            />
 
-                <div class="mt-4 grid grid-cols-2 gap-4">
-                    <label class="flex items-center gap-2">
-                        <input v-model="form.enabled" type="checkbox" />
-                        <span>Enabled</span>
-                    </label>
-                    <label class="flex items-center gap-2">
-                        <span class="w-48">Interval (minutes)</span>
-                        <input
-                            v-model.number="form.interval_minutes"
-                            type="number"
-                            min="1"
-                            class="w-24 rounded border px-2 py-1"
-                        />
-                    </label>
-                </div>
-            </section>
-
-            <section class="rounded-lg border bg-white p-6 shadow-sm">
-                <h2 class="mb-4 text-lg font-semibold">Default label</h2>
-                <select
-                    v-model="form.default_label_id"
-                    class="w-full rounded border px-2 py-1"
-                >
-                    <option value="">(none)</option>
-                    <option v-for="l in labels" :key="l.id" :value="l.label_id">
-                        {{ l.name }}
-                    </option>
-                </select>
-                <p class="mt-2 text-sm text-gray-500">
-                    Applied when no prefix rule matches.
-                </p>
-            </section>
-
-            <section class="rounded-lg border bg-white p-6 shadow-sm">
-                <h2 class="mb-4 text-lg font-semibold">Prefix rules</h2>
-                <table class="w-full text-sm">
-                    <thead>
-                        <tr class="border-b text-left">
-                            <th class="w-16 px-2 py-1">Priority</th>
-                            <th class="px-2 py-1">Prefix</th>
-                            <th class="px-2 py-1">Label</th>
-                            <th class="w-16 px-2 py-1"></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr
-                            v-for="(rule, i) in form.rules"
-                            :key="i"
-                            class="border-b"
+            <Card>
+                <CardHeader>
+                    <CardTitle>Sweep status</CardTitle>
+                </CardHeader>
+                <CardContent class="flex flex-col gap-4">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <Badge
+                            :variant="bridgeStatusVariant"
+                            :title="
+                                bridgeHealth?.certThumbprint ??
+                                bridgeError ??
+                                ''
+                            "
                         >
-                            <td class="px-2 py-1">
-                                <input
-                                    v-model.number="rule.priority"
-                                    type="number"
-                                    min="1"
-                                    class="w-16 rounded border px-2 py-1"
-                                />
-                            </td>
-                            <td class="px-2 py-1">
-                                <input
-                                    v-model="rule.prefix"
-                                    type="text"
-                                    class="w-full rounded border px-2 py-1"
-                                />
-                            </td>
-                            <td class="px-2 py-1">
-                                <select
-                                    v-model="rule.label_id"
-                                    class="w-full rounded border px-2 py-1"
-                                >
-                                    <option
-                                        v-for="l in labels"
-                                        :key="l.id"
-                                        :value="l.label_id"
+                            Bridge: {{ bridgeStatusLabel }}
+                        </Badge>
+                        <span
+                            v-if="lastRun"
+                            class="text-sm text-muted-foreground"
+                        >
+                            Last run #{{ lastRun.id }} — {{ lastRun.status }},
+                            {{ lastRun.applied }}/{{ lastRun.total_scanned }}
+                            applied
+                        </span>
+                    </div>
+
+                    <Alert v-if="bridgeError" variant="destructive">
+                        <AlertDescription>{{ bridgeError }}</AlertDescription>
+                    </Alert>
+
+                    <div class="grid gap-4 sm:grid-cols-2">
+                        <div class="flex items-center gap-3">
+                            <Switch id="sweep-enabled" v-model="form.enabled" />
+                            <Label for="sweep-enabled">Enabled</Label>
+                        </div>
+                        <div class="grid gap-2">
+                            <Label for="sweep-interval">
+                                Interval (minutes)
+                            </Label>
+                            <Input
+                                id="sweep-interval"
+                                v-model.number="form.interval_minutes"
+                                type="number"
+                                min="1"
+                                class="max-w-32"
+                                :class="
+                                    errorClass(!!form.errors.interval_minutes)
+                                "
+                            />
+                            <InputError
+                                :message="form.errors.interval_minutes"
+                            />
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle>Default label</CardTitle>
+                </CardHeader>
+                <CardContent class="grid gap-2">
+                    <Select v-model="form.default_label_id">
+                        <SelectTrigger
+                            :class="errorClass(!!form.errors.default_label_id)"
+                        >
+                            <SelectValue placeholder="(none)" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem
+                                v-for="l in labels"
+                                :key="l.id"
+                                :value="l.label_id"
+                            >
+                                {{ l.name }}
+                            </SelectItem>
+                        </SelectContent>
+                    </Select>
+                    <InputError :message="form.errors.default_label_id" />
+                    <p class="text-sm text-muted-foreground">
+                        Applied when no prefix rule matches.
+                    </p>
+                </CardContent>
+            </Card>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle>Prefix rules</CardTitle>
+                </CardHeader>
+                <CardContent class="flex flex-col gap-3">
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead class="w-24">Priority</TableHead>
+                                <TableHead>Prefix</TableHead>
+                                <TableHead>Label</TableHead>
+                                <TableHead class="w-16" />
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            <TableRow v-for="(rule, i) in form.rules" :key="i">
+                                <TableCell class="align-top">
+                                    <Input
+                                        v-model.number="rule.priority"
+                                        type="number"
+                                        min="1"
+                                        class="w-20"
+                                        :class="
+                                            errorClass(
+                                                !!form.errors[
+                                                    `rules.${i}.priority`
+                                                ],
+                                            )
+                                        "
+                                    />
+                                    <InputError
+                                        :message="
+                                            form.errors[`rules.${i}.priority`]
+                                        "
+                                    />
+                                </TableCell>
+                                <TableCell class="align-top">
+                                    <Input
+                                        v-model="rule.prefix"
+                                        type="text"
+                                        :class="
+                                            errorClass(
+                                                !!form.errors[
+                                                    `rules.${i}.prefix`
+                                                ],
+                                            )
+                                        "
+                                    />
+                                    <InputError
+                                        :message="
+                                            form.errors[`rules.${i}.prefix`]
+                                        "
+                                    />
+                                </TableCell>
+                                <TableCell class="align-top">
+                                    <Select v-model="rule.label_id">
+                                        <SelectTrigger
+                                            :class="
+                                                errorClass(
+                                                    !!form.errors[
+                                                        `rules.${i}.label_id`
+                                                    ],
+                                                )
+                                            "
+                                        >
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem
+                                                v-for="l in labels"
+                                                :key="l.id"
+                                                :value="l.label_id"
+                                            >
+                                                {{ l.name }}
+                                            </SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                    <InputError
+                                        :message="
+                                            form.errors[`rules.${i}.label_id`]
+                                        "
+                                    />
+                                </TableCell>
+                                <TableCell class="text-right align-top">
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        :aria-label="`Remove rule ${i + 1}`"
+                                        @click="removeRule(i)"
                                     >
-                                        {{ l.name }}
-                                    </option>
-                                </select>
-                            </td>
-                            <td class="px-2 py-1">
-                                <button
-                                    type="button"
-                                    @click="removeRule(i)"
-                                    class="text-red-600 hover:underline"
-                                >
-                                    Remove
-                                </button>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-                <button
-                    type="button"
-                    @click="addRule"
-                    class="mt-2 rounded bg-blue-600 px-3 py-1 text-sm text-white hover:bg-blue-700"
-                >
-                    Add rule
-                </button>
-            </section>
+                                        <Trash2
+                                            class="size-4 text-destructive"
+                                        />
+                                    </Button>
+                                </TableCell>
+                            </TableRow>
+                        </TableBody>
+                    </Table>
+                    <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        class="self-start"
+                        @click="addRule"
+                    >
+                        <Plus class="mr-1 size-4" />
+                        Add rule
+                    </Button>
+                </CardContent>
+            </Card>
 
-            <section class="rounded-lg border bg-white p-6 shadow-sm">
-                <h2 class="mb-4 text-lg font-semibold">Site exclusions</h2>
-                <table class="w-full text-sm">
-                    <thead>
-                        <tr class="border-b text-left">
-                            <th class="px-2 py-1">Pattern</th>
-                            <th class="w-16 px-2 py-1"></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr
-                            v-for="(ex, i) in form.exclusions"
-                            :key="i"
-                            class="border-b"
-                        >
-                            <td class="px-2 py-1">
-                                <input
-                                    v-model="ex.pattern"
-                                    type="text"
-                                    class="w-full rounded border px-2 py-1"
-                                />
-                            </td>
-                            <td class="px-2 py-1">
-                                <button
-                                    type="button"
-                                    @click="removeExclusion(i)"
-                                    class="text-red-600 hover:underline"
-                                >
-                                    Remove
-                                </button>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-                <button
-                    type="button"
-                    @click="addExclusion"
-                    class="mt-2 rounded bg-blue-600 px-3 py-1 text-sm text-white hover:bg-blue-700"
-                >
-                    Add exclusion
-                </button>
-                <p class="mt-2 text-xs text-gray-500">
-                    Case-insensitive substring match. Matching sites are dropped
-                    from tracking on the next sweep.
-                </p>
-            </section>
+            <Card>
+                <CardHeader>
+                    <CardTitle>Site exclusions</CardTitle>
+                </CardHeader>
+                <CardContent class="flex flex-col gap-3">
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Pattern</TableHead>
+                                <TableHead class="w-16" />
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            <TableRow
+                                v-for="(ex, i) in form.exclusions"
+                                :key="i"
+                            >
+                                <TableCell class="align-top">
+                                    <Input
+                                        v-model="ex.pattern"
+                                        type="text"
+                                        :class="
+                                            errorClass(
+                                                !!form.errors[
+                                                    `exclusions.${i}.pattern`
+                                                ],
+                                            )
+                                        "
+                                    />
+                                    <InputError
+                                        :message="
+                                            form.errors[
+                                                `exclusions.${i}.pattern`
+                                            ]
+                                        "
+                                    />
+                                </TableCell>
+                                <TableCell class="text-right align-top">
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        :aria-label="`Remove exclusion ${i + 1}`"
+                                        @click="removeExclusion(i)"
+                                    >
+                                        <Trash2
+                                            class="size-4 text-destructive"
+                                        />
+                                    </Button>
+                                </TableCell>
+                            </TableRow>
+                        </TableBody>
+                    </Table>
+                    <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        class="self-start"
+                        @click="addExclusion"
+                    >
+                        <Plus class="mr-1 size-4" />
+                        Add exclusion
+                    </Button>
+                    <p class="text-xs text-muted-foreground">
+                        Case-insensitive substring match. Matching sites are
+                        dropped from tracking on the next sweep.
+                    </p>
+                </CardContent>
+            </Card>
 
-            <section class="rounded-lg border bg-white p-6 shadow-sm">
-                <h2 class="mb-4 text-lg font-semibold">Bridge connection</h2>
-                <div class="grid grid-cols-1 gap-4">
-                    <label class="flex flex-col gap-1">
-                        <span class="text-sm font-medium">Bridge URL</span>
-                        <input
+            <Card>
+                <CardHeader>
+                    <CardTitle>Bridge connection</CardTitle>
+                </CardHeader>
+                <CardContent class="grid gap-4">
+                    <div class="grid gap-2">
+                        <Label for="bridge-url">Bridge URL</Label>
+                        <Input
+                            id="bridge-url"
                             v-model="form.bridge_url"
                             type="text"
-                            class="rounded border px-2 py-1"
+                            :class="errorClass(!!form.errors.bridge_url)"
                         />
-                    </label>
-                    <label class="flex flex-col gap-1">
-                        <span class="text-sm font-medium">
-                            Shared secret
-                            <span
+                        <InputError :message="form.errors.bridge_url" />
+                    </div>
+                    <div class="grid gap-2">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <Label for="bridge-secret">Shared secret</Label>
+                            <Badge
                                 v-if="settings.bridge_shared_secret_configured"
-                                class="ml-2 text-xs text-green-700"
+                                variant="secondary"
                             >
-                                (currently configured — leave blank to keep)
-                            </span>
-                            <span v-else class="ml-2 text-xs text-red-700">
-                                (not configured)
-                            </span>
-                        </span>
-                        <input
+                                Configured — leave blank to keep
+                            </Badge>
+                            <Badge v-else variant="destructive">
+                                Not configured
+                            </Badge>
+                        </div>
+                        <Input
+                            id="bridge-secret"
                             v-model="form.bridge_shared_secret"
                             type="password"
                             autocomplete="new-password"
                             placeholder="Enter a new secret to rotate"
-                            class="rounded border px-2 py-1"
+                            :class="
+                                errorClass(!!form.errors.bridge_shared_secret)
+                            "
                         />
-                    </label>
-                </div>
-            </section>
+                        <InputError
+                            :message="form.errors.bridge_shared_secret"
+                        />
+                    </div>
+                </CardContent>
+            </Card>
 
-            <footer class="flex justify-end">
-                <button
+            <div class="flex justify-end">
+                <Button
                     type="button"
-                    @click="submit"
                     :disabled="form.processing"
-                    class="rounded bg-green-600 px-4 py-2 text-white hover:bg-green-700 disabled:opacity-50"
+                    @click="submit"
                 >
                     Save configuration
-                </button>
-            </footer>
+                </Button>
+            </div>
         </div>
     </AppLayout>
 </template>
