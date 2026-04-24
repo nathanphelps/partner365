@@ -42,6 +42,15 @@ public class CloudEnvironmentConfigTests
     }
 
     [Fact]
+    public void Accepts_gcc_high_with_underscore_form()
+    {
+        // Partner365's CloudEnvironment enum stores the value as "gcc_high".
+        var config = CloudEnvironmentConfig.For("gcc_high", "https://gdotsg-admin.sharepoint.us");
+        Assert.Equal(AzureAuthorityHosts.AzureGovernment, config.AuthorityHost);
+        Assert.Equal("gcc-high", config.CloudEnvironmentName);
+    }
+
+    [Fact]
     public void Admin_url_without_dash_admin_throws()
     {
         Assert.Throws<ArgumentException>(() =>

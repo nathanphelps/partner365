@@ -1,55 +1,138 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging.EventLog;
+using Microsoft.Extensions.Options;
+using Partner365.Bridge;
 using Partner365.Bridge.Models;
 using Partner365.Bridge.Services;
 
+// Bridge flat BRIDGE_* env vars into the Bridge__* form .NET Config expects.
+// Docker admins can keep their compose file as-is; no breaking change.
+LegacyEnvVarMapper.Apply();
+
 var builder = WebApplication.CreateBuilder(args);
 
-// --- Configuration (env vars only) ---
-var cloudEnv = RequireEnv("BRIDGE_CLOUD_ENVIRONMENT");
-var tenantId = RequireEnv("BRIDGE_TENANT_ID");
-var clientId = RequireEnv("BRIDGE_CLIENT_ID");
-var adminUrl = RequireEnv("BRIDGE_ADMIN_SITE_URL");
-var certPath = RequireEnv("BRIDGE_CERT_PATH");
-var certPw = Environment.GetEnvironmentVariable("BRIDGE_CERT_PASSWORD") ?? "";
-var secret = RequireEnv("BRIDGE_SHARED_SECRET");
+// Windows Service support. No-op when process isn't launched by the SCM —
+// same binary runs as a console on dev boxes and as a container on Linux.
+builder.Host.UseWindowsService(o => o.ServiceName = "PartnerBridge");
 
-var cloudCfg = CloudEnvironmentConfig.For(cloudEnv, adminUrl);
-
-// BRIDGE_CERT_PATH="__TEST__" is the only sentinel — it skips cert load so that
-// BridgeFactory (integration tests) can start the host without a real PFX and then
-// inject a mock ICsomOperations. Certificate thumbprint is then reported as null
-// in /health responses rather than leaking the sentinel to clients.
-System.Security.Cryptography.X509Certificates.X509Certificate2? cert = null;
-if (certPath != "__TEST__")
+// Pin the EventLog source name so Windows admins' `Get-WinEvent` filters in
+// README.md / validate.md (ProviderName -like '*PartnerBridge*') actually match.
+// Without this, the default source is the assembly name (Partner365.Bridge).
+// EventLog is Windows-only; the Configure call is a no-op on Linux containers.
+#pragma warning disable CA1416 // guarded by OperatingSystem.IsWindows() check
+if (OperatingSystem.IsWindows())
 {
-    cert = CertificateLoader.LoadFromPfx(certPath, certPw);
+    builder.Services.Configure<EventLogSettings>(s => s.SourceName = "PartnerBridge");
+}
+#pragma warning restore CA1416
+
+// Bind BridgeOptions to the Bridge config section. Cross-field and DataAnnotations
+// rules are bundled in IValidateOptions<BridgeOptions> so they run together any
+// time options are validated — no fluent-chain a future caller can forget.
+builder.Services.AddOptions<BridgeOptions>()
+    .Bind(builder.Configuration.GetSection("Bridge"))
+    .ValidateOnStart();
+builder.Services.AddSingleton<IValidateOptions<BridgeOptions>, BridgeOptionsValidator>();
+
+builder.Services.AddSingleton<CloudEnvironmentConfig>(sp =>
+{
+    var runtimeOpts = sp.GetRequiredService<IOptions<BridgeOptions>>().Value;
+    return CloudEnvironmentConfig.For(runtimeOpts.CloudEnvironment, runtimeOpts.AdminSiteUrl);
+});
+
+// Load the bound options once for startup-only wiring (listen URL + cert load),
+// and run the same validator against it NOW so failures surface at startup
+// BEFORE we call UseUrls or CertificateLoader.Load with partial data.
+//
+// ValidateOnStart() still fires again when the host resolves IOptions<T> — so
+// if Program.cs is refactored later and this manual call disappears, the DI
+// path still catches the problem. Belt + suspenders.
+var opts = builder.Configuration.GetSection("Bridge").Get<BridgeOptions>()
+    ?? throw new InvalidOperationException(
+        "Bridge configuration section missing. Set Bridge:* config keys " +
+        "(appsettings.Production.json) or BRIDGE_* environment variables.");
+
+var validationResult = new BridgeOptionsValidator().Validate(Options.DefaultName, opts);
+if (validationResult.Failed)
+{
+    throw new OptionsValidationException(
+        Options.DefaultName,
+        typeof(BridgeOptions),
+        validationResult.Failures ?? new[] { "Bridge options validation failed with no explanation." });
 }
 
-builder.Services.AddSingleton(cloudCfg);
+// Listen URL: explicit ASPNETCORE_URLS (from .NET Host) wins if set;
+// otherwise we use the validated Bridge:ListenUrl.
+if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("ASPNETCORE_URLS")))
+{
+    builder.WebHost.UseUrls(opts.ListenUrl);
+}
+
+// The test harness (BridgeFactory) uses CertPath="__TEST__" as a sentinel so
+// the host boots without a real cert, then injects a mock ICsomOperations.
+// /health reports thumbprint as null rather than leaking the sentinel.
+System.Security.Cryptography.X509Certificates.X509Certificate2? cert = null;
+if (opts.CertPath != "__TEST__")
+{
+    // Wrap cert load with a bootstrap logger so SCM/event-log picks up the
+    // actionable failure reason BEFORE the host crash surfaces as "Error 1053".
+    // Also covers LoadFromStore on Linux and wrong-PFX-password scenarios.
+    using var bootstrapLoggerFactory = LoggerFactory.Create(lb =>
+    {
+        lb.AddConsole();
+#pragma warning disable CA1416 // guarded by OperatingSystem.IsWindows() check
+        if (OperatingSystem.IsWindows())
+        {
+            lb.AddEventLog(s => s.SourceName = "PartnerBridge");
+        }
+#pragma warning restore CA1416
+    });
+    var bootstrapLog = bootstrapLoggerFactory.CreateLogger("Partner365.Bridge.Startup");
+
+    try
+    {
+        cert = CertificateLoader.Load(opts);
+    }
+    catch (Exception ex)
+    {
+        bootstrapLog.LogCritical(ex,
+            "Bridge failed to load certificate at startup. CertPath={CertPath}, CertThumbprint={CertThumbprint}. See the inner exception for the root cause.",
+            opts.CertPath ?? "(null)",
+            opts.CertThumbprint ?? "(null)");
+        throw;
+    }
+}
+
 builder.Services.AddSingleton(_ => new BridgeStartupInfo(
-    CloudEnvironmentName: cloudCfg.CloudEnvironmentName,
+    CloudEnvironmentName: CloudEnvironmentConfig.For(opts.CloudEnvironment, opts.AdminSiteUrl).CloudEnvironmentName,
     CertThumbprint: cert?.Thumbprint));
 
 if (cert is not null)
 {
-    builder.Services.AddSingleton<ICsomOperations>(
-        _ => new PnPCsomOperations(cloudCfg, tenantId, clientId, adminUrl, cert));
+    builder.Services.AddSingleton<ICsomOperations>(sp =>
+    {
+        var cloudCfg = sp.GetRequiredService<CloudEnvironmentConfig>();
+        var runtimeOpts = sp.GetRequiredService<IOptions<BridgeOptions>>().Value;
+        return new PnPCsomOperations(cloudCfg, runtimeOpts.TenantId, runtimeOpts.ClientId, runtimeOpts.AdminSiteUrl, cert);
+    });
 }
-// else: the test harness (BridgeFactory) injects a mock ICsomOperations.
+// else: the test harness injects a mock ICsomOperations.
 
 builder.Services.AddSingleton<SharePointCsomService>();
 
-builder.Services.ConfigureHttpJsonOptions(options =>
+builder.Services.ConfigureHttpJsonOptions(jsonOpts =>
 {
-    options.SerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
-    options.SerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+    jsonOpts.SerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+    jsonOpts.SerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
 });
 
 var app = builder.Build();
 
-// --- Middleware: shared secret on all /v1/* ---
+// Shared-secret middleware. Resolve SharedSecret through IOptions so tests
+// (which rebind via the test host) see the same value.
+var secret = app.Services.GetRequiredService<IOptions<BridgeOptions>>().Value.SharedSecret;
 var middlewareLogger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger<SharedSecretMiddleware>();
 app.Use(async (ctx, next) =>
 {
@@ -57,7 +140,7 @@ app.Use(async (ctx, next) =>
     await mw.Invoke(ctx);
 });
 
-// --- Endpoints ---
+// 7) Endpoints.
 app.MapGet("/health", (BridgeStartupInfo info) =>
     Results.Ok(new HealthResponse("ok", info.CloudEnvironmentName, info.CertThumbprint)));
 
@@ -65,6 +148,7 @@ app.MapPost("/v1/sites/label", async (
     [FromQuery] bool? overwrite,
     [FromBody] SetLabelRequest? req,
     SharePointCsomService svc,
+    IOptions<BridgeOptions> bridgeOpts,
     ILogger<Program> log,
     CancellationToken ct) =>
 {
@@ -77,7 +161,7 @@ app.MapPost("/v1/sites/label", async (
 
     try
     {
-        SiteUrlValidator.EnsureInTenant(req.SiteUrl, adminUrl);
+        SiteUrlValidator.EnsureInTenant(req.SiteUrl, bridgeOpts.Value.AdminSiteUrl);
     }
     catch (ArgumentException ex)
     {
@@ -93,7 +177,6 @@ app.MapPost("/v1/sites/label", async (
     }
     catch (OperationCanceledException)
     {
-        // Client disconnected; don't classify as bridge failure.
         throw;
     }
     catch (LabelConflictException ex)
@@ -101,19 +184,22 @@ app.MapPost("/v1/sites/label", async (
         log.LogInformation("{RequestId} set-label conflict site={Site}", requestId, req.SiteUrl);
         return Results.Json(new ErrorResponse(new ErrorBody("already_labeled", ex.Message, requestId)), statusCode: 409);
     }
+    catch (ArgumentException ex)
+    {
+        // ArgumentException from service-layer validation — caller bug, not an upstream failure.
+        log.LogInformation("{RequestId} set-label rejected: {Message}", requestId, ex.Message);
+        return BadRequest(requestId, ex.Message);
+    }
     catch (Exception ex)
     {
-        var code = ErrorClassifier.Classify(ex);
-        // Log at Error: this either classified into a known category (operator action needed)
-        // or fell through to "unknown" (author needs a new handler).
-        log.LogError(ex, "{RequestId} set-label failed site={Site} code={Code}", requestId, req.SiteUrl, code);
-        return Results.Json(new ErrorResponse(new ErrorBody(code, SanitizeMessage(ex), requestId)), statusCode: 502);
+        return ClassifyServerError(ex, log, requestId, "set-label", req.SiteUrl);
     }
 });
 
 app.MapPost("/v1/sites/label:read", async (
     [FromBody] ReadLabelRequest? req,
     SharePointCsomService svc,
+    IOptions<BridgeOptions> bridgeOpts,
     ILogger<Program> log,
     CancellationToken ct) =>
 {
@@ -126,7 +212,7 @@ app.MapPost("/v1/sites/label:read", async (
 
     try
     {
-        SiteUrlValidator.EnsureInTenant(req.SiteUrl, adminUrl);
+        SiteUrlValidator.EnsureInTenant(req.SiteUrl, bridgeOpts.Value.AdminSiteUrl);
     }
     catch (ArgumentException ex)
     {
@@ -144,32 +230,42 @@ app.MapPost("/v1/sites/label:read", async (
     {
         throw;
     }
+    catch (ArgumentException ex)
+    {
+        log.LogInformation("{RequestId} read-label rejected: {Message}", requestId, ex.Message);
+        return BadRequest(requestId, ex.Message);
+    }
     catch (Exception ex)
     {
-        var code = ErrorClassifier.Classify(ex);
-        log.LogError(ex, "{RequestId} read-label failed site={Site} code={Code}", requestId, req.SiteUrl, code);
-        return Results.Json(new ErrorResponse(new ErrorBody(code, SanitizeMessage(ex), requestId)), statusCode: 502);
+        return ClassifyServerError(ex, log, requestId, "read-label", req.SiteUrl);
     }
 });
+
+app.Run();
 
 static IResult BadRequest(string requestId, string message) =>
     Results.Json(new ErrorResponse(new ErrorBody("bad_request", message, requestId)), statusCode: 400);
 
-// Client-facing error messages drop server-internal details. Full exception info lives only in bridge logs,
-// cross-referenced by requestId.
 static string SanitizeMessage(Exception ex) =>
     $"Bridge operation failed ({ex.GetType().Name}). See bridge logs.";
 
-app.Run();
-
-static string RequireEnv(string name)
+// Classify 5xx failures: known upstream-origin exceptions return 502 with a
+// category (auth/throttle/network/certificate). Anything unrecognized is a
+// bridge-side bug and returns 500 "internal_error" so the caller's retry policy
+// doesn't keep hammering a broken process.
+static IResult ClassifyServerError(Exception ex, ILogger log, string requestId, string op, string siteUrl)
 {
-    var v = Environment.GetEnvironmentVariable(name);
-    if (string.IsNullOrWhiteSpace(v))
+    var code = ErrorClassifier.Classify(ex);
+    if (code == "unknown")
     {
-        throw new InvalidOperationException($"Required environment variable '{name}' is not set.");
+        log.LogError(ex, "{RequestId} {Op} failed with unclassified exception site={Site}", requestId, op, siteUrl);
+        return Results.Json(
+            new ErrorResponse(new ErrorBody("internal_error", SanitizeMessage(ex), requestId)),
+            statusCode: 500);
     }
-    return v;
+
+    log.LogError(ex, "{RequestId} {Op} failed site={Site} code={Code}", requestId, op, siteUrl, code);
+    return Results.Json(new ErrorResponse(new ErrorBody(code, SanitizeMessage(ex), requestId)), statusCode: 502);
 }
 
 public sealed record BridgeStartupInfo(string CloudEnvironmentName, string? CertThumbprint);

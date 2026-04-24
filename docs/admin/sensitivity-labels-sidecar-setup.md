@@ -4,10 +4,24 @@ This page walks a Partner365 administrator through enabling the sensitivity-labe
 
 ## Prerequisites
 
-- You are running Partner365 via `docker compose` from this repo.
 - You have tenant administrator access to the Entra portal.
 - You have Global Admin (or Application Administrator + SharePoint Administrator) available to consent new permissions.
 - `openssl` and `PowerShell 7+` are available locally.
+
+## Choose your deployment mode
+
+The bridge ships as a single binary but supports two deployment models:
+
+| Mode | When to use | Follow |
+|---|---|---|
+| **Docker container** | You already run Partner365 via `docker compose` on Linux or WSL2; you want config via env vars; you treat the bridge as ephemeral. | The rest of this page. |
+| **Windows Service** | Your host is Windows; you don't run Docker; you want a service in SCM that survives reboots with delayed auto-start. | [bridge/windows/README.md](../../bridge/windows/README.md). |
+
+Both modes use the same Entra app registration, the same certificate, and the same shared secret. You can switch between them — just uninstall one before installing the other. Partner365 cannot tell which is on the other end of the HTTP call.
+
+The remainder of this page documents the Docker path. Windows Service-specific setup and troubleshooting live under `bridge/windows/`.
+
+---
 
 ## Step 1 — Generate a certificate for the bridge
 
@@ -126,3 +140,24 @@ Brief overlap is fine — in-flight jobs will retry with backoff.
 
 - Disable the feature: Sweep Config → turn off Enabled → Save. Existing history stays; no new sweeps run.
 - Remove bridge: comment out the `bridge` service in `docker-compose.yml`, `docker compose up -d`. Manual-apply buttons will fail with a user-friendly "sidecar not reachable" message. Scheduled command will fail at pre-flight health check. No labels in M365 are rolled back — they stay as they were set.
+
+---
+
+## Appendix: Windows Service alternative
+
+If Docker is not an option, install the bridge as a Windows Service instead:
+
+```powershell
+cd C:\GitHub\partner365\bridge\windows
+$secret = -join ((1..64) | ForEach-Object { '{0:x}' -f (Get-Random -Maximum 16) })
+.\Install-PartnerBridge.ps1 `
+    -TenantId         '<guid>' `
+    -ClientId         '<guid>' `
+    -AdminSiteUrl     'https://<tenant>-admin.sharepoint.com' `
+    -CloudEnvironment 'commercial' `
+    -CertPath         'C:\certs\bridge.pfx' `
+    -CertPassword     '<pfx-password>' `
+    -SharedSecret     $secret
+```
+
+The bridge will listen on `http://127.0.0.1:5300`. Set Partner365's Sweep Config page to point at that URL and paste the shared secret. Full documentation, including cert-store thumbprint support, non-LocalSystem service accounts, and the validation harness, lives in `bridge/windows/README.md` and `bridge/windows/validate.md`.

@@ -1,5 +1,7 @@
 # Bridge manual validation harness
 
+> **Note:** This file covers the Docker deployment. For Windows Service installs, see `../windows/validate.md`.
+
 Use this checklist when wiring a new tenant, rotating certs, or verifying a release build.
 
 ## Prereqs

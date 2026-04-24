@@ -7,6 +7,7 @@ using Xunit;
 
 namespace Partner365.Bridge.Tests;
 
+[Collection("ProcessEnv")]
 public class BridgeStartupTests : IClassFixture<BridgeFactory>
 {
     private readonly BridgeFactory _factory;
@@ -119,5 +120,39 @@ public class BridgeStartupTests : IClassFixture<BridgeFactory>
 
         var body = await resp.Content.ReadAsStringAsync();
         Assert.Contains("\"labelId\":\"label-xyz\"", body);
+    }
+
+    [Fact]
+    public async Task Unclassified_ops_failure_returns_500_not_502()
+    {
+        // NullReferenceException / generic programming bugs have no ErrorClassifier category.
+        // They should bucket to 500 "internal_error" so the caller's retry policy doesn't
+        // keep hammering the bridge thinking SharePoint is down.
+        _factory.Ops
+            .Setup(o => o.GetSiteLabelAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new NullReferenceException("unexpected null inside ops layer"));
+
+        var client = AuthorizedClient();
+        var resp = await client.PostAsJsonAsync("/v1/sites/label",
+            new { SiteUrl = "https://test.sharepoint.com/sites/x", LabelId = "lbl" });
+
+        Assert.Equal(HttpStatusCode.InternalServerError, resp.StatusCode);
+        var body = await resp.Content.ReadAsStringAsync();
+        Assert.Contains("\"code\":\"internal_error\"", body);
+    }
+
+    [Fact]
+    public async Task ArgumentException_from_ops_returns_400_not_502()
+    {
+        // Caller-bug exceptions (beyond the SiteUrlValidator path) should also bucket to 400.
+        _factory.Ops
+            .Setup(o => o.GetSiteLabelAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new ArgumentException("labelId must be a GUID"));
+
+        var client = AuthorizedClient();
+        var resp = await client.PostAsJsonAsync("/v1/sites/label",
+            new { SiteUrl = "https://test.sharepoint.com/sites/x", LabelId = "lbl" });
+
+        Assert.Equal(HttpStatusCode.BadRequest, resp.StatusCode);
     }
 }

@@ -106,6 +106,8 @@ docker build -t partner365:latest .
 curl http://localhost:8000/health
 ```
 
+The bridge also ships as a Windows Service for on-prem Windows hosts — see `bridge/windows/README.md` for install.
+
 ## Environment
 
 Requires `MICROSOFT_GRAPH_TENANT_ID`, `MICROSOFT_GRAPH_CLIENT_ID`, `MICROSOFT_GRAPH_CLIENT_SECRET` in `.env`. Config in `config/graph.php`.
