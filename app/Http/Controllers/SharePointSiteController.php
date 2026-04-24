@@ -40,7 +40,7 @@ class SharePointSiteController extends Controller
         ]);
     }
 
-    public function show(SharePointSite $sharePointSite): Response
+    public function show(SharePointSite $sharePointSite, \Illuminate\Http\Request $request): Response
     {
         $sharePointSite->load([
             'sensitivityLabel',
@@ -57,6 +57,7 @@ class SharePointSiteController extends Controller
             'site' => $sharePointSite,
             'availableLabels' => $availableLabels,
             'isExcluded' => $isExcluded,
+            'canManage' => $request->user()->role->canManage(),
         ]);
     }
 
