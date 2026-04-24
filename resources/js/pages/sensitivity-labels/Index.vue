@@ -127,10 +127,7 @@ function formatScope(scope: string[] | null): string {
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    <template
-                        v-for="label in labels.data"
-                        :key="label.id"
-                    >
+                    <template v-for="label in labels.data" :key="label.id">
                         <TableRow>
                             <TableCell>
                                 <Link
@@ -150,14 +147,10 @@ function formatScope(scope: string[] | null): string {
                             <TableCell>
                                 <Badge
                                     :variant="
-                                        protectionVariant(
-                                            label.protection_type,
-                                        )
+                                        protectionVariant(label.protection_type)
                                     "
                                 >
-                                    {{
-                                        protectionLabel(label.protection_type)
-                                    }}
+                                    {{ protectionLabel(label.protection_type) }}
                                 </Badge>
                             </TableCell>
                             <TableCell>{{
@@ -167,15 +160,11 @@ function formatScope(scope: string[] | null): string {
                             <TableCell>
                                 <Badge
                                     :variant="
-                                        label.is_active
-                                            ? 'default'
-                                            : 'outline'
+                                        label.is_active ? 'default' : 'outline'
                                     "
                                 >
                                     {{
-                                        label.is_active
-                                            ? 'Active'
-                                            : 'Inactive'
+                                        label.is_active ? 'Active' : 'Inactive'
                                     }}
                                 </Badge>
                             </TableCell>
@@ -206,14 +195,10 @@ function formatScope(scope: string[] | null): string {
                             <TableCell>
                                 <Badge
                                     :variant="
-                                        protectionVariant(
-                                            child.protection_type,
-                                        )
+                                        protectionVariant(child.protection_type)
                                     "
                                 >
-                                    {{
-                                        protectionLabel(child.protection_type)
-                                    }}
+                                    {{ protectionLabel(child.protection_type) }}
                                 </Badge>
                             </TableCell>
                             <TableCell>{{
@@ -223,15 +208,11 @@ function formatScope(scope: string[] | null): string {
                             <TableCell>
                                 <Badge
                                     :variant="
-                                        child.is_active
-                                            ? 'default'
-                                            : 'outline'
+                                        child.is_active ? 'default' : 'outline'
                                     "
                                 >
                                     {{
-                                        child.is_active
-                                            ? 'Active'
-                                            : 'Inactive'
+                                        child.is_active ? 'Active' : 'Inactive'
                                     }}
                                 </Badge>
                             </TableCell>

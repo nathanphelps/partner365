@@ -199,8 +199,7 @@ function accessPolicyVariant(
                 class="flex items-center justify-between"
             >
                 <p class="text-sm text-muted-foreground">
-                    Showing {{ sites.data.length }} of
-                    {{ sites.total }} sites
+                    Showing {{ sites.data.length }} of {{ sites.total }} sites
                 </p>
                 <div class="flex gap-1">
                     <template v-for="link in sites.links" :key="link.label">

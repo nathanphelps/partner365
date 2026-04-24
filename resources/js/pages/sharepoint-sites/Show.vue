@@ -190,7 +190,9 @@ function grantedViaLabel(via: string): string {
                     <CardTitle>Access Controls</CardTitle>
                 </CardHeader>
                 <CardContent class="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-                    <span class="text-muted-foreground">Conditional Access</span>
+                    <span class="text-muted-foreground"
+                        >Conditional Access</span
+                    >
                     <span>
                         <Badge
                             :variant="
@@ -213,9 +215,7 @@ function grantedViaLabel(via: string): string {
                     <span class="text-muted-foreground"
                         >Limited Access File Type</span
                     >
-                    <span>{{
-                        site.limited_access_file_type ?? '\u2014'
-                    }}</span>
+                    <span>{{ site.limited_access_file_type ?? '\u2014' }}</span>
 
                     <span class="text-muted-foreground">Allow Download</span>
                     <span>{{
@@ -231,30 +231,26 @@ function grantedViaLabel(via: string): string {
                         <span class="text-muted-foreground"
                             >Domain Restriction Mode</span
                         >
-                        <span>{{
-                            site.sharing_domain_restriction_mode
-                        }}</span>
+                        <span>{{ site.sharing_domain_restriction_mode }}</span>
 
                         <template v-if="site.sharing_allowed_domain_list">
                             <span class="text-muted-foreground"
                                 >Allowed Domains</span
                             >
-                            <span>{{
-                                site.sharing_allowed_domain_list
-                            }}</span>
+                            <span>{{ site.sharing_allowed_domain_list }}</span>
                         </template>
 
                         <template v-if="site.sharing_blocked_domain_list">
                             <span class="text-muted-foreground"
                                 >Blocked Domains</span
                             >
-                            <span>{{
-                                site.sharing_blocked_domain_list
-                            }}</span>
+                            <span>{{ site.sharing_blocked_domain_list }}</span>
                         </template>
                     </template>
 
-                    <template v-if="site.external_user_expiration_days !== null">
+                    <template
+                        v-if="site.external_user_expiration_days !== null"
+                    >
                         <span class="text-muted-foreground"
                             >External User Expiration</span
                         >

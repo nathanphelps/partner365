@@ -11,7 +11,12 @@ export type SensitivityLabel = {
     priority: number;
     is_active: boolean;
     parent_label_id: number | null;
-    protection_type: 'encryption' | 'watermark' | 'header_footer' | 'none' | 'unknown';
+    protection_type:
+        | 'encryption'
+        | 'watermark'
+        | 'header_footer'
+        | 'none'
+        | 'unknown';
     synced_at: string | null;
     partners_count?: number;
     partners?: (PartnerOrganization & {
