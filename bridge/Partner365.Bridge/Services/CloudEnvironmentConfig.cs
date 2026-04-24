@@ -2,8 +2,25 @@ using Azure.Identity;
 
 namespace Partner365.Bridge.Services;
 
-public sealed record CloudEnvironmentConfig(Uri AuthorityHost, string CsomResourceScope, string CloudEnvironmentName)
+/// <summary>
+/// Tenant-scoped settings derived at startup from <c>BRIDGE_CLOUD_ENVIRONMENT</c>
+/// and <c>BRIDGE_ADMIN_SITE_URL</c>. Construct via <see cref="For"/> only — the
+/// factory validates inputs and the constructor is private so there is no other
+/// way to produce an instance with unchecked values.
+/// </summary>
+public sealed record CloudEnvironmentConfig
 {
+    public Uri AuthorityHost { get; }
+    public string CsomResourceScope { get; }
+    public string CloudEnvironmentName { get; }
+
+    private CloudEnvironmentConfig(Uri authorityHost, string csomResourceScope, string cloudEnvironmentName)
+    {
+        AuthorityHost = authorityHost;
+        CsomResourceScope = csomResourceScope;
+        CloudEnvironmentName = cloudEnvironmentName;
+    }
+
     public static CloudEnvironmentConfig For(string cloudEnvironment, string adminSiteUrl)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(cloudEnvironment);

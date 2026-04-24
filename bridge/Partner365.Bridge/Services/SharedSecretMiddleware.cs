@@ -39,6 +39,17 @@ public sealed class SharedSecretMiddleware
 
         var providedBytes = Encoding.UTF8.GetBytes(provided.ToString());
 
+        // Refuse to accept an empty secret even if the server is misconfigured with one —
+        // a deployment with BRIDGE_SHARED_SECRET="" must NOT accidentally become an
+        // unauthenticated service.
+        if (_expectedBytes.Length == 0 || providedBytes.Length == 0)
+        {
+            _logger?.LogWarning("Bridge auth rejected (empty secret) path={Path} remote={Remote}",
+                ctx.Request.Path, ctx.Connection.RemoteIpAddress);
+            await Reject(ctx, "missing_secret", "Empty secret rejected.");
+            return;
+        }
+
         if (providedBytes.Length != _expectedBytes.Length ||
             !CryptographicOperations.FixedTimeEquals(providedBytes, _expectedBytes))
         {

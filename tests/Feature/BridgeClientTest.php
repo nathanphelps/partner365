@@ -143,6 +143,44 @@ test('setLabel maps connection failure to BridgeUnavailableException', function 
         ->toThrow(BridgeUnavailableException::class);
 });
 
+test('setLabel maps 401 (bad shared secret) to BridgeConfigException', function () {
+    Http::fake([
+        'bridge-test:8080/v1/sites/label*' => Http::response([
+            'error' => ['code' => 'missing_secret', 'message' => 'bad secret', 'requestId' => 'r'],
+        ], 401),
+    ]);
+
+    $thrown = null;
+    try {
+        app(BridgeClient::class)->setLabel('https://a/sites/x', 'lbl', false);
+    } catch (\Throwable $e) {
+        $thrown = $e;
+    }
+
+    expect($thrown)->toBeInstanceOf(BridgeConfigException::class);
+    expect($thrown->getMessage())->toContain('shared secret');
+});
+
+test('setLabel maps 400 (bad request from bridge) to BridgeUnknownException', function () {
+    Http::fake([
+        'bridge-test:8080/v1/sites/label*' => Http::response([
+            'error' => ['code' => 'bad_request', 'message' => 'siteUrl rejected', 'requestId' => 'r'],
+        ], 400),
+    ]);
+
+    expect(fn () => app(BridgeClient::class)->setLabel('https://a/sites/x', 'lbl', false))
+        ->toThrow(BridgeUnknownException::class);
+});
+
+test('readLabel connection failure maps to BridgeUnavailableException', function () {
+    Http::fake([
+        'bridge-test:8080/v1/sites/label:read*' => fn () => throw new \Illuminate\Http\Client\ConnectionException('dns'),
+    ]);
+
+    expect(fn () => app(BridgeClient::class)->readLabel('https://a/sites/x'))
+        ->toThrow(BridgeUnavailableException::class);
+});
+
 test('readLabel returns null when bridge reports unlabeled', function () {
     Http::fake([
         'bridge-test:8080/v1/sites/label:read*' => Http::response([

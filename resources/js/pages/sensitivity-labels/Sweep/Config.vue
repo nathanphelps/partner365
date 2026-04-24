@@ -141,9 +141,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                     </span>
                     <span v-if="lastRun" class="text-sm text-gray-500">
                         Last run #{{ lastRun.id }} — {{ lastRun.status }},
-                        {{ lastRun.applied }}/{{
-                            lastRun.total_scanned
-                        }}
+                        {{ lastRun.applied }}/{{ lastRun.total_scanned }}
                         applied
                     </span>
                 </div>

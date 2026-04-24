@@ -21,7 +21,9 @@ Use this checklist when wiring a new tenant, rotating certs, or verifying a rele
 
 3. Authoritative label read via Partner365 `tinker`:
     ```bash
-    docker compose exec app php artisan tinker --execute="echo app(App\Services\BridgeClient::class)->readLabel('https://<tenant>.sharepoint.us/sites/<TestSite>');"
+    # Commercial: https://<tenant>.sharepoint.com/sites/<TestSite>
+    # GCC High:   https://<tenant>.sharepoint.us/sites/<TestSite>
+    docker compose exec app php artisan tinker --execute="echo app(App\Services\BridgeClient::class)->readLabel('https://<tenant>.sharepoint.com/sites/<TestSite>');"
     ```
     Cross-check against the SharePoint admin center's Sensitivity column for the same site.
 

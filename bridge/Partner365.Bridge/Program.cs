@@ -17,7 +17,10 @@ var secret = RequireEnv("BRIDGE_SHARED_SECRET");
 
 var cloudCfg = CloudEnvironmentConfig.For(cloudEnv, adminUrl);
 
-// Cert load is deferred when running under the integration test harness.
+// BRIDGE_CERT_PATH="__TEST__" is the only sentinel — it skips cert load so that
+// BridgeFactory (integration tests) can start the host without a real PFX and then
+// inject a mock ICsomOperations. Certificate thumbprint is then reported as null
+// in /health responses rather than leaking the sentinel to clients.
 System.Security.Cryptography.X509Certificates.X509Certificate2? cert = null;
 if (certPath != "__TEST__")
 {
@@ -27,7 +30,7 @@ if (certPath != "__TEST__")
 builder.Services.AddSingleton(cloudCfg);
 builder.Services.AddSingleton(_ => new BridgeStartupInfo(
     CloudEnvironmentName: cloudCfg.CloudEnvironmentName,
-    CertThumbprint: cert?.Thumbprint ?? "__TEST__"));
+    CertThumbprint: cert?.Thumbprint));
 
 if (cert is not null)
 {
@@ -169,6 +172,6 @@ static string RequireEnv(string name)
     return v;
 }
 
-public sealed record BridgeStartupInfo(string CloudEnvironmentName, string CertThumbprint);
+public sealed record BridgeStartupInfo(string CloudEnvironmentName, string? CertThumbprint);
 
 public partial class Program { }

@@ -72,7 +72,7 @@ docker compose logs -f bridge
 ```
 
 Expected first lines: cert thumbprint, cloud environment, Kestrel bind. If the bridge fails here, check:
-- `BRIDGE_CERT_PATH` is reachable inside the container.
+- `BRIDGE_CERT_HOST_PATH` (host side) points at a real PFX file. The container sees it at `/run/secrets/bridge.pfx` via the bind mount.
 - Cert password is correct.
 - `BRIDGE_ADMIN_SITE_URL` contains `-admin.` (the bridge will refuse to start otherwise).
 
@@ -91,7 +91,7 @@ Expected first lines: cert thumbprint, cloud environment, Kestrel bind. If the b
 docker compose exec app php artisan sensitivity:sweep --force --dry-run
 ```
 
-Open Sweep history. The run should show `status=success`, every scanned site listed with `action=applied` and the message `[dry-run] would apply` in the error column. No site in SharePoint was actually relabeled.
+Open Sweep history. Every scanned site is listed with `action=applied` and the message `[dry-run] would apply` in the error column. No site in SharePoint was actually relabeled. Note: the run initially shows `status=running` and transitions to `success` once `CompleteSweepRunJob` fires — usually within seconds of dispatch (when the batch has zero jobs) or after the last apply job settles for a live sweep.
 
 ## Step 7 — First live sweep
 

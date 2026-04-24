@@ -109,3 +109,96 @@ test('refresh with bridge unavailable flashes error', function () {
         ->assertRedirect()
         ->assertSessionHas('error');
 });
+
+test('refresh with bridge returning null clears the label locally', function () {
+    $label = SensitivityLabel::create(['label_id' => 'lbl', 'name' => 'Conf', 'protection_type' => 'none']);
+    $site = SharePointSite::create([
+        'site_id' => 'sid2',
+        'display_name' => 'Test',
+        'url' => 'https://a/sites/Test',
+        'sensitivity_label_id' => $label->id,
+        'synced_at' => now(),
+    ]);
+
+    $mock = mock(BridgeClient::class);
+    $mock->shouldReceive('readLabel')->andReturn(null);
+    $this->app->instance(BridgeClient::class, $mock);
+
+    $admin = User::factory()->create(['role' => UserRole::Admin, 'approved_at' => now(), 'email_verified_at' => now()]);
+    $this->actingAs($admin)
+        ->post(route('sharepoint-sites.refresh-label', $site))
+        ->assertRedirect()
+        ->assertSessionHas('success');
+
+    expect($site->fresh()->sensitivity_label_id)->toBeNull();
+});
+
+test('refresh with unknown GUID keeps local state and flashes warning', function () {
+    $label = SensitivityLabel::create(['label_id' => 'known', 'name' => 'Known', 'protection_type' => 'none']);
+    $site = SharePointSite::create([
+        'site_id' => 'sid3',
+        'display_name' => 'Test',
+        'url' => 'https://a/sites/Test',
+        'sensitivity_label_id' => $label->id,
+        'synced_at' => now(),
+    ]);
+
+    $mock = mock(BridgeClient::class);
+    $mock->shouldReceive('readLabel')->andReturn('orphan-guid-not-in-catalog');
+    $this->app->instance(BridgeClient::class, $mock);
+
+    $admin = User::factory()->create(['role' => UserRole::Admin, 'approved_at' => now(), 'email_verified_at' => now()]);
+    $this->actingAs($admin)
+        ->post(route('sharepoint-sites.refresh-label', $site))
+        ->assertRedirect()
+        ->assertSessionHas('warning');
+
+    // Local state NOT overwritten — user would otherwise think the label was deleted.
+    expect($site->fresh()->sensitivity_label_id)->toBe($label->id);
+});
+
+test('refresh emits LabelRefreshed audit log', function () {
+    SensitivityLabel::create(['label_id' => 'lbl', 'name' => 'Conf', 'protection_type' => 'none']);
+    $site = makeSiteRow();
+
+    $mock = mock(BridgeClient::class);
+    $mock->shouldReceive('readLabel')->andReturn('lbl');
+    $this->app->instance(BridgeClient::class, $mock);
+
+    $admin = User::factory()->create(['role' => UserRole::Admin, 'approved_at' => now(), 'email_verified_at' => now()]);
+    $this->actingAs($admin)->post(route('sharepoint-sites.refresh-label', $site));
+
+    expect(ActivityLog::where('action', ActivityAction::LabelRefreshed->value)->count())->toBe(1);
+});
+
+test('apply flashes throttle friendly message', function () {
+    SensitivityLabel::create(['label_id' => 'lbl', 'name' => 'Conf', 'protection_type' => 'none']);
+    $site = makeSiteRow();
+
+    $mock = mock(BridgeClient::class);
+    $mock->shouldReceive('setLabel')->andThrow(new \App\Services\Exceptions\BridgeThrottleException('429'));
+    $this->app->instance(BridgeClient::class, $mock);
+
+    $admin = User::factory()->create(['role' => UserRole::Admin, 'approved_at' => now(), 'email_verified_at' => now()]);
+    $this->actingAs($admin)
+        ->post(route('sharepoint-sites.apply-label', $site), ['label_id' => 'lbl'])
+        ->assertRedirect();
+
+    expect(session('error'))->toContain('rate-limiting');
+});
+
+test('apply flashes unavailable friendly message', function () {
+    SensitivityLabel::create(['label_id' => 'lbl', 'name' => 'Conf', 'protection_type' => 'none']);
+    $site = makeSiteRow();
+
+    $mock = mock(BridgeClient::class);
+    $mock->shouldReceive('setLabel')->andThrow(new BridgeUnavailableException('down'));
+    $this->app->instance(BridgeClient::class, $mock);
+
+    $admin = User::factory()->create(['role' => UserRole::Admin, 'approved_at' => now(), 'email_verified_at' => now()]);
+    $this->actingAs($admin)
+        ->post(route('sharepoint-sites.apply-label', $site), ['label_id' => 'lbl'])
+        ->assertRedirect();
+
+    expect(session('error'))->toContain('not reachable');
+});

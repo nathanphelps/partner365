@@ -60,4 +60,14 @@ public class SharedSecretMiddlewareTests
         var status = await Invoke(provided, expected);
         Assert.Equal(401, status);
     }
+
+    [Fact]
+    public async Task Empty_server_secret_still_rejects_empty_provided()
+    {
+        // Guard against a misconfigured deployment (BRIDGE_SHARED_SECRET="") accidentally
+        // turning the bridge into an unauthenticated service. The middleware must reject
+        // an empty provided header even when the expected secret is also empty.
+        var status = await Invoke("", "");
+        Assert.Equal(401, status);
+    }
 }
