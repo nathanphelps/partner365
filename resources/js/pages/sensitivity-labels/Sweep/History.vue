@@ -2,6 +2,17 @@
 import { Head, Link } from '@inertiajs/vue3';
 import * as SweepConfigController from '@/actions/App/Http/Controllers/SensitivityLabelSweepConfigController';
 import * as SweepHistoryController from '@/actions/App/Http/Controllers/SensitivityLabelSweepHistoryController';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { dashboard } from '@/routes';
 import type { BreadcrumbItem } from '@/types';
@@ -30,12 +41,13 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Sweep History', href: SweepHistoryController.index.url() },
 ];
 
-function statusBadge(status: string): string {
-    if (status === 'success') return 'bg-green-100 text-green-800';
-    if (status === 'partial_failure') return 'bg-yellow-100 text-yellow-800';
-    if (status === 'failed' || status === 'aborted')
-        return 'bg-red-100 text-red-800';
-    return 'bg-gray-100 text-gray-800';
+function statusVariant(
+    status: string,
+): 'default' | 'destructive' | 'outline' | 'secondary' {
+    if (status === 'success') return 'default';
+    if (status === 'partial_failure') return 'secondary';
+    if (status === 'failed' || status === 'aborted') return 'destructive';
+    return 'outline';
 }
 
 function duration(run: Run): string {
@@ -52,75 +64,70 @@ function duration(run: Run): string {
     <Head title="Sweep Run History" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
-        <div class="mx-auto max-w-5xl space-y-4 p-6">
-            <header class="flex items-center justify-between">
-                <h1 class="text-2xl font-semibold">Sweep run history</h1>
-                <Link
-                    :href="SweepConfigController.show.url()"
-                    class="text-sm text-blue-600 hover:underline"
-                >
-                    Configuration
-                </Link>
-            </header>
+        <div class="flex flex-col gap-6 p-6">
+            <div class="flex items-start justify-between gap-4">
+                <div>
+                    <h1 class="text-2xl font-semibold">Sweep run history</h1>
+                    <p class="mt-1 text-sm text-muted-foreground">
+                        Recent sensitivity-label sweep runs and their outcomes.
+                    </p>
+                </div>
+                <Button variant="outline" as-child>
+                    <Link :href="SweepConfigController.show.url()">
+                        Configuration
+                    </Link>
+                </Button>
+            </div>
 
-            <table class="w-full rounded-lg border bg-white text-sm shadow-sm">
-                <thead>
-                    <tr class="border-b text-left">
-                        <th class="px-3 py-2">#</th>
-                        <th class="px-3 py-2">Started</th>
-                        <th class="px-3 py-2">Duration</th>
-                        <th class="px-3 py-2 text-right">Scanned</th>
-                        <th class="px-3 py-2 text-right">Applied</th>
-                        <th class="px-3 py-2 text-right">Failed</th>
-                        <th class="px-3 py-2">Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr
-                        v-for="run in runs.data"
-                        :key="run.id"
-                        class="border-b hover:bg-blue-50"
-                    >
-                        <td class="px-3 py-2">
+            <Card v-if="runs.data.length === 0">
+                <CardContent class="py-12 text-center text-muted-foreground">
+                    No sweep runs yet.
+                </CardContent>
+            </Card>
+
+            <Table v-else>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead>#</TableHead>
+                        <TableHead>Started</TableHead>
+                        <TableHead>Duration</TableHead>
+                        <TableHead class="text-right">Scanned</TableHead>
+                        <TableHead class="text-right">Applied</TableHead>
+                        <TableHead class="text-right">Failed</TableHead>
+                        <TableHead>Status</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    <TableRow v-for="run in runs.data" :key="run.id">
+                        <TableCell>
                             <Link
                                 :href="SweepHistoryController.show.url(run.id)"
-                                class="text-blue-600 hover:underline"
+                                class="font-medium hover:underline"
                             >
                                 #{{ run.id }}
                             </Link>
-                        </td>
-                        <td class="px-3 py-2">
+                        </TableCell>
+                        <TableCell>
                             {{ new Date(run.started_at).toLocaleString() }}
-                        </td>
-                        <td class="px-3 py-2">{{ duration(run) }}</td>
-                        <td class="px-3 py-2 text-right tabular-nums">
+                        </TableCell>
+                        <TableCell>{{ duration(run) }}</TableCell>
+                        <TableCell class="text-right tabular-nums">
                             {{ run.total_scanned }}
-                        </td>
-                        <td class="px-3 py-2 text-right tabular-nums">
+                        </TableCell>
+                        <TableCell class="text-right tabular-nums">
                             {{ run.applied }}
-                        </td>
-                        <td class="px-3 py-2 text-right tabular-nums">
+                        </TableCell>
+                        <TableCell class="text-right tabular-nums">
                             {{ run.failed }}
-                        </td>
-                        <td class="px-3 py-2">
-                            <span
-                                class="inline-flex items-center rounded px-2 py-0.5 text-xs font-medium"
-                                :class="statusBadge(run.status)"
-                            >
+                        </TableCell>
+                        <TableCell>
+                            <Badge :variant="statusVariant(run.status)">
                                 {{ run.status }}
-                            </span>
-                        </td>
-                    </tr>
-                    <tr v-if="runs.data.length === 0">
-                        <td
-                            colspan="7"
-                            class="px-3 py-6 text-center text-gray-500"
-                        >
-                            No sweep runs yet.
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+                            </Badge>
+                        </TableCell>
+                    </TableRow>
+                </TableBody>
+            </Table>
         </div>
     </AppLayout>
 </template>
