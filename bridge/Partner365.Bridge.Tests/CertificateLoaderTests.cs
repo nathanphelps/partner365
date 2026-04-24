@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
+using Partner365.Bridge;
 using Partner365.Bridge.Services;
 using Xunit;
 
@@ -65,5 +66,42 @@ public class CertificateLoaderTests : IDisposable
         {
             if (File.Exists(path)) File.Delete(path);
         }
+    }
+
+    [Fact]
+    public void Load_throws_when_neither_path_nor_thumbprint_set()
+    {
+        var opts = new BridgeOptions
+        {
+            CloudEnvironment = "gcc_high",
+            TenantId = "t",
+            ClientId = "c",
+            AdminSiteUrl = "https://x-admin.sharepoint.com",
+            SharedSecret = "s",
+            ListenUrl = "http://127.0.0.1:5300",
+        };
+
+        var ex = Assert.Throws<InvalidOperationException>(() => CertificateLoader.Load(opts));
+        Assert.Contains("cert source not configured", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Load_dispatches_to_pfx_when_CertPath_set()
+    {
+        var opts = new BridgeOptions
+        {
+            CloudEnvironment = "gcc_high",
+            TenantId = "t",
+            ClientId = "c",
+            AdminSiteUrl = "https://x-admin.sharepoint.com",
+            SharedSecret = "s",
+            ListenUrl = "http://127.0.0.1:5300",
+            CertPath = _tempPfxPath,
+            CertPassword = _password,
+        };
+
+        var cert = CertificateLoader.Load(opts);
+        Assert.NotNull(cert);
+        Assert.True(cert.HasPrivateKey);
     }
 }
