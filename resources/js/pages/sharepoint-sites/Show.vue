@@ -51,6 +51,11 @@ function submitApply() {
         onSuccess: () => {
             showApplyDialog.value = false;
         },
+        // On error, keep the dialog open so the user can retry or cancel.
+        // The global FlashMessages component surfaces the server-side error.
+        onError: () => {
+            showApplyDialog.value = true;
+        },
     });
 }
 

@@ -12,7 +12,9 @@ use App\Models\SharePointSite;
 use App\Models\SiteExclusion;
 use App\Services\BridgeClient;
 use App\Services\Exceptions\BridgeException;
+use Illuminate\Bus\Batch;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Bus;
 
 class SensitivitySweepCommand extends Command
 {
@@ -56,7 +58,8 @@ class SensitivitySweepCommand extends Command
             ]);
             $this->error('Bridge unreachable: '.$e->getMessage());
 
-            return Command::SUCCESS;
+            // Non-zero exit propagates to schedule:run monitors and CI.
+            return Command::FAILURE;
         }
 
         $exclusions = SiteExclusion::pluck('pattern')->all();
@@ -72,6 +75,8 @@ class SensitivitySweepCommand extends Command
         $scanned = 0;
         $alreadyLabeled = 0;
         $skippedExcluded = 0;
+        /** @var list<ApplySiteLabelJob> $pendingJobs */
+        $pendingJobs = [];
 
         foreach ($candidates as $site) {
             $scanned++;
@@ -85,8 +90,10 @@ class SensitivitySweepCommand extends Command
                     'action' => 'skipped_excluded',
                     'processed_at' => now(),
                 ]);
-                SharePointSite::where('id', $site->id)->delete();
 
+                // Do NOT delete the SharePointSite row. The row may have cascading
+                // relations (sharepoint_site_permissions) that represent audit-critical
+                // guest-access history. Exclusion is a sweep-time decision only.
                 continue;
             }
 
@@ -120,7 +127,7 @@ class SensitivitySweepCommand extends Command
                 continue;
             }
 
-            ApplySiteLabelJob::dispatch(
+            $pendingJobs[] = new ApplySiteLabelJob(
                 $run->id,
                 $site->url,
                 $site->display_name,
@@ -135,9 +142,24 @@ class SensitivitySweepCommand extends Command
             'skipped_excluded' => $skippedExcluded,
         ]);
 
-        CompleteSweepRunJob::dispatch($run->id)->delay(now()->addMinutes(30));
+        $runId = $run->id;
 
-        $this->info("Sweep run #{$run->id} dispatched. Scanned {$scanned}, excluded {$skippedExcluded}, already labeled {$alreadyLabeled}.");
+        if (count($pendingJobs) === 0) {
+            // Nothing to dispatch — finalize immediately so dashboards reflect the run.
+            CompleteSweepRunJob::dispatchSync($runId);
+        } else {
+            // Bus::batch completion fires after every apply job settles (success OR failed),
+            // so run finalization cannot race against in-flight retries.
+            Bus::batch($pendingJobs)
+                ->name("sensitivity-sweep-{$runId}")
+                ->allowFailures()
+                ->finally(function (Batch $batch) use ($runId) {
+                    CompleteSweepRunJob::dispatch($runId);
+                })
+                ->dispatch();
+        }
+
+        $this->info("Sweep run #{$runId} dispatched. Scanned {$scanned}, excluded {$skippedExcluded}, already labeled {$alreadyLabeled}.");
 
         return Command::SUCCESS;
     }

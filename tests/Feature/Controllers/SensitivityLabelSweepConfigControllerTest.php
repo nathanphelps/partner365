@@ -76,6 +76,7 @@ test('update saves settings, rules, exclusions', function () {
 
     expect((bool) Setting::get('sensitivity_sweep', 'enabled'))->toBeTrue();
     expect((int) Setting::get('sensitivity_sweep', 'interval_minutes'))->toBe(120);
+    expect((string) Setting::get('sensitivity_sweep', 'bridge_shared_secret'))->toBe('secret');
 
     $rules = LabelRule::orderBy('priority')->get();
     expect($rules)->toHaveCount(2);
@@ -87,6 +88,36 @@ test('update saves settings, rules, exclusions', function () {
     expect(SiteExclusion::count())->toBe(2);
 });
 
+test('update with empty secret keeps existing secret', function () {
+    Setting::set('sensitivity_sweep', 'bridge_shared_secret', 'old-secret', encrypted: true);
+
+    $this->actingAs(adminUser())
+        ->put(route('sensitivity-labels.sweep.config.update'), [
+            'enabled' => true,
+            'interval_minutes' => 60,
+            'default_label_id' => 'x',
+            'bridge_url' => 'http://bridge:8080',
+            'bridge_shared_secret' => '',
+            'rules' => [],
+            'exclusions' => [],
+        ])
+        ->assertRedirect();
+
+    // Existing encrypted secret is preserved on empty-string submit.
+    expect((string) Setting::get('sensitivity_sweep', 'bridge_shared_secret'))->toBe('old-secret');
+});
+
+test('show page masks the shared secret', function () {
+    Setting::set('sensitivity_sweep', 'bridge_shared_secret', 'top-secret-value', encrypted: true);
+
+    $this->actingAs(adminUser())
+        ->get(route('sensitivity-labels.sweep.config'))
+        ->assertInertia(fn ($p) => $p->component('sensitivity-labels/Sweep/Config')
+            ->where('settings.bridge_shared_secret_configured', true)
+            ->missing('settings.bridge_shared_secret')
+        );
+});
+
 test('update rejects empty rule prefix', function () {
     $this->actingAs(adminUser())
         ->put(route('sensitivity-labels.sweep.config.update'), [
@@ -94,7 +125,7 @@ test('update rejects empty rule prefix', function () {
             'interval_minutes' => 90,
             'default_label_id' => 'x',
             'bridge_url' => 'http://bridge:8080',
-            'bridge_shared_secret' => 's',
+            'bridge_shared_secret' => '',
             'rules' => [['prefix' => '', 'label_id' => 'a', 'priority' => 1]],
             'exclusions' => [],
         ])
@@ -108,9 +139,31 @@ test('update rejects empty exclusion pattern', function () {
             'interval_minutes' => 90,
             'default_label_id' => 'x',
             'bridge_url' => 'http://bridge:8080',
-            'bridge_shared_secret' => 's',
+            'bridge_shared_secret' => '',
             'rules' => [],
             'exclusions' => [['pattern' => '']],
         ])
         ->assertSessionHasErrors('exclusions.0.pattern');
+});
+
+test('update replaces existing rules and exclusions', function () {
+    LabelRule::create(['prefix' => 'OLD', 'label_id' => 'stale', 'priority' => 1]);
+    SiteExclusion::create(['pattern' => '/sites/oldPattern']);
+
+    $this->actingAs(adminUser())
+        ->put(route('sensitivity-labels.sweep.config.update'), [
+            'enabled' => true,
+            'interval_minutes' => 60,
+            'default_label_id' => 'x',
+            'bridge_url' => 'http://bridge:8080',
+            'bridge_shared_secret' => '',
+            'rules' => [['prefix' => 'NEW', 'label_id' => 'new-lbl', 'priority' => 1]],
+            'exclusions' => [['pattern' => '/sites/newPattern']],
+        ])
+        ->assertRedirect();
+
+    expect(LabelRule::count())->toBe(1);
+    expect(LabelRule::first()->prefix)->toBe('NEW');
+    expect(SiteExclusion::count())->toBe(1);
+    expect(SiteExclusion::first()->pattern)->toBe('/sites/newPattern');
 });

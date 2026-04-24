@@ -48,6 +48,7 @@ enum ActivityAction: string
     case GraphConnectionTested = 'graph_connection_tested';
     case ConsentGranted = 'consent_granted';
     case LabelApplied = 'label_applied';
+    case LabelRefreshed = 'label_refreshed';
     case RuleChanged = 'rule_changed';
     case ExclusionChanged = 'exclusion_changed';
     case SweepRan = 'sweep_ran';

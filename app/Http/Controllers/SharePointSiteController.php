@@ -89,7 +89,11 @@ class SharePointSiteController extends Controller
     public function refreshLabel(
         SharePointSite $sharePointSite,
         BridgeClient $bridge,
+        ActivityLogService $log,
+        \Illuminate\Http\Request $request,
     ): RedirectResponse {
+        $previousLabelId = $sharePointSite->sensitivity_label_id;
+
         try {
             $labelId = $bridge->readLabel($sharePointSite->url);
         } catch (BridgeException $e) {
@@ -98,15 +102,41 @@ class SharePointSiteController extends Controller
 
         if ($labelId === null) {
             $sharePointSite->update(['sensitivity_label_id' => null, 'synced_at' => now()]);
+            $flash = ['success', 'Label refreshed — SharePoint reports the site as unlabeled.'];
         } else {
             $label = SensitivityLabel::where('label_id', $labelId)->first();
+
+            if ($label === null) {
+                // SharePoint returned a label GUID that is not in our local catalog.
+                // Don't overwrite local state — it would look to the user like we deleted the label.
+                // Instruct the admin to run the label catalog sync.
+                return redirect()->back()->with(
+                    'warning',
+                    "SharePoint reports label GUID '{$labelId}', which is not in the local catalog. ".
+                    'Run `php artisan sync:sensitivity-labels` and try again.',
+                );
+            }
+
             $sharePointSite->update([
-                'sensitivity_label_id' => $label?->id,
+                'sensitivity_label_id' => $label->id,
                 'synced_at' => now(),
             ]);
+            $flash = ['success', "Label refreshed: {$label->name}."];
         }
 
-        return redirect()->back()->with('success', 'Label refreshed from SharePoint.');
+        $log->log(
+            $request->user(),
+            ActivityAction::LabelRefreshed,
+            subject: $sharePointSite,
+            details: [
+                'site_url' => $sharePointSite->url,
+                'previous_label_id' => $previousLabelId,
+                'new_label_id' => $sharePointSite->fresh()->sensitivity_label_id,
+                'spo_label_guid' => $labelId,
+            ],
+        );
+
+        return redirect()->back()->with($flash[0], $flash[1]);
     }
 
     private function friendlyMessage(BridgeException $e): string

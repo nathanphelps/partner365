@@ -3,6 +3,8 @@
 namespace App\Jobs;
 
 use App\Enums\ActivityAction;
+use App\Enums\SweepEntryAction;
+use App\Enums\SweepRunStatus;
 use App\Models\LabelSweepRun;
 use App\Models\LabelSweepRunEntry;
 use App\Services\ActivityLogService;
@@ -19,6 +21,9 @@ class CompleteSweepRunJob implements ShouldQueue
     use Queueable;
     use SerializesModels;
 
+    /** Maximum sweep runs to retain; older runs are trimmed after each completion. */
+    private const RETENTION_LIMIT = 500;
+
     public function __construct(public readonly int $runId) {}
 
     public function handle(): void
@@ -26,6 +31,10 @@ class CompleteSweepRunJob implements ShouldQueue
         $run = LabelSweepRun::find($this->runId);
 
         if (! $run) {
+            \Log::warning('CompleteSweepRunJob: run not found (likely trimmed)', [
+                'run_id' => $this->runId,
+            ]);
+
             return;
         }
 
@@ -35,15 +44,16 @@ class CompleteSweepRunJob implements ShouldQueue
             ->pluck('c', 'action')
             ->all();
 
-        $applied = (int) ($counts['applied'] ?? 0);
-        $failed = (int) ($counts['failed'] ?? 0);
-        $skippedLabeled = (int) ($counts['skipped_labeled'] ?? 0);
-        $skippedExcluded = (int) ($counts['skipped_excluded'] ?? 0);
+        $applied = (int) ($counts[SweepEntryAction::Applied->value] ?? 0);
+        $failed = (int) ($counts[SweepEntryAction::Failed->value] ?? 0);
+        $skippedLabeled = (int) ($counts[SweepEntryAction::SkippedLabeled->value] ?? 0);
+        $skippedExcluded = (int) ($counts[SweepEntryAction::SkippedExcluded->value] ?? 0);
 
         $status = match (true) {
-            $run->status === 'aborted' => 'aborted',
-            $failed > 0 => 'partial_failure',
-            default => 'success',
+            // Aborted runs stay aborted — do not promote to partial_failure or success.
+            $run->status === SweepRunStatus::Aborted => SweepRunStatus::Aborted,
+            $failed > 0 => SweepRunStatus::PartialFailure,
+            default => SweepRunStatus::Success,
         };
 
         $run->update([
@@ -60,7 +70,7 @@ class CompleteSweepRunJob implements ShouldQueue
             subject: $run,
             details: [
                 'run_id' => $run->id,
-                'status' => $status,
+                'status' => $status->value,
                 'applied' => $applied,
                 'failed' => $failed,
             ],
@@ -71,9 +81,8 @@ class CompleteSweepRunJob implements ShouldQueue
 
     private function trimHistory(): void
     {
-        $keep = 500;
         $ids = LabelSweepRun::orderByDesc('started_at')
-            ->skip($keep)
+            ->skip(self::RETENTION_LIMIT)
             ->take(10_000)
             ->pluck('id');
 

@@ -47,9 +47,10 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 var app = builder.Build();
 
 // --- Middleware: shared secret on all /v1/* ---
+var middlewareLogger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger<SharedSecretMiddleware>();
 app.Use(async (ctx, next) =>
 {
-    var mw = new SharedSecretMiddleware(_ => next(), secret);
+    var mw = new SharedSecretMiddleware(_ => next(), secret, middlewareLogger);
     await mw.Invoke(ctx);
 });
 
@@ -59,17 +60,38 @@ app.MapGet("/health", (BridgeStartupInfo info) =>
 
 app.MapPost("/v1/sites/label", async (
     [FromQuery] bool? overwrite,
-    [FromBody] SetLabelRequest req,
+    [FromBody] SetLabelRequest? req,
     SharePointCsomService svc,
     ILogger<Program> log,
     CancellationToken ct) =>
 {
     var requestId = Guid.NewGuid().ToString("N");
+
+    if (req is null)
+    {
+        return BadRequest(requestId, "Request body is required.");
+    }
+
+    try
+    {
+        SiteUrlValidator.EnsureInTenant(req.SiteUrl, adminUrl);
+    }
+    catch (ArgumentException ex)
+    {
+        log.LogInformation("{RequestId} set-label rejected: {Message}", requestId, ex.Message);
+        return BadRequest(requestId, ex.Message);
+    }
+
     try
     {
         var result = await svc.SetLabelAsync(req.SiteUrl, req.LabelId, overwrite ?? false, ct);
         log.LogInformation("{RequestId} set-label site={Site} fastPath={FastPath}", requestId, req.SiteUrl, result.FastPath);
         return Results.Ok(new SetLabelResponse(req.SiteUrl, req.LabelId, result.FastPath));
+    }
+    catch (OperationCanceledException)
+    {
+        // Client disconnected; don't classify as bridge failure.
+        throw;
     }
     catch (LabelConflictException ex)
     {
@@ -79,31 +101,61 @@ app.MapPost("/v1/sites/label", async (
     catch (Exception ex)
     {
         var code = ErrorClassifier.Classify(ex);
-        log.LogWarning(ex, "{RequestId} set-label failed site={Site} code={Code}", requestId, req.SiteUrl, code);
-        return Results.Json(new ErrorResponse(new ErrorBody(code, ex.Message, requestId)), statusCode: 502);
+        // Log at Error: this either classified into a known category (operator action needed)
+        // or fell through to "unknown" (author needs a new handler).
+        log.LogError(ex, "{RequestId} set-label failed site={Site} code={Code}", requestId, req.SiteUrl, code);
+        return Results.Json(new ErrorResponse(new ErrorBody(code, SanitizeMessage(ex), requestId)), statusCode: 502);
     }
 });
 
 app.MapPost("/v1/sites/label:read", async (
-    [FromBody] ReadLabelRequest req,
+    [FromBody] ReadLabelRequest? req,
     SharePointCsomService svc,
     ILogger<Program> log,
     CancellationToken ct) =>
 {
     var requestId = Guid.NewGuid().ToString("N");
+
+    if (req is null)
+    {
+        return BadRequest(requestId, "Request body is required.");
+    }
+
+    try
+    {
+        SiteUrlValidator.EnsureInTenant(req.SiteUrl, adminUrl);
+    }
+    catch (ArgumentException ex)
+    {
+        log.LogInformation("{RequestId} read-label rejected: {Message}", requestId, ex.Message);
+        return BadRequest(requestId, ex.Message);
+    }
+
     try
     {
         var labelId = await svc.ReadLabelAsync(req.SiteUrl, ct);
         log.LogInformation("{RequestId} read-label site={Site} labelId={LabelId}", requestId, req.SiteUrl, labelId ?? "(none)");
         return Results.Ok(new ReadLabelResponse(req.SiteUrl, labelId));
     }
+    catch (OperationCanceledException)
+    {
+        throw;
+    }
     catch (Exception ex)
     {
         var code = ErrorClassifier.Classify(ex);
-        log.LogWarning(ex, "{RequestId} read-label failed site={Site} code={Code}", requestId, req.SiteUrl, code);
-        return Results.Json(new ErrorResponse(new ErrorBody(code, ex.Message, requestId)), statusCode: 502);
+        log.LogError(ex, "{RequestId} read-label failed site={Site} code={Code}", requestId, req.SiteUrl, code);
+        return Results.Json(new ErrorResponse(new ErrorBody(code, SanitizeMessage(ex), requestId)), statusCode: 502);
     }
 });
+
+static IResult BadRequest(string requestId, string message) =>
+    Results.Json(new ErrorResponse(new ErrorBody("bad_request", message, requestId)), statusCode: 400);
+
+// Client-facing error messages drop server-internal details. Full exception info lives only in bridge logs,
+// cross-referenced by requestId.
+static string SanitizeMessage(Exception ex) =>
+    $"Bridge operation failed ({ex.GetType().Name}). See bridge logs.";
 
 app.Run();
 

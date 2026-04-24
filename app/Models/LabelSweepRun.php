@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\SweepRunStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -32,6 +33,7 @@ class LabelSweepRun extends Model
             'applied' => 'integer',
             'skipped_excluded' => 'integer',
             'failed' => 'integer',
+            'status' => SweepRunStatus::class,
         ];
     }
 

@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Enums\ActivityAction;
+use App\Enums\SweepRunStatus;
 use App\Enums\UserRole;
 use App\Models\LabelSweepRun;
 use App\Models\User;
@@ -28,12 +29,12 @@ class AbortSweepRunJob implements ShouldQueue
     {
         $run = LabelSweepRun::find($this->runId);
 
-        if (! $run || $run->status === 'aborted') {
+        if (! $run || $run->status === SweepRunStatus::Aborted) {
             return;
         }
 
         $run->update([
-            'status' => 'aborted',
+            'status' => SweepRunStatus::Aborted,
             'error_message' => 'Aborted after 3 systemic failures (auth/certificate). See run entries for details.',
             'completed_at' => now(),
         ]);

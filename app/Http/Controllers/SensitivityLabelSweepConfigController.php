@@ -28,13 +28,17 @@ class SensitivityLabelSweepConfigController extends Controller
             $bridgeError = $e->getMessage();
         }
 
+        // Shared secret is encrypted at rest and never returned to the browser —
+        // the admin sees only whether it is configured. Rotation requires re-entering it.
+        $bridgeSecret = (string) Setting::get('sensitivity_sweep', 'bridge_shared_secret', '');
+
         return Inertia::render('sensitivity-labels/Sweep/Config', [
             'settings' => [
                 'enabled' => (bool) Setting::get('sensitivity_sweep', 'enabled', false),
                 'interval_minutes' => (int) Setting::get('sensitivity_sweep', 'interval_minutes', 90),
                 'default_label_id' => (string) Setting::get('sensitivity_sweep', 'default_label_id', ''),
                 'bridge_url' => (string) Setting::get('sensitivity_sweep', 'bridge_url', 'http://bridge:8080'),
-                'bridge_shared_secret' => (string) Setting::get('sensitivity_sweep', 'bridge_shared_secret', ''),
+                'bridge_shared_secret_configured' => $bridgeSecret !== '',
             ],
             'rules' => LabelRule::orderBy('priority')->get(),
             'exclusions' => SiteExclusion::orderBy('pattern')->get(),
@@ -49,11 +53,22 @@ class SensitivityLabelSweepConfigController extends Controller
     {
         $data = $request->validated();
 
+        // Setting::set stores ?string — cast booleans and ints to string form.
         Setting::set('sensitivity_sweep', 'enabled', $data['enabled'] ? '1' : '0');
         Setting::set('sensitivity_sweep', 'interval_minutes', (string) $data['interval_minutes']);
         Setting::set('sensitivity_sweep', 'default_label_id', $data['default_label_id']);
         Setting::set('sensitivity_sweep', 'bridge_url', $data['bridge_url']);
-        Setting::set('sensitivity_sweep', 'bridge_shared_secret', $data['bridge_shared_secret']);
+
+        // Only rotate the shared secret when the admin supplies a new value.
+        // An empty string means "no change"; the existing encrypted value stays put.
+        if (! empty($data['bridge_shared_secret'])) {
+            Setting::set(
+                'sensitivity_sweep',
+                'bridge_shared_secret',
+                $data['bridge_shared_secret'],
+                encrypted: true,
+            );
+        }
 
         DB::transaction(function () use ($data) {
             LabelRule::query()->delete();

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\SweepEntryAction;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -26,7 +27,10 @@ class LabelSweepRunEntry extends Model
 
     protected function casts(): array
     {
-        return ['processed_at' => 'datetime'];
+        return [
+            'processed_at' => 'datetime',
+            'action' => SweepEntryAction::class,
+        ];
     }
 
     public function run(): BelongsTo

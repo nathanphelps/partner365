@@ -40,7 +40,7 @@ test('returns early when sweep is disabled', function () {
 
     $this->artisan('sensitivity:sweep', ['--force' => true])->assertSuccessful();
 
-    Bus::assertNothingDispatched();
+    Bus::assertNothingBatched();
     expect(LabelSweepRun::count())->toBe(0);
 });
 
@@ -50,7 +50,7 @@ test('returns early when default label unset', function () {
 
     $this->artisan('sensitivity:sweep', ['--force' => true])->assertSuccessful();
 
-    Bus::assertNothingDispatched();
+    Bus::assertNothingBatched();
     expect(LabelSweepRun::count())->toBe(0);
 });
 
@@ -61,7 +61,7 @@ test('respects interval guard', function () {
     $this->artisan('sensitivity:sweep')->assertSuccessful();
 
     expect(LabelSweepRun::count())->toBe(1);
-    Bus::assertNothingDispatched();
+    Bus::assertNothingBatched();
 });
 
 test('force flag bypasses interval guard', function () {
@@ -73,7 +73,17 @@ test('force flag bypasses interval guard', function () {
     expect(LabelSweepRun::count())->toBe(2);
 });
 
-test('applies exclusions and deletes matching site rows', function () {
+test('first-ever run with no prior runs dispatches without --force', function () {
+    Bus::fake();
+    makeSite('https://a/sites/X', 'X');
+
+    // No existing LabelSweepRun rows — interval guard should let it run.
+    $this->artisan('sensitivity:sweep')->assertSuccessful();
+
+    Bus::assertBatched(fn ($batch) => $batch->jobs->count() === 1);
+});
+
+test('applies exclusions by writing entry but preserves site row', function () {
     Bus::fake();
     SiteExclusion::create(['pattern' => '/sites/contentTypeHub']);
     makeSite('https://a/sites/contentTypeHub', 'Hub');
@@ -81,7 +91,8 @@ test('applies exclusions and deletes matching site rows', function () {
 
     $this->artisan('sensitivity:sweep', ['--force' => true])->assertSuccessful();
 
-    expect(SharePointSite::where('url', 'https://a/sites/contentTypeHub')->count())->toBe(0);
+    // Excluded sites are NOT deleted — preserves permissions/audit history.
+    expect(SharePointSite::where('url', 'https://a/sites/contentTypeHub')->count())->toBe(1);
     expect(SharePointSite::where('url', 'https://a/sites/Normal')->count())->toBe(1);
 
     $run = LabelSweepRun::latest('id')->first();
@@ -96,7 +107,8 @@ test('matches rules by priority ascending', function () {
 
     $this->artisan('sensitivity:sweep', ['--force' => true])->assertSuccessful();
 
-    Bus::assertDispatched(ApplySiteLabelJob::class, fn ($job) => $job->labelId === 'ext-lbl');
+    Bus::assertBatched(fn ($batch) => collect($batch->jobs)
+        ->contains(fn (ApplySiteLabelJob $job) => $job->labelId === 'ext-lbl'));
 });
 
 test('falls back to default label when no rule matches', function () {
@@ -106,10 +118,11 @@ test('falls back to default label when no rule matches', function () {
 
     $this->artisan('sensitivity:sweep', ['--force' => true])->assertSuccessful();
 
-    Bus::assertDispatched(ApplySiteLabelJob::class, fn ($job) => $job->labelId === 'default-lbl');
+    Bus::assertBatched(fn ($batch) => collect($batch->jobs)
+        ->contains(fn (ApplySiteLabelJob $job) => $job->labelId === 'default-lbl'));
 });
 
-test('dispatches one job per unlabeled site', function () {
+test('batches one job per unlabeled site', function () {
     Bus::fake();
     makeSite('https://a/sites/S1', 'S1');
     makeSite('https://a/sites/S2', 'S2');
@@ -119,34 +132,35 @@ test('dispatches one job per unlabeled site', function () {
 
     $this->artisan('sensitivity:sweep', ['--force' => true])->assertSuccessful();
 
-    Bus::assertDispatched(ApplySiteLabelJob::class, 2);
+    Bus::assertBatched(fn ($batch) => $batch->jobs->count() === 2);
 
     $run = LabelSweepRun::latest('id')->first();
     expect($run->entries()->where('action', 'skipped_labeled')->count())->toBe(1);
 });
 
-test('pre-flight health failure marks run as failed', function () {
+test('pre-flight health failure marks run as failed and returns FAILURE', function () {
     Bus::fake();
     $mock = mock(BridgeClient::class);
     $mock->shouldReceive('health')->andThrow(new \App\Services\Exceptions\BridgeUnavailableException('down'));
     $this->app->instance(BridgeClient::class, $mock);
 
-    $this->artisan('sensitivity:sweep', ['--force' => true])->assertSuccessful();
+    // Non-zero exit code surfaces to schedule:run monitoring.
+    $this->artisan('sensitivity:sweep', ['--force' => true])->assertFailed();
 
     $run = LabelSweepRun::latest('id')->first();
-    expect($run->status)->toBe('failed');
+    expect($run->status)->toBe(\App\Enums\SweepRunStatus::Failed);
     expect($run->error_message)->toContain('down');
-    Bus::assertNotDispatched(ApplySiteLabelJob::class);
+    Bus::assertNothingBatched();
 });
 
-test('dry-run flag does not dispatch apply jobs', function () {
+test('dry-run flag does not batch apply jobs', function () {
     Bus::fake();
     LabelRule::create(['prefix' => 'E', 'label_id' => 'e', 'priority' => 1]);
     makeSite('https://a/sites/Example', 'Example');
 
     $this->artisan('sensitivity:sweep', ['--force' => true, '--dry-run' => true])->assertSuccessful();
 
-    Bus::assertNotDispatched(ApplySiteLabelJob::class);
+    Bus::assertNothingBatched();
 
     $run = LabelSweepRun::latest('id')->first();
     expect($run->entries()->count())->toBe(1);
@@ -160,5 +174,15 @@ test('filters to /sites/ and /teams/ urls only', function () {
 
     $this->artisan('sensitivity:sweep', ['--force' => true])->assertSuccessful();
 
-    Bus::assertDispatched(ApplySiteLabelJob::class, 2);
+    Bus::assertBatched(fn ($batch) => $batch->jobs->count() === 2);
+});
+
+test('when zero apply jobs pending, no batch is created', function () {
+    Bus::fake();
+    $label = SensitivityLabel::create(['label_id' => 'x', 'name' => 'X', 'protection_type' => 'none']);
+    makeSite('https://a/sites/Labeled', 'Labeled', $label->id);
+
+    $this->artisan('sensitivity:sweep', ['--force' => true])->assertSuccessful();
+
+    Bus::assertNothingBatched();
 });

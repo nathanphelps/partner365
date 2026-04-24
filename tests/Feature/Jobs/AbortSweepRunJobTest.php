@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\SweepRunStatus;
 use App\Enums\UserRole;
 use App\Jobs\AbortSweepRunJob;
 use App\Models\ActivityLog;
@@ -10,19 +11,19 @@ use Illuminate\Support\Facades\Notification;
 
 test('marks run aborted with error message', function () {
     Notification::fake();
-    $run = LabelSweepRun::factory()->create(['status' => 'running']);
+    $run = LabelSweepRun::factory()->create(['status' => SweepRunStatus::Running]);
 
     (new AbortSweepRunJob($run->id))->handle();
 
     $run->refresh();
-    expect($run->status)->toBe('aborted');
+    expect($run->status)->toBe(SweepRunStatus::Aborted);
     expect($run->error_message)->toContain('systemic');
     expect($run->completed_at)->not->toBeNull();
 });
 
 test('logs sweep_aborted activity entry', function () {
     Notification::fake();
-    $run = LabelSweepRun::factory()->create(['status' => 'running']);
+    $run = LabelSweepRun::factory()->create(['status' => SweepRunStatus::Running]);
 
     (new AbortSweepRunJob($run->id))->handle();
 
@@ -33,7 +34,7 @@ test('notifies admin users', function () {
     Notification::fake();
     User::factory()->create(['role' => UserRole::Admin]);
     User::factory()->create(['role' => UserRole::Operator]);
-    $run = LabelSweepRun::factory()->create(['status' => 'running']);
+    $run = LabelSweepRun::factory()->create(['status' => SweepRunStatus::Running]);
 
     (new AbortSweepRunJob($run->id))->handle();
 
@@ -42,7 +43,7 @@ test('notifies admin users', function () {
 
 test('idempotent on already-aborted run', function () {
     Notification::fake();
-    $run = LabelSweepRun::factory()->create(['status' => 'aborted', 'error_message' => 'old']);
+    $run = LabelSweepRun::factory()->create(['status' => SweepRunStatus::Aborted, 'error_message' => 'old']);
 
     (new AbortSweepRunJob($run->id))->handle();
 
