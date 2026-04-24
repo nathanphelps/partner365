@@ -5,7 +5,7 @@ namespace App\Jobs;
 use App\Models\LabelSweepRun;
 use App\Models\LabelSweepRunEntry;
 use App\Models\SensitivityLabel;
-use App\Models\SiteSensitivityLabel;
+use App\Models\SharePointSite;
 use App\Services\BridgeClient;
 use App\Services\Exceptions\BridgeAuthException;
 use App\Services\Exceptions\BridgeConfigException;
@@ -122,7 +122,7 @@ class ApplySiteLabelJob implements ShouldQueue
             return;
         }
 
-        SiteSensitivityLabel::where('site_url', $this->siteUrl)
+        SharePointSite::where('url', $this->siteUrl)
             ->update(['sensitivity_label_id' => $label->id]);
     }
 

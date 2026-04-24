@@ -4,7 +4,7 @@ use App\Jobs\ApplySiteLabelJob;
 use App\Models\LabelSweepRun;
 use App\Models\LabelSweepRunEntry;
 use App\Models\SensitivityLabel;
-use App\Models\SiteSensitivityLabel;
+use App\Models\SharePointSite;
 use App\Services\BridgeClient;
 use App\Services\DTOs\SetLabelResult;
 use App\Services\Exceptions\BridgeAuthException;
@@ -19,7 +19,7 @@ function makeRun(): LabelSweepRun
     return LabelSweepRun::factory()->create(['status' => 'running']);
 }
 
-test('job writes applied entry and updates SiteSensitivityLabel on success', function () {
+test('job writes applied entry and updates SharePointSite on success', function () {
     $run = makeRun();
     $label = SensitivityLabel::create(['label_id' => 'lbl', 'name' => 'X', 'protection_type' => 'none']);
 
@@ -30,10 +30,10 @@ test('job writes applied entry and updates SiteSensitivityLabel on success', fun
         ->andReturn(new SetLabelResult('https://a/sites/x', 'lbl', fastPath: false));
     $this->app->instance(BridgeClient::class, $mock);
 
-    SiteSensitivityLabel::create([
+    SharePointSite::create([
         'site_id' => 'site-1',
-        'site_name' => 'X',
-        'site_url' => 'https://a/sites/x',
+        'display_name' => 'X',
+        'url' => 'https://a/sites/x',
         'sensitivity_label_id' => null,
         'synced_at' => now(),
     ]);
@@ -45,7 +45,7 @@ test('job writes applied entry and updates SiteSensitivityLabel on success', fun
     expect($entry->action)->toBe('applied');
     expect($entry->label_id)->toBe('lbl');
 
-    $updated = SiteSensitivityLabel::where('site_url', 'https://a/sites/x')->first();
+    $updated = SharePointSite::where('url', 'https://a/sites/x')->first();
     expect($updated->sensitivity_label_id)->toBe($label->id);
 });
 

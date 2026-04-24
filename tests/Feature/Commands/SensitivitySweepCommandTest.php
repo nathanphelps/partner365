@@ -5,8 +5,8 @@ use App\Models\LabelRule;
 use App\Models\LabelSweepRun;
 use App\Models\SensitivityLabel;
 use App\Models\Setting;
+use App\Models\SharePointSite;
 use App\Models\SiteExclusion;
-use App\Models\SiteSensitivityLabel;
 use App\Services\BridgeClient;
 use App\Services\DTOs\BridgeHealth;
 use Illuminate\Support\Facades\Bus;
@@ -23,12 +23,12 @@ beforeEach(function () {
     $this->app->instance(BridgeClient::class, $mock);
 });
 
-function makeSite(string $url, string $title, ?int $labelId = null): SiteSensitivityLabel
+function makeSite(string $url, string $title, ?int $labelId = null): SharePointSite
 {
-    return SiteSensitivityLabel::create([
+    return SharePointSite::create([
         'site_id' => md5($url),
-        'site_name' => $title,
-        'site_url' => $url,
+        'display_name' => $title,
+        'url' => $url,
         'sensitivity_label_id' => $labelId,
         'synced_at' => now(),
     ]);
@@ -81,8 +81,8 @@ test('applies exclusions and deletes matching site rows', function () {
 
     $this->artisan('sensitivity:sweep', ['--force' => true])->assertSuccessful();
 
-    expect(SiteSensitivityLabel::where('site_url', 'https://a/sites/contentTypeHub')->count())->toBe(0);
-    expect(SiteSensitivityLabel::where('site_url', 'https://a/sites/Normal')->count())->toBe(1);
+    expect(SharePointSite::where('url', 'https://a/sites/contentTypeHub')->count())->toBe(0);
+    expect(SharePointSite::where('url', 'https://a/sites/Normal')->count())->toBe(1);
 
     $run = LabelSweepRun::latest('id')->first();
     expect($run->entries()->where('action', 'skipped_excluded')->count())->toBe(1);

@@ -8,8 +8,8 @@ use App\Models\LabelRule;
 use App\Models\LabelSweepRun;
 use App\Models\LabelSweepRunEntry;
 use App\Models\Setting;
+use App\Models\SharePointSite;
 use App\Models\SiteExclusion;
-use App\Models\SiteSensitivityLabel;
 use App\Services\BridgeClient;
 use App\Services\Exceptions\BridgeException;
 use Illuminate\Console\Command;
@@ -62,10 +62,10 @@ class SensitivitySweepCommand extends Command
         $exclusions = SiteExclusion::pluck('pattern')->all();
         $rules = LabelRule::orderBy('priority')->get();
 
-        $candidates = SiteSensitivityLabel::query()
+        $candidates = SharePointSite::query()
             ->where(function ($q) {
-                $q->where('site_url', 'like', '%/sites/%')
-                    ->orWhere('site_url', 'like', '%/teams/%');
+                $q->where('url', 'like', '%/sites/%')
+                    ->orWhere('url', 'like', '%/teams/%');
             })
             ->get();
 
@@ -76,16 +76,16 @@ class SensitivitySweepCommand extends Command
         foreach ($candidates as $site) {
             $scanned++;
 
-            if ($this->isExcluded($site->site_url, $exclusions)) {
+            if ($this->isExcluded($site->url, $exclusions)) {
                 $skippedExcluded++;
                 LabelSweepRunEntry::create([
                     'label_sweep_run_id' => $run->id,
-                    'site_url' => $site->site_url,
-                    'site_title' => $site->site_name,
+                    'site_url' => $site->url,
+                    'site_title' => $site->display_name,
                     'action' => 'skipped_excluded',
                     'processed_at' => now(),
                 ]);
-                SiteSensitivityLabel::where('id', $site->id)->delete();
+                SharePointSite::where('id', $site->id)->delete();
 
                 continue;
             }
@@ -94,8 +94,8 @@ class SensitivitySweepCommand extends Command
                 $alreadyLabeled++;
                 LabelSweepRunEntry::create([
                     'label_sweep_run_id' => $run->id,
-                    'site_url' => $site->site_url,
-                    'site_title' => $site->site_name,
+                    'site_url' => $site->url,
+                    'site_title' => $site->display_name,
                     'action' => 'skipped_labeled',
                     'processed_at' => now(),
                 ]);
@@ -103,13 +103,13 @@ class SensitivitySweepCommand extends Command
                 continue;
             }
 
-            [$labelId, $matchedRuleId] = $this->resolveLabel($site->site_name, $rules, $defaultLabel);
+            [$labelId, $matchedRuleId] = $this->resolveLabel($site->display_name, $rules, $defaultLabel);
 
             if ($this->option('dry-run')) {
                 LabelSweepRunEntry::create([
                     'label_sweep_run_id' => $run->id,
-                    'site_url' => $site->site_url,
-                    'site_title' => $site->site_name,
+                    'site_url' => $site->url,
+                    'site_title' => $site->display_name,
                     'action' => 'applied',
                     'label_id' => $labelId,
                     'matched_rule_id' => $matchedRuleId,
@@ -122,8 +122,8 @@ class SensitivitySweepCommand extends Command
 
             ApplySiteLabelJob::dispatch(
                 $run->id,
-                $site->site_url,
-                $site->site_name,
+                $site->url,
+                $site->display_name,
                 $labelId,
                 $matchedRuleId,
             );
