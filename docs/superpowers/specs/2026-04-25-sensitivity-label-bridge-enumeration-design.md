@@ -19,8 +19,8 @@ The bridge is a .NET 9 sidecar service running on Windows that already holds a c
 
 ## Goals
 
-1. **Remove the CSV fallback entirely.** Code, config keys, env vars, test fixtures, and the parser methods that consume them.
-2. **Remove the Laravel-side PowerShell path entirely.** No `ExchangeOnlineManagement` module on the Laravel host, no compliance cert deployed there.
+1. **Remove the CSV fallback entirely** for label enumeration. Code, config keys, env vars, test fixtures, and the parser methods that consume them.
+2. **Remove the Laravel-side PowerShell path for label enumeration.** Specifically: `CompliancePowerShellService::getLabels()` and its dependencies (`parseLabelsOutput()`, `mapLabel()`, `parseContentType()`, `parseLabelActions()`, `getCsvLabelsPath()`, `parseCsvLabels()`, `mapCsvRow()`, `extractSettingsValue()`) are deleted. The PS path for label *policies* (`getPolicies()`/`parsePoliciesOutput()`/`mapPolicy()`) STAYS — moving that to the bridge is out of scope (see Non-goals). As a consequence, `COMPLIANCE_CERTIFICATE_PATH` / `COMPLIANCE_CERTIFICATE_PASSWORD` and the `ExchangeOnlineManagement` module on the Laravel host stay until policies are also migrated.
 3. **Add a bridge endpoint** that enumerates the tenant's sensitivity labels using `Get-Label` via `Microsoft.PowerShell.SDK` in-process.
 4. **Keep the Graph tier.** It's the fast path for commercial; no reason to disturb it.
 5. **Keep the stub-from-site fallback.** Last-resort behavior when both Graph and the bridge are unreachable.
@@ -157,10 +157,12 @@ None.
 | File | What |
 |---|---|
 | `app/Services/BridgeClient.php` | Add `getLabels()` method |
-| `app/Services/SensitivityLabelService.php` | Replace CSV+PS branches with a single bridge branch; update tier ordering and the `source` strings; remove the `CompliancePowerShellService` dependency from the constructor |
-| `config/graph.php` | Remove `'labels_csv_path'`, `'compliance_certificate_path'`, `'compliance_certificate_password'` keys |
-| `.env.example` | Remove `COMPLIANCE_LABELS_CSV_PATH`, `COMPLIANCE_CERTIFICATE_PATH`, `COMPLIANCE_CERTIFICATE_PASSWORD` |
-| `tests/Feature/Services/SensitivityLabelServiceTest.php` | Delete CSV/PS test cases; add bridge-path test cases (mocked via `Http::fake()`) |
+| `app/Services/SensitivityLabelService.php` | Replace CSV+PS branches in `fetchLabelsWithFallback()` with a single bridge branch; update tier ordering and the `source` strings; add `BridgeClient` to the constructor. Keep the `CompliancePowerShellService` constructor parameter — `fetchPoliciesWithFallback()` still needs it |
+| `app/Services/CompliancePowerShellService.php` | Delete labels-only methods: `getLabels`, `getCsvLabelsPath`, `parseCsvLabels`, `mapCsvRow`, `extractSettingsValue`, `parseLabelsOutput`, `mapLabel`, `parseContentType`, `parseLabelActions`. Keep `isAvailable`, `getPolicies`, `parsePoliciesOutput`, `mapPolicy`, `runPowerShell`, `findPwshCommand` |
+| `config/graph.php` | Remove `'labels_csv_path'` only. Keep `'compliance_certificate_path'` and `'compliance_certificate_password'` (still used by policy fetching) |
+| `.env.example` | Remove `COMPLIANCE_LABELS_CSV_PATH` only. Keep `COMPLIANCE_CERTIFICATE_PATH` and `COMPLIANCE_CERTIFICATE_PASSWORD` |
+| `tests/Feature/Services/SensitivityLabelServiceTest.php` | Delete label-CSV/PS test cases; add bridge-path test cases (mocked via `Http::fake()`). Keep policy-related test cases unchanged |
+| `tests/Feature/Services/CompliancePowerShellServiceTest.php` | Delete only the test cases covering the deleted label methods. Keep tests for `isAvailable`, `getPolicies`, `parsePoliciesOutput`, etc. |
 | `tests/Feature/Services/BridgeClientTest.php` (or wherever bridge tests live) | Add `getLabels()` happy-path + classified-error tests |
 | `app/Http/Controllers/Admin/GraphController.php` and `resources/js/pages/admin/Graph.vue` | If they expose form fields for the deleted env vars, remove them and their validation rules. Verify during implementation. |
 
@@ -168,13 +170,13 @@ None.
 
 | File | Why |
 |---|---|
-| `app/Services/CompliancePowerShellService.php` | Both the CSV parsing and direct-PS call paths it served are gone. Verify no other callers via grep before deleting. |
-| `tests/Feature/Services/CompliancePowerShellServiceTest.php` | Subject under test is gone |
-| `tmp/Labels.csv` | Test fixture no longer used |
+| `tmp/Labels.csv` | Test fixture no longer used (label CSV path is gone) |
+
+`CompliancePowerShellService.php` and its test file are NOT deleted in this change — only their labels-related methods/cases are removed. See the modify table above. Full deletion is deferred to whenever policy fetching also moves to the bridge.
 
 ### Database — runtime cleanup
 
-If the `settings` table holds any of `(group=graph, key=labels_csv_path)`, `(group=graph, key=compliance_certificate_path)`, or `(group=graph, key=compliance_certificate_password)`, delete them in a migration so dead rows don't linger. (Verify presence in implementation; if no rows exist the migration is a no-op and that's fine.)
+If the `settings` table holds a `(group=graph, key=labels_csv_path)` row, delete it in a migration so a dead row doesn't linger. The compliance-certificate setting rows STAY because policy fetching still uses them. If no `labels_csv_path` row exists, the migration is a no-op and that's fine.
 
 ## Deployment order
 
