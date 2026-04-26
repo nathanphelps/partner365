@@ -56,6 +56,17 @@ class BridgeClient
         return $response->json('labelId');
     }
 
+    public function getLabels(): array
+    {
+        $response = $this->tryRequest(
+            fn (PendingRequest $http) => $http->get($this->baseUrl().'/v1/labels')
+        );
+
+        $this->throwOnError($response);
+
+        return $response->json('labels') ?? [];
+    }
+
     public function health(): BridgeHealth
     {
         $response = $this->tryRequest(

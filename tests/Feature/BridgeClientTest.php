@@ -218,3 +218,55 @@ test('health returns BridgeHealth DTO', function () {
     expect($h->status)->toBe('ok');
     expect($h->cloudEnvironment)->toBe('commercial');
 });
+
+test('getLabels returns labels array on 200', function () {
+    Http::fake([
+        'bridge-test:8080/v1/labels' => Http::response([
+            'source' => 'powershell',
+            'fetchedAt' => '2026-04-25T13:00:00Z',
+            'labels' => [
+                ['id' => 'label-1', 'name' => 'Confidential', 'priority' => 5],
+                ['id' => 'label-2', 'name' => 'Public', 'priority' => 1],
+            ],
+        ], 200),
+    ]);
+
+    $labels = app(BridgeClient::class)->getLabels();
+
+    expect($labels)->toBeArray()->toHaveCount(2);
+    expect($labels[0]['name'])->toBe('Confidential');
+});
+
+test('getLabels sends shared secret header', function () {
+    Http::fake([
+        'bridge-test:8080/v1/labels' => Http::response([
+            'source' => 'powershell',
+            'fetchedAt' => '2026-04-25T13:00:00Z',
+            'labels' => [],
+        ], 200),
+    ]);
+
+    app(BridgeClient::class)->getLabels();
+
+    Http::assertSent(fn ($request) => $request->hasHeader('X-Bridge-Secret', 'unit-secret'));
+});
+
+test('getLabels throws BridgeConfigException on 401', function () {
+    Http::fake([
+        'bridge-test:8080/v1/labels' => Http::response([
+            'error' => ['code' => 'unauthorized', 'message' => 'bad secret', 'requestId' => 'r1'],
+        ], 401),
+    ]);
+
+    expect(fn () => app(BridgeClient::class)->getLabels())->toThrow(BridgeConfigException::class);
+});
+
+test('getLabels throws classified upstream on 502 with auth code', function () {
+    Http::fake([
+        'bridge-test:8080/v1/labels' => Http::response([
+            'error' => ['code' => 'auth', 'message' => 'Connect-IPPSSession failed', 'requestId' => 'r2'],
+        ], 502),
+    ]);
+
+    expect(fn () => app(BridgeClient::class)->getLabels())->toThrow(BridgeAuthException::class);
+});

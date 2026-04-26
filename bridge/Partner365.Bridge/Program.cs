@@ -122,6 +122,10 @@ if (cert is not null)
 
 builder.Services.AddSingleton<SharePointCsomService>();
 
+builder.Services.AddSingleton<TimeProvider>(_ => TimeProvider.System);
+builder.Services.AddSingleton<IPowerShellRunner, PowerShellSdkRunner>();
+builder.Services.AddSingleton<ILabelEnumerationService, LabelEnumerationService>();
+
 builder.Services.ConfigureHttpJsonOptions(jsonOpts =>
 {
     jsonOpts.SerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
@@ -238,6 +242,29 @@ app.MapPost("/v1/sites/label:read", async (
     catch (Exception ex)
     {
         return ClassifyServerError(ex, log, requestId, "read-label", req.SiteUrl);
+    }
+});
+
+app.MapGet("/v1/labels", async (
+    ILabelEnumerationService svc,
+    ILogger<Program> log,
+    CancellationToken ct) =>
+{
+    var requestId = Guid.NewGuid().ToString("N");
+    try
+    {
+        var response = await svc.GetLabelsAsync(ct);
+        log.LogInformation("{RequestId} list-labels count={Count} source={Source}",
+            requestId, response.Labels.Count, response.Source);
+        return Results.Ok(response);
+    }
+    catch (OperationCanceledException)
+    {
+        throw;
+    }
+    catch (Exception ex)
+    {
+        return ClassifyServerError(ex, log, requestId, "list-labels", siteUrl: "(n/a)");
     }
 });
 

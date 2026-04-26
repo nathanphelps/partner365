@@ -18,6 +18,7 @@ class SensitivityLabelService
         private MicrosoftGraphService $graph,
         private SharePointAdminService $spoAdmin,
         private CompliancePowerShellService $compliance,
+        private BridgeClient $bridge,
     ) {}
 
     public function syncLabels(): array
@@ -55,7 +56,7 @@ class SensitivityLabelService
         }
 
         // Only delete stale labels when we got a definitive list
-        if (in_array($source, ['graph', 'csv', 'powershell'])) {
+        if (in_array($source, ['graph', 'bridge'])) {
             SensitivityLabel::whereNotIn('id', $syncedLabelIds)->delete();
         }
 
@@ -234,7 +235,7 @@ class SensitivityLabelService
 
     private function fetchLabelsWithFallback(): ?array
     {
-        // Tier 1: Graph API
+        // Tier 1: Graph API (works in commercial; not in GCC High).
         try {
             $labels = $this->fetchLabelsFromGraph();
 
@@ -245,36 +246,20 @@ class SensitivityLabelService
             ]);
         }
 
-        // Tier 2: CSV file (useful for GCC High where Graph/PowerShell may be unavailable)
+        // Tier 2: Bridge (replaces CSV + Laravel-side PowerShell).
         try {
-            $csvPath = $this->compliance->getCsvLabelsPath();
-
-            if ($csvPath) {
-                $labels = $this->compliance->parseCsvLabels($csvPath);
-                Log::info('Loaded '.count($labels)." labels from CSV: {$csvPath}");
-
-                return ['labels' => $labels, 'source' => 'csv'];
+            $labels = $this->bridge->getLabels();
+            if (! empty($labels)) {
+                return ['labels' => $labels, 'source' => 'bridge'];
             }
-        } catch (\RuntimeException $e) {
-            Log::warning("CSV label import failed: {$e->getMessage()}", [
+            Log::warning('Bridge returned empty label list — falling through to stubs.');
+        } catch (\Throwable $e) {
+            Log::warning("Bridge label fetch failed: {$e->getMessage()}", [
                 'exception_class' => get_class($e),
             ]);
         }
 
-        // Tier 3: PowerShell
-        try {
-            if ($this->compliance->isAvailable()) {
-                $labels = $this->compliance->getLabels();
-
-                return ['labels' => $labels, 'source' => 'powershell'];
-            }
-        } catch (\RuntimeException $e) {
-            Log::warning("PowerShell label fetch failed: {$e->getMessage()}", [
-                'exception_class' => get_class($e),
-            ]);
-        }
-
-        // Tier 4: Stubs will be created during syncSiteLabels()
+        // Tier 3: Stubs will be created during syncSiteLabels().
         Log::warning('No label source available — labels will be created as stubs from site data');
 
         return null;

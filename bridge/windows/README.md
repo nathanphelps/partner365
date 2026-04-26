@@ -21,6 +21,25 @@ talking to.
   registration that Partner365 uses. The app reg must have SharePoint
   `Sites.FullControl.All` and Graph `Sites.FullControl.All` consented.
 
+### Sensitivity-label enumeration prerequisites (`GET /v1/labels`)
+
+The bridge's `GET /v1/labels` endpoint runs `Get-Label` via Exchange Online
+PowerShell in-process. One-time host setup as the bridge's service
+account:
+
+```powershell
+Install-Module ExchangeOnlineManagement -Scope AllUsers -Force -RequiredVersion 3.5.1
+```
+
+The AAD app registration (the same one used for SharePoint CSOM) needs:
+
+- Application permission `Office 365 Exchange Online → Exchange.ManageAsApp` (admin consent required)
+- Directory role assignment on the service principal: `Compliance Data Administrator` (read-only) or `Compliance Administrator`
+- The cert must be in `LocalMachine\My` with a thumbprint set on the bridge config (`-CertThumbprint`). `Connect-IPPSSession`'s cert auth requires a thumbprint, not a PFX path.
+
+The bridge reuses its existing certificate and tenant/client config — no
+new credentials.
+
 ## Install (first run)
 
 ```powershell
