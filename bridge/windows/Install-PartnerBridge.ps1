@@ -101,6 +101,17 @@ if (-not $dotnetVersion -or [Version]::Parse(($dotnetVersion -split '-')[0]) -lt
 }
 Write-Host "dotnet version: $dotnetVersion"
 
+Write-Host "Ensuring ExchangeOnlineManagement module is available (required for /v1/labels)..." -ForegroundColor Cyan
+$existingMod = Get-Module -ListAvailable -Name ExchangeOnlineManagement |
+    Where-Object { $_.Version -ge [Version]'3.5.1' } |
+    Select-Object -First 1
+if (-not $existingMod) {
+    Install-Module -Name ExchangeOnlineManagement -Scope AllUsers -Force -RequiredVersion 3.5.1
+    Write-Host "  Installed ExchangeOnlineManagement 3.5.1." -ForegroundColor Green
+} else {
+    Write-Host "  Found ExchangeOnlineManagement $($existingMod.Version) (>=3.5.1) — skipping install." -ForegroundColor Green
+}
+
 if (-not $RepoRoot) {
     $RepoRoot = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
 }
