@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Moq;
+using Partner365.Bridge.Models;
 using Partner365.Bridge.Services;
 
 namespace Partner365.Bridge.Tests;
@@ -22,6 +23,7 @@ namespace Partner365.Bridge.Tests;
 public sealed class BridgeFactory : WebApplicationFactory<Program>
 {
     public Mock<ICsomOperations> Ops { get; } = new();
+    public Mock<ILabelEnumerationService> LabelService { get; } = new();
 
     private static readonly string[] OwnedEnvKeys =
     {
@@ -63,6 +65,13 @@ public sealed class BridgeFactory : WebApplicationFactory<Program>
             // inject the mock.
             services.RemoveAll<ICsomOperations>();
             services.AddSingleton(Ops.Object);
+
+            // Replace label-enumeration plumbing with mocks so tests don't try
+            // to spin up a real PowerShell host or call Connect-IPPSSession.
+            services.RemoveAll<ILabelEnumerationService>();
+            services.AddSingleton(LabelService.Object);
+            services.RemoveAll<IPowerShellRunner>();
+            services.AddSingleton(Mock.Of<IPowerShellRunner>());
         });
     }
 

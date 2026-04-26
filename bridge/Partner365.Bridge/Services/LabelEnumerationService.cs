@@ -6,7 +6,12 @@ using Partner365.Bridge.Models;
 
 namespace Partner365.Bridge.Services;
 
-public sealed class LabelEnumerationService
+public interface ILabelEnumerationService
+{
+    Task<LabelsResponse> GetLabelsAsync(CancellationToken ct);
+}
+
+public sealed class LabelEnumerationService : ILabelEnumerationService
 {
     private static readonly TimeSpan CacheTtl = TimeSpan.FromMinutes(5);
 
